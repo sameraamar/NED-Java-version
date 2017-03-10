@@ -1,6 +1,12 @@
 package ned.types;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 final public class Utility {
 
@@ -21,27 +27,44 @@ final public class Utility {
 	    /*
 	    String text = "";
 	    if (diff[0] > 1)
-	    	text += "%d day%s";
+	    	text += "%d d%s";
 	    if (diff[1] > 1)
-	    	text += "%d hour%s";
+	    	text += "%d h%s";
 	    if (diff[1] > 1)
-	    	text += "%d minute%s";
+	    	text += "%d m%s";
 	    if (diff[1] > 1)
-	    	text += "%d second%s";
+	    	text += "%d s%s";
 	    */
 	    
 	    String text = String.format(
-		        "%d hour%s, %d minute%s, %d second%s",
-		        //"%d day%s, %d hour%s, %d minute%s, %d second%s",
-	        //diff[0],
+		        //"%d hour%s, %d minute%s, %d second%s",
+		        "%d days %02d:%02d:%02d",
+	        diff[0],
 	        //diff[0] > 1 ? "s" : "",
 	        diff[1],
-	        diff[1] > 1 ? "s" : "",
+	        //diff[1] > 1 ? "s" : "",
 	        diff[2],
-	        diff[2] > 1 ? "s" : "",
-	        diff[3],
-	        diff[3] > 1 ? "s" : "");
+	        //diff[2] > 1 ? "s" : "",
+	        diff[3]
+	        //diff[3] > 1 ? "s" : ""
+	        );
 	    
 	    return text;
 	}
+	
+	public static void main(String[] args) throws IOException 
+	{
+		Set<Integer> s = new HashSet<Integer>();
+		
+		s.add(6);
+		s.add(8);
+		s.add(6);
+		s.add(8);
+		s.add(8);
+		s.add(6);
+		s.add(9);
+		
+		System.out.println(s);
+	}
+	
 }

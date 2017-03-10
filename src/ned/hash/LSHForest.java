@@ -1,13 +1,15 @@
 package ned.hash;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 import ned.types.Document;
 
 public class LSHForest {
-
+	
 	private int numberOfTables ;
 	private LSHTable[] tables = null;
 	
@@ -22,24 +24,47 @@ public class LSHForest {
 		}
 	}
 	
-	public LinkedList<Document> AddDocument(Document doc)
+	public List<String> AddDocument(Document doc)
     {
-		LinkedList<Document> res = new LinkedList<Document>();
+		HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 		
 		for (int i = 0; i<numberOfTables; i++)
 		{
-			LinkedList<Document> tmpList = tables[i].AddDocument(doc);
+			List<String> tmpList = tables[i].AddDocument(doc);
 			
-			//add to the set
-			res.addAll(tmpList);
+			for (String tmp : tmpList) {
+				if (tmp == doc.getId())
+					continue;
+				
+				Integer c = hitCounts.getOrDefault(tmp, 0);
+				hitCounts.put(tmp, c+1);
+			}
 			
 		}
-		
-		return res;
+
+        ArrayList<String> output = new ArrayList<String>();
+        output.addAll(hitCounts.keySet());
+        
+        output.sort( new Comparator<String> () 
+					        {  
+					            @Override  
+					            public int compare(String left, String right){  
+					                 return hitCounts.get(right) - hitCounts.get(left) ;  //Descending  
+					            }  
+					            
+					        }
+        ); 
+        
+        int compare_with = 3*numberOfTables;
+        int toIndex = Math.min(compare_with, output.size());
+        List<String> res = output.subList(0, toIndex);
+        
+        return res;
     }
 	
+	/*
 	public HashSet<String> AddDocument2(Document doc)
-    {
+	{
 		HashSet<String> res = new HashSet<String>();
 		
 		for (int i = 0; i<numberOfTables; i++)
@@ -55,6 +80,7 @@ public class LSHForest {
 		
 		return res;
     }
+    */
 	
 	public String toString()
 	{

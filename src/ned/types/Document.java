@@ -14,6 +14,7 @@ public class Document {
     public int max_idx;
 	private long timestamp;
 	private String cleanText;
+	private String created_at;
 
     public Document(String id, String text, long timestamp)
     {
@@ -124,6 +125,10 @@ public class Document {
 
 	public String getCleanText() {
 		return cleanText;
+	}
+
+	public void setCreatedAt(String created_at) {
+		this.created_at = created_at;
 	}
 
 

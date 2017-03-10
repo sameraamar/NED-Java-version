@@ -1,6 +1,8 @@
 package ned.hash;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 import ned.types.Document;
 
@@ -36,6 +38,17 @@ public class Bucket
 
 	public LinkedList<Document> getDocList() {
 		return docList;
+	}
+	
+	public List<String> getDocIDsList(String excludeId) {
+		List<String> list = new ArrayList<String>();
+		for (Document doc : docList) {
+			if (excludeId.equals(doc.getId()))
+					continue;
+			
+			list.add(doc.getId());
+		}
+		return list;
 	}
 
 }

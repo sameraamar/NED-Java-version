@@ -6,15 +6,16 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 
 public class ThreadManagerHelper {
-	private static Document determineClosest(Document doc, LinkedList<Document> list)
+	private static Document determineClosest(Document doc, List<String> list)
 	{
 		double minDist = 1.0;
 		Document nearest = null;
-		for (Document right : list) {
+		for (String rightId : list) {
 			
-			String rightId = right.getId();
+			Document right = GlobalData.getInstance().id2document.get(rightId);
 					
 			if ( rightId.equals(doc.getId()) )
 				continue;
@@ -32,7 +33,7 @@ public class ThreadManagerHelper {
 		return nearest;
 	}
 	
-	public static void mapToCluster(Document doc, LinkedList<Document> set)
+	public static void afterLSHMapping(Document doc, List<String> set)
 	{
 		Document nearest = ThreadManagerHelper.determineClosest(doc, set);
 		
@@ -42,7 +43,7 @@ public class ThreadManagerHelper {
 		
 		
 		//handle recent documents
-		Object[] candidate = searchinRecentDocuments(doc);
+		Object[] candidate = searchInRecentDocuments(doc);
 		Double recentDist = null;
 		Document recentDoc = null;
 		if (candidate[0] != null) //there is something
@@ -52,15 +53,15 @@ public class ThreadManagerHelper {
 		}
 		if (nearest == null || dist>recentDist) 
 		{
-			nearest = (Document)candidate[0];
-			dist = (Double)candidate[1];	
+			nearest = recentDoc;
+			dist = recentDist;	
 		}
 		
 		
 		ThreadManagerHelper.mapToClusterHelper(doc, nearest, dist);
     }
 	
-	public static Object[] searchinRecentDocuments(Document doc) 
+	public static Object[] searchInRecentDocuments(Document doc) 
 	{
 		Document nearest = null;
 		double min_dist = 1.0;
@@ -98,24 +99,30 @@ public class ThreadManagerHelper {
 			
 		if (!createNewThread) 
 		{
-			DocumentCluster cluster = data.getId2Cluster().get(nearest.getId());
+			DocumentCluster cluster = data.clusterByDoc(nearest.getId());
 			if (cluster != null && cluster.canAdd(doc))
 			{
 				cluster.addDocument(doc, nearest, distance);
-				data.getId2Cluster().put(doc.getId(), cluster);
+				data.mapToCluster(cluster.leadId, doc);
+				
+				//int idx = data.clusterIndexByDoc(nearest.getId());
+				//data.getId2Cluster().put(doc.getId(), idx);
 			}
 			else 
 			{
 				createNewThread = true;
-				data.cleanClusterQueue.addLast(cluster.leadId);
+				if (cluster != null)
+					data.cleanClusterQueue.addLast(cluster.leadId);
 			}
 		}
 		
 		if (createNewThread)
 		{
-			DocumentCluster cluster = new DocumentCluster(doc);
-			data.getClusters().add(cluster);
-			data.getId2Cluster().put(doc.getId(), cluster);
+			data.createCluster(doc);
+			
+			//DocumentCluster cluster = new DocumentCluster(doc);
+			//int idx = data.getClusters().add(cluster);
+			//data.getId2Cluster().put(doc.getId(), idx);
 		}
 		
 	}
@@ -124,11 +131,12 @@ public class ThreadManagerHelper {
 	{
 		GlobalData gd = GlobalData.getInstance();
 		
-		for (DocumentCluster cluster : gd.clusters) 
+		for (String leadId : gd.getId2Cluster().keySet())
 		{
-			if (cluster.size() > 1)
+			DocumentCluster c = gd.clusterByDoc(leadId);
+			if (c.size() > 1)
 			{
-				out.println(cluster.toString());
+				out.println(c.toString());
 			}
 		}
 	}

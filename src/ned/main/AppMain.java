@@ -8,13 +8,18 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import ned.hash.LSHForest;
+import ned.hash.LSHForestThreads;
+import ned.types.Dict;
 import ned.types.Document;
 import ned.types.GlobalData;
 import ned.types.Session;
@@ -22,15 +27,28 @@ import ned.types.ThreadManagerHelper;
 import ned.types.Utility;
 
 public class AppMain {
+
 	
 	public static void main(String[] args) throws IOException {
 		GlobalData gd = GlobalData.getInstance();
 		
-		//LSHForest( tablesNumer, hyperPlanesNumber, dimension, maxBucketSize ) 
+		
+		/*LSHForestThreads[] forest = new LSHForestThreads[ gd.getParams().lsh_forest_threads ];
+		for(int k = 0; k<forest.length; k++) 
+		{
+			forest[k] = new LSHForestThreads(gd.getParams().number_of_tables,
+				 gd.getParams().hyperplanes, 
+				 gd.getParams().inital_dimension, 
+				 gd.getParams().max_bucket_size);
+			
+			forest[k].setDaemon(true);
+			forest[k].start();
+		}*/
+		
 		LSHForest forest = new LSHForest(gd.getParams().number_of_tables, 
-										 gd.getParams().hyperplanes, 
-										 gd.getParams().inital_dimension, 
-										 gd.getParams().max_bucket_size);
+				 gd.getParams().hyperplanes, 
+				 gd.getParams().inital_dimension, 
+				 gd.getParams().max_bucket_size);
 
 		
 		
@@ -101,12 +119,18 @@ public class AppMain {
 		JsonParser jsonParser = new JsonParser();
 
 		int processed = 0;
+		int middle_processed = 0;
 		int cursor = 0;
 		boolean stop = false;
 		long base = System.nanoTime();
+		long middletime = base; 
+		long firsttweet = 0;
+		long lasttweet;
 
 		String threadsFileName = "c:/temp/threads.txt";
 		PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
+		
+		printParameters(out);
 		
 		int offset = gd.getParams().offset;
 		int offset_p = (int)(offset * 0.05);
@@ -135,28 +159,67 @@ public class AppMain {
 				//Gson gson = new GsonBuilder().create();
 				String text = jsonObj.get("text").getAsString();
 				String id = jsonObj.get("id_str").getAsString();
+				String created_at = jsonObj.get("created_at").getAsString();
 				long timestamp = jsonObj.get("timestamp").getAsLong();
+				if (firsttweet == 0)
+					firsttweet = timestamp;
+				lasttweet = timestamp;
 				
 	            Document doc = new Document(id, text, timestamp); //id == "94816822100099073" is for Amy Winhouse event
-	            LinkedList<Document> set = forest.AddDocument(doc);
+	            doc.setCreatedAt(created_at);
+	        	Dict weights = doc.getWeights();
+
+	        	List<String> set = forest.AddDocument(doc);
+	        	
+	            /*for (int k=0; k<forest.length; k++)
+	            	forest[k].addDocumentRequest(doc);
 	            
-	            ThreadManagerHelper.mapToCluster(doc, set);
+	            List<String> set = null;
+	            for (int k=0; k<forest.length; k++)
+	            {
+	            	List<String> set1 = forest[k].addDocumentResponse();
+	            	if (set == null)
+	            		set = set1;
+	            	else
+	            		set.addAll(set1);
+	            }*/
+	            
+	            ThreadManagerHelper.afterLSHMapping(doc, set);
 	            
 	            processed ++;
+	            middle_processed++;
 	            
-	            long passed = System.nanoTime() - base;
 	            if (processed % gd.getParams().print_limit == 0)
 	            {
-	            	double average = 1.0 * TimeUnit.NANOSECONDS.toMillis(passed) / processed;
-	            	average = Math.round(100.0 * average) / 100.0;
+		            long passed = System.nanoTime() - base;
+	            	double average1 = 1.0 * TimeUnit.NANOSECONDS.toMillis(passed) / processed;
+	            	average1 = Math.round(100.0 * average1) / 100.0;
+
+	            	long tmp = System.nanoTime() - middletime;
+	            	double average2 = 1.0 * TimeUnit.NANOSECONDS.toMillis(tmp) / middle_processed;
+	            	average2 = Math.round(100.0 * average2) / 100.0;
+	            	
+	            	long reportedtime = lasttweet - firsttweet;
 	            	
 	            	StringBuffer msg = new StringBuffer();
-	            	msg.append( "Processed " ).append ( processed ).append(" documents. ");
-	            	msg.append("Elapsed time ").append(  Utility.humanTime( TimeUnit.NANOSECONDS.toSeconds(passed) ) ).append(". ");
-	            	msg.append("(AHT: ").append(average).append(" ms). ");
-	            	msg.append("Cursor at: ").append(id);
+	            	msg.append( "Processed " ).append ( processed ).append(" docs. ");
+	            	msg.append(gd.clustersSize()).append(" clusters.");
+	            	msg.append("[spent ").append(  Utility.humanTime( TimeUnit.NANOSECONDS.toSeconds(passed) ) ).append("]. ");
+	            	msg.append("[reported ").append( Utility.humanTime( reportedtime ) ).append("]. ");
+	            	msg.append("(overall AHT: ").append(average1).append(" ms). ");
+	            	msg.append("(AHT: ").append(average2).append(" ms). ");
+	            	msg.append("Cursor: ").append(id);
 	            	Session.getInstance().message(Session.INFO, "Reader", msg.toString());
-	            	gd.flushClusters(out);
+	            	
+	            	if (processed % (15*gd.getParams().print_limit) == 0)
+	            	{
+	            		Session.getInstance().message(Session.INFO, "Reader", "doing some cleanup...");
+	            		gd.markOldClusters(doc);
+	            		//gd.flushClusters(out);
+	            		//System.gc();
+	            		middletime = System.nanoTime();
+	            		middle_processed = 0;
+	            	}
 	            }
 	            
 	            if (processed == gd.getParams().max_documents)
@@ -174,10 +237,19 @@ public class AppMain {
 		
 		gd.flushClustersAll(out, 2);
 		
-		
-		long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);
-		Session.getInstance().message(Session.INFO, "Summary", "Done: " + Utility.humanTime(seconds) );
 		out.close();
+
+		long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);
+		Session.getInstance().message(Session.INFO, "Summary", "Done in " + Utility.humanTime(seconds) );
+	}
+	
+	private static void printParameters(PrintStream out) 
+	{
+		GsonBuilder gson = new GsonBuilder();
+		Gson g = gson.setPrettyPrinting().create();
+		String params = g.toJson(GlobalData.getInstance().getParams());
+	                
+	    out.println(params);
 	}
 
 }

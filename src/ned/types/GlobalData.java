@@ -3,8 +3,10 @@ package ned.types;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,16 +18,19 @@ import ned.modules.Twokenize;
 public class GlobalData {
 	public class Parameters 
 	{
+		public int lsh_forest_threads = 10;
 		public int inital_dimension = 50000;
-		public int print_limit = 1000;
-		public int number_of_tables = 60;
-		public int hyperplanes = 12;
+		public int print_limit = 2000;
+		public int number_of_tables = 50;
+		public int hyperplanes = 5;
 		public int max_bucket_size = 100;
 		public int max_documents = 100000;
 		public int max_thread_delta_time = 3600; //seconds
 		public int offset = 0; //8800000;
 		public int search_recents = 100;
 		public double threshold = 0.6;
+		public double min_cluster_entropy = 0.0;
+		public double min_cluster_size = 0;
 	}
 	
 	private static GlobalData globalData = null;
@@ -43,11 +48,39 @@ public class GlobalData {
 		index2word  = new HashMap<Integer, String>();
 		id2document = new HashMap<String , Document>();
 		numberOfDocsIncludeWord = new HashMap<Integer, Integer>();
-		clusters = new ArrayList<DocumentCluster>();
-		id2cluster = new HashMap<String, DocumentCluster>();
+		cleanClusterQueue = new LinkedList<String>();
+		clusters = new HashMap<Integer, DocumentCluster>();
+		next_index = 0;
+		id2cluster = new HashMap<String, Integer>();
 	}
 	
+	public DocumentCluster clusterByDoc(String id)
+	{
+		Integer idx = id2cluster.get(id);
+		if (idx == null)
+			return null;
+		
+		DocumentCluster c = clusters.get(idx);
+		return c;
+	}
 	
+	public int clusterIndexByDoc(String id)
+	{
+		Integer idx = id2cluster.get(id);
+		if (idx == null)
+			return -1;
+		return idx.intValue();
+	}
+	
+	private DocumentCluster getClusterByIndex(int index) 
+	{
+		return this.clusters.get(index);
+	}
+	
+	public int clustersSize()
+	{
+		return this.clusters.size();
+	}
 	
 	public void calcWeights(Document doc, Dict weights) 
 	{		
@@ -137,16 +170,17 @@ public class GlobalData {
 		if (this.recent.size() > this.parameters.search_recents)
 			this.recent.removeFirst();
 	}
-
+	
 	public HashMap<String, Integer>    word2index;
 	public HashMap<Integer, String>    index2word;
 	public HashMap<String, Document>   id2document;
 	public HashMap<Integer, Integer>   numberOfDocsIncludeWord;
-	public ArrayList<DocumentCluster>  clusters;
-	public HashMap<String, DocumentCluster> id2cluster;
+	public HashMap<Integer, DocumentCluster>  clusters;
+	int next_index;
+	public HashMap<String, Integer> id2cluster;
 	public LinkedList<Document> recent;
 	public Parameters parameters = new Parameters();
-	public LinkedList<String> cleanClusterQueue = new LinkedList<String>();;
+	public LinkedList<String> cleanClusterQueue = null;
 	
 	public String tweetWithoutURL(String text)
 	{
@@ -172,7 +206,9 @@ public class GlobalData {
 	
 	public void flushClustersAll(PrintStream out, int minsize)
 	{
-		for (DocumentCluster c : clusters) {
+		for (int i : this.clusters.keySet()) {
+			DocumentCluster c = getClusterByIndex(i);
+			
 			if (c.size() >= minsize)
 				out.println(c.toString());
 		} 
@@ -182,32 +218,46 @@ public class GlobalData {
 	public void flushClusters(PrintStream out)
 	{
 		int counter = 0;
-		ArrayList<String> toRemove = new ArrayList<String>();
+		Set<Integer> todelete = new HashSet<Integer>();
+		
 		while (!cleanClusterQueue.isEmpty()) {
 			String docId = cleanClusterQueue.removeFirst(); //important since we add to the last
-			toRemove.add(docId);
-			
-			DocumentCluster cluster = id2cluster.get(docId);
+			int idx = clusterIndexByDoc(docId);
+			todelete.add(idx);
+		}
+		
+		ArrayList<String> marktoremove = new ArrayList<String>();
+		for (Integer idx : todelete) 
+		{
+			DocumentCluster cluster = getClusterByIndex(idx);
 			if (cluster == null) 
 				continue;
 			
-			out.println(cluster.toString());
+			boolean print = true;
+			if (cluster.size() < this.getParams().min_cluster_size)
+				print = false;
 			
-			/*for (String itemId : cluster.getIdList()) 
-			{
-				toRemove.add(itemId);
-			}*/
+			else if(cluster.entropy() < this.getParams().min_cluster_entropy )
+				print = false;
+			
+			if (print)
+				out.println(cluster.toString());
+
 			counter+=1;
-			id2cluster.remove(docId);
 			
+			this.clusters.remove(idx);
+			for (String id : this.id2cluster.keySet()) 
+			{
+				if (this.id2cluster.get(id) == idx)
+					marktoremove.add(id);
+			}
 		}
 		
-		/*
-		for (String id : toRemove) 
-		{
-			id2document.remove(id);
+		for (String id : marktoremove) {
+			this.id2cluster.remove(id);
 		}
-		*/
+		
+		
 		if (counter>0)
 			Session.getInstance().message(Session.INFO, "cleanClusters", "released "+counter+" clusters" );
 	}
@@ -221,17 +271,56 @@ public class GlobalData {
 		return words;
 	}
 
-	public HashMap<String, DocumentCluster> getId2Cluster() {
+	public HashMap<String, Integer> getId2Cluster() {
 		return id2cluster;
 	}
 
-	public ArrayList<DocumentCluster> getClusters()
+	/*private HashMap<Integer, DocumentCluster> getClusters()
 	{
 		return clusters;
+	}*/
+	
+	public void createCluster(Document doc)
+	{
+		DocumentCluster cluster = new DocumentCluster(doc);
+		
+		this.clusters.put(next_index, cluster);
+		this.id2cluster.put(doc.getId(), next_index);
+
+		next_index++;
+	}	
+	
+	public void mapToCluster(String leadId, Document doc)
+	{
+		int idx = clusterIndexByDoc(leadId);
+		this.id2cluster.put(doc.getId(), idx);
 	}
 
 	public Parameters getParams() {
 		return parameters;
+	}
+
+	public void markOldClusters(Document doc) 
+	{
+		int young = 0;
+		int old = 0;
+		for (int i : this.clusters.keySet()) 
+		{
+			DocumentCluster c = this.getClusterByIndex(i);
+			if (c.canAdd(doc))
+				young++;
+			else
+			{
+				this.cleanClusterQueue.add(c.leadId);
+				old++;
+			}
+		}
+		
+		int wait;
+		if (true)
+			wait = 0;
+		
+		Session.getInstance().message(Session.INFO, "markOldClusters", "marked " + old + " old clusters for cleanup");
 	}
 	
 }

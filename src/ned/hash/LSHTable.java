@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.List;
 
 import ned.types.Dict;
 import ned.types.Document;
@@ -78,11 +79,13 @@ public class LSHTable
     	for (int i = 0 ; i<hyperPlanesNumber; i++)
     	{
     		double tmp = 0;
-    		
-			for (Integer j : weights.keySet()) 
-    		{
-    			tmp += weights.get(j) * getHyperPlane(i).get(j);
-    		}
+    		//Samer: remove syncronized
+    		//synchronized (weights) {
+				for (Integer j : weights.keySet()) 
+	    		{
+	    			tmp += weights.get(j) * getHyperPlane(i).get(j);
+	    		}
+    		//}
 			session.message(Session.DEBUG, "GenerateHashCode", ""+ tmp);
 
     		st.append( tmp>=0 ? "1" : "0" );
@@ -92,7 +95,7 @@ public class LSHTable
         return st.toString();
     }
 
-    public LinkedList<Document> AddDocument(Document doc)
+    public List<String> AddDocument(Document doc)
     {
         String code = GenerateHashCode(doc);
         if (buckets.get(code) == null)
@@ -100,7 +103,7 @@ public class LSHTable
 
         buckets.get(code).Append(doc);
 
-        return buckets.get(code).getDocList();
+        return buckets.get(code).getDocIDsList(doc.getId());
     }
     
     public String toString() 
