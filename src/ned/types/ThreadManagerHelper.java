@@ -51,7 +51,7 @@ public class ThreadManagerHelper {
 			recentDist = (Double)candidate[1];
 			recentDoc = (Document)candidate[0];
 		}
-		if (nearest == null || dist>recentDist) 
+		if (nearest == null || (recentDist != null && dist>recentDist) )
 		{
 			nearest = recentDoc;
 			dist = recentDist;	

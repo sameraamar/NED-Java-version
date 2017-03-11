@@ -18,19 +18,18 @@ public class CleanupThread extends Thread {
 		GlobalData gd = GlobalData.getInstance();
 		while (true)
 		{
-			Set<Integer> list = null;
+			Set<String> list = null;
 			synchronized (this)
 			{
 				try {
 					this.wait();
 					
-					list = gd.prepareListBeforeRelease();
+					list = null;//gd.prepareListBeforeRelease();
 				} catch (InterruptedException e) {
 				}
 			}
 
-			if (list != null)
-				gd.flushClusters(out, list);
+			gd.flushClusters(out, list);
 		}
 	}
 	

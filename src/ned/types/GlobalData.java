@@ -18,13 +18,13 @@ import ned.modules.Twokenize;
 public class GlobalData {
 	public class Parameters 
 	{
-		public int lsh_forest_threads = 0; //put ZERO for single thread mode
+		public int lsh_forest_threads = 6; //put ZERO for single thread mode
 		public int inital_dimension = 50000;
 		public int print_limit = 2000;
 		public int number_of_tables = 60;
 		public int hyperplanes = 12;
 		public int max_bucket_size = 100;
-		public int max_documents = 100000;
+		public int max_documents = 500000;
 		public int max_thread_delta_time = 3600; //seconds
 		public int offset = 0;//8800000;
 		public int search_recents = 100;
@@ -45,7 +45,13 @@ public class GlobalData {
 	class Cluster 
 	{
 		DocumentCluster cluster;
-		ArrayList<Integer> documents;
+		ArrayList<String> documents;
+		
+		public Cluster(DocumentCluster cluster)
+		{
+			documents = new ArrayList<String>();
+			documents.add(cluster.leadId);
+		}
 	}
 	
 	private GlobalData()
@@ -55,33 +61,33 @@ public class GlobalData {
 		id2document = new HashMap<String , Document>();
 		numberOfDocsIncludeWord = new HashMap<Integer, Integer>();
 		cleanClusterQueue = new LinkedList<String>();
-		clusters = new HashMap<Integer, DocumentCluster>();
+		clusters = new HashMap<String, DocumentCluster>();
 		next_index = 0;
-		id2cluster = new HashMap<String, Integer>();
+		id2cluster = new HashMap<String, String>();
 	}
 	
 	public DocumentCluster clusterByDoc(String id)
 	{
-		Integer idx = id2cluster.get(id);
-		if (idx == null)
+		String leadId = id2cluster.get(id);
+		if (leadId == null)
 			return null;
 		
-		DocumentCluster c = clusters.get(idx);
+		DocumentCluster c = clusters.get(leadId);
 		return c;
 	}
 	
-	public int clusterIndexByDoc(String id)
+	/*public int clusterIndexByDoc(String id)
 	{
 		Integer idx = id2cluster.get(id);
 		if (idx == null)
 			return -1;
 		return idx.intValue();
-	}
+	}*/
 	
-	private DocumentCluster getClusterByIndex(int index) 
+	/*private DocumentCluster getClusterByIndex(int index) 
 	{
 		return this.clusters.get(index);
-	}
+	}*/
 	
 	public int clustersSize()
 	{
@@ -181,9 +187,9 @@ public class GlobalData {
 	public HashMap<Integer, String>    index2word;
 	public HashMap<String, Document>   id2document;
 	public HashMap<Integer, Integer>   numberOfDocsIncludeWord;
-	public HashMap<Integer, DocumentCluster>  clusters;
+	public HashMap<String, DocumentCluster>  clusters;
 	int next_index;
-	public HashMap<String, Integer> id2cluster;
+	public HashMap<String, String> id2cluster;
 	public LinkedList<Document> recent;
 	public Parameters parameters = new Parameters();
 	public LinkedList<String> cleanClusterQueue = null;
@@ -210,32 +216,32 @@ public class GlobalData {
 		return tweetWithoutHashtagAndUrl;
 	}
 	
-	public void flushClustersAll(PrintStream out, int minsize)
+	/*public void flushClustersAll(PrintStream out, int minsize)
 	{
-		for (int i : this.clusters.keySet()) {
-			DocumentCluster c = getClusterByIndex(i);
+		for (String leadId : this.clusters.keySet()) {
+			DocumentCluster c = clusterByDoc(leadId);
 			
 			if (c.size() >= minsize)
 				out.println(c.toString());
 		} 
-		//flushClusters(out, false);
-	}
+	}*/
 	
 	public void flushClusters(PrintStream out)
 	{
 		flushClusters(out, null);
 	}
 	
-	public void flushClusters(PrintStream out, Set<Integer> todelete)
+	public void flushClusters(PrintStream out, Set<String> todelete)
 	{
 		int counter = 0;
 		if (todelete == null)
 			todelete = prepareListBeforeRelease();
 		
+		
 		ArrayList<String> marktoremove = new ArrayList<String>();
-		for (Integer idx : todelete) 
+		for (String leadId : todelete) 
 		{
-			DocumentCluster cluster = getClusterByIndex(idx);
+			DocumentCluster cluster = clusterByDoc(leadId);
 			if (cluster == null) 
 				continue;
 			
@@ -251,11 +257,10 @@ public class GlobalData {
 
 			counter+=1;
 			
-			this.clusters.remove(idx);
-			for (String id : this.id2cluster.keySet()) 
+			this.clusters.remove(leadId);
+			for (String id : cluster.getIdList()) 
 			{
-				if (this.id2cluster.get(id) == idx)
-					marktoremove.add(id);
+				marktoremove.add(id);
 			}
 		}
 		
@@ -268,12 +273,12 @@ public class GlobalData {
 			Session.getInstance().message(Session.INFO, "cleanClusters", "released "+counter+" clusters" );
 	}
 
-	public Set<Integer> prepareListBeforeRelease() {
-		Set<Integer> todelete = new HashSet<Integer>();
+	public Set<String> prepareListBeforeRelease() {
+		Set<String> todelete = new HashSet<String>();
 		while (!cleanClusterQueue.isEmpty()) {
 			String docId = cleanClusterQueue.removeFirst(); 
-			int idx = clusterIndexByDoc(docId);
-			todelete.add(idx);
+			String leadId = clusterByDoc(docId).leadId;
+			todelete.add(leadId);
 		}
 		return todelete;
 	}
@@ -287,7 +292,7 @@ public class GlobalData {
 		return words;
 	}
 
-	public HashMap<String, Integer> getId2Cluster() {
+	public HashMap<String, String> getId2Cluster() {
 		return id2cluster;
 	}
 
@@ -300,16 +305,20 @@ public class GlobalData {
 	{
 		DocumentCluster cluster = new DocumentCluster(doc);
 		
-		this.clusters.put(next_index, cluster);
-		this.id2cluster.put(doc.getId(), next_index);
+		this.clusters.put(doc.getId(), cluster);
+		this.id2cluster.put(doc.getId(), doc.getId());
+		
+		//this.clusters.put(next_index, cluster);
+		//this.id2cluster.put(doc.getId(), next_index);
 
-		next_index++;
+		//next_index++;
 	}	
 	
 	public void mapToCluster(String leadId, Document doc)
 	{
-		int idx = clusterIndexByDoc(leadId);
-		this.id2cluster.put(doc.getId(), idx);
+		//int idx = clusterIndexByDoc(leadId);
+		//this.id2cluster.put(doc.getId(), idx);
+		this.id2cluster.put(doc.getId(), leadId);
 	}
 
 	public Parameters getParams() {
@@ -320,9 +329,9 @@ public class GlobalData {
 	{
 		int young = 0;
 		int old = 0;
-		for (int i : this.clusters.keySet()) 
+		for (String leadId : this.clusters.keySet()) 
 		{
-			DocumentCluster c = this.getClusterByIndex(i);
+			DocumentCluster c = this.clusterByDoc(leadId);
 			if (c.canAdd(doc))
 				young++;
 			else

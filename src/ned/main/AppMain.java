@@ -179,7 +179,6 @@ public class AppMain {
 				}
 				
 				JsonObject jsonObj = jsonParser.parse(line).getAsJsonObject();
-				//Gson gson = new GsonBuilder().create();
 				String text = jsonObj.get("text").getAsString();
 				String id = jsonObj.get("id_str").getAsString();
 				String created_at = jsonObj.get("created_at").getAsString();
@@ -250,14 +249,15 @@ public class AppMain {
             		middletime = System.nanoTime();
             		middle_processed = 0;
             		*/
+	            	
+            		middletime = System.nanoTime();
+            		middle_processed = 0;
+	            	
 	            	if (processed % (15*gd.getParams().print_limit) == 0)
 	            	{
 	            		Session.getInstance().message(Session.INFO, "Reader", "doing some cleanup...");
 	            		gd.markOldClusters(doc);
 	            		gd.flushClusters(out);
-	            		//System.gc();
-	            		middletime = System.nanoTime();
-	            		middle_processed = 0;
 	            	}
 	            }
 	            
@@ -274,7 +274,7 @@ public class AppMain {
 
 		//ThreadManagerHelper.pprint(out);
 		
-		gd.flushClustersAll(out, 2);
+		gd.flushClusters(out);
 		
 		out.close();
 
