@@ -48,9 +48,19 @@ public class LSHForestThreads extends Thread {
 	@Override 
 	public void run()
 	{
+		try {
+			doRun();
+		} catch(Throwable thr) {
+			thr.printStackTrace();
+		}
+		System.out.println("Thread is going down");
+	}
+	public void doRun()
+	{
+		
+		System.out.println("Thread started!");
 		while (true)
 		{
-			System.out.println("Thread started!");
 			synchronized (queueIn) 
 			{
 				try {
@@ -60,14 +70,20 @@ public class LSHForestThreads extends Thread {
 			}
 			
 			Document doc = queueIn.poll();
-			List<String> list = this.lshForest.AddDocument(doc);
-				
-			synchronized (queueOut) 
-			{
-				queueOut.add(list);
-				queueOut.notify();
-			} 
-			
+			if (doc != null)
+			{			
+				List<String> list = this.lshForest.AddDocument(doc);
+					
+				synchronized (queueOut) 
+				{
+					queueOut.add(list);
+					queueOut.notify();
+				} 
+			}			
 		}
+		
+		
 	}
+	
+	
 }

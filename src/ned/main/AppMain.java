@@ -28,28 +28,46 @@ import ned.types.Utility;
 
 public class AppMain {
 
-	
+	public static int checkThreads(Thread[] list)
+	{
+		int count =0 ;
+		
+		for (int i = 0 ; i <list.length; i++)
+		{
+			if (list[i].isAlive())
+				count++;
+		}
+		
+		return count;
+	}
 	public static void main(String[] args) throws IOException {
 		GlobalData gd = GlobalData.getInstance();
+		boolean multi_thread = gd.getParams().lsh_forest_threads > 1;
 		
-		
-		/*LSHForestThreads[] forest = new LSHForestThreads[ gd.getParams().lsh_forest_threads ];
-		for(int k = 0; k<forest.length; k++) 
+		LSHForest forest1 = null;
+		LSHForestThreads[] forest2 = null;
+		if (multi_thread)
 		{
-			forest[k] = new LSHForestThreads(gd.getParams().number_of_tables,
+			forest2 = new LSHForestThreads[ gd.getParams().lsh_forest_threads ];
+			int split = gd.getParams().number_of_tables / gd.getParams().lsh_forest_threads;
+			for(int k = 0; k<forest2.length; k++) 
+			{
+				forest2[k] = new LSHForestThreads(split,
+					 gd.getParams().hyperplanes, 
+					 gd.getParams().inital_dimension, 
+					 gd.getParams().max_bucket_size);
+				
+				forest2[k].setDaemon(true);
+				forest2[k].start();
+			}
+		}
+		else
+		{
+			forest1 = new LSHForest(gd.getParams().number_of_tables, 
 				 gd.getParams().hyperplanes, 
 				 gd.getParams().inital_dimension, 
 				 gd.getParams().max_bucket_size);
-			
-			forest[k].setDaemon(true);
-			forest[k].start();
-		}*/
-		
-		LSHForest forest = new LSHForest(gd.getParams().number_of_tables, 
-				 gd.getParams().hyperplanes, 
-				 gd.getParams().inital_dimension, 
-				 gd.getParams().max_bucket_size);
-
+		}
 		
 		
 		String folder = "C:\\data\\events_db\\petrovic";
@@ -131,6 +149,11 @@ public class AppMain {
 		PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 		
 		printParameters(out);
+
+
+		//CleanupThread thread = new CleanupThread(out);
+		//threadsFileName.isDaemon(true);
+		//thread.start();
 		
 		int offset = gd.getParams().offset;
 		int offset_p = (int)(offset * 0.05);
@@ -161,6 +184,7 @@ public class AppMain {
 				String id = jsonObj.get("id_str").getAsString();
 				String created_at = jsonObj.get("created_at").getAsString();
 				long timestamp = jsonObj.get("timestamp").getAsLong();
+				
 				if (firsttweet == 0)
 					firsttweet = timestamp;
 				lasttweet = timestamp;
@@ -169,21 +193,25 @@ public class AppMain {
 	            doc.setCreatedAt(created_at);
 	        	Dict weights = doc.getWeights();
 
-	        	List<String> set = forest.AddDocument(doc);
-	        	
-	            /*for (int k=0; k<forest.length; k++)
-	            	forest[k].addDocumentRequest(doc);
-	            
-	            List<String> set = null;
-	            for (int k=0; k<forest.length; k++)
-	            {
-	            	List<String> set1 = forest[k].addDocumentResponse();
-	            	if (set == null)
-	            		set = set1;
-	            	else
-	            		set.addAll(set1);
-	            }*/
-	            
+	        	List<String> set;
+	        	if (multi_thread)
+	        	{
+		            for (int k=0; k<forest2.length; k++)
+		            	forest2[k].addDocumentRequest(doc);
+		            
+		            set = null;
+		            for (int k=0; k<forest2.length; k++)
+		            {
+		            	List<String> set1 = forest2[k].addDocumentResponse();
+		            	if (set == null)
+		            		set = set1;
+		            	else
+		            		set.addAll(set1);
+		            }
+	        	}
+	        	else
+		        	set = forest1.AddDocument(doc);
+
 	            ThreadManagerHelper.afterLSHMapping(doc, set);
 	            
 	            processed ++;
@@ -209,13 +237,24 @@ public class AppMain {
 	            	msg.append("(overall AHT: ").append(average1).append(" ms). ");
 	            	msg.append("(AHT: ").append(average2).append(" ms). ");
 	            	msg.append("Cursor: ").append(id);
+	            	if (multi_thread)
+	            		msg.append(" #threads: ").append(checkThreads(forest2));
+	            	
 	            	Session.getInstance().message(Session.INFO, "Reader", msg.toString());
 	            	
+            		/*Session.getInstance().message(Session.INFO, "Reader", "doing some cleanup...");
+	            	gd.markOldClusters(doc);
+	            	synchronized(thread) {
+	            		thread.notify();
+	            	}
+            		middletime = System.nanoTime();
+            		middle_processed = 0;
+            		*/
 	            	if (processed % (15*gd.getParams().print_limit) == 0)
 	            	{
 	            		Session.getInstance().message(Session.INFO, "Reader", "doing some cleanup...");
 	            		gd.markOldClusters(doc);
-	            		//gd.flushClusters(out);
+	            		gd.flushClusters(out);
 	            		//System.gc();
 	            		middletime = System.nanoTime();
 	            		middle_processed = 0;

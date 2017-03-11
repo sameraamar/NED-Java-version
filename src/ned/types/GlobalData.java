@@ -18,19 +18,19 @@ import ned.modules.Twokenize;
 public class GlobalData {
 	public class Parameters 
 	{
-		public int lsh_forest_threads = 10;
+		public int lsh_forest_threads = 0; //put ZERO for single thread mode
 		public int inital_dimension = 50000;
 		public int print_limit = 2000;
-		public int number_of_tables = 50;
-		public int hyperplanes = 5;
+		public int number_of_tables = 60;
+		public int hyperplanes = 12;
 		public int max_bucket_size = 100;
 		public int max_documents = 100000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 0; //8800000;
+		public int offset = 0;//8800000;
 		public int search_recents = 100;
 		public double threshold = 0.6;
-		public double min_cluster_entropy = 0.0;
-		public double min_cluster_size = 0;
+		public double min_cluster_entropy = 0.95;
+		public double min_cluster_size = 3;
 	}
 	
 	private static GlobalData globalData = null;
@@ -40,6 +40,12 @@ public class GlobalData {
 			globalData = new GlobalData();
 		
 		return globalData;
+	}
+	
+	class Cluster 
+	{
+		DocumentCluster cluster;
+		ArrayList<Integer> documents;
 	}
 	
 	private GlobalData()
@@ -217,14 +223,14 @@ public class GlobalData {
 	
 	public void flushClusters(PrintStream out)
 	{
+		flushClusters(out, null);
+	}
+	
+	public void flushClusters(PrintStream out, Set<Integer> todelete)
+	{
 		int counter = 0;
-		Set<Integer> todelete = new HashSet<Integer>();
-		
-		while (!cleanClusterQueue.isEmpty()) {
-			String docId = cleanClusterQueue.removeFirst(); //important since we add to the last
-			int idx = clusterIndexByDoc(docId);
-			todelete.add(idx);
-		}
+		if (todelete == null)
+			todelete = prepareListBeforeRelease();
 		
 		ArrayList<String> marktoremove = new ArrayList<String>();
 		for (Integer idx : todelete) 
@@ -260,6 +266,16 @@ public class GlobalData {
 		
 		if (counter>0)
 			Session.getInstance().message(Session.INFO, "cleanClusters", "released "+counter+" clusters" );
+	}
+
+	public Set<Integer> prepareListBeforeRelease() {
+		Set<Integer> todelete = new HashSet<Integer>();
+		while (!cleanClusterQueue.isEmpty()) {
+			String docId = cleanClusterQueue.removeFirst(); 
+			int idx = clusterIndexByDoc(docId);
+			todelete.add(idx);
+		}
+		return todelete;
 	}
 	
 	public String[] identifyWords(String text) {
