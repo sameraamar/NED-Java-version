@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 import ned.types.Document;
 
@@ -97,6 +96,10 @@ public class LSHForest {
 	
 	public int getTablesNumber() {
 		return numberOfTables;
+	}
+
+	public int getDimension() {
+		return this.tables[0].getDimension();
 	}
 
 }

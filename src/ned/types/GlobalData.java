@@ -2,35 +2,33 @@ package ned.types;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import ned.modules.Twokenize;
-
-
 
 public class GlobalData {
 	public class Parameters 
 	{
-		public int lsh_forest_threads = 6; //put ZERO for single thread mode
-		public int inital_dimension = 50000;
-		public int print_limit = 2000;
-		public int number_of_tables = 60;
-		public int hyperplanes = 12;
-		public int max_bucket_size = 100;
-		public int max_documents = 500000;
+		public int number_of_threads = 200;
+		public int print_limit = 5000;
+		public int number_of_tables = 70;
+		public int hyperplanes = 10;
+		public int max_bucket_size = 300;
+		public int max_documents = 100000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 0;//8800000;
-		public int search_recents = 100;
+		public int offset = 8800000;
+		public int search_recents = 200;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.95;
 		public double min_cluster_size = 3;
+		public int inital_dimension = 1000000;
+		public int dimension_jumps = 20000;
 	}
 	
 	private static GlobalData globalData = null;
@@ -56,14 +54,14 @@ public class GlobalData {
 	
 	private GlobalData()
 	{	
-		word2index  = new HashMap<String , Integer>();
-		index2word  = new HashMap<Integer, String>();
-		id2document = new HashMap<String , Document>();
-		numberOfDocsIncludeWord = new HashMap<Integer, Integer>();
+		word2index  = new Hashtable<String , Integer>();
+		index2word  = new Hashtable<Integer, String>();
+		id2document = new Hashtable<String , Document>();
+		numberOfDocsIncludeWord = new Hashtable<Integer, Integer>();
 		cleanClusterQueue = new LinkedList<String>();
-		clusters = new HashMap<String, DocumentCluster>();
+		clusters = new Hashtable<String, DocumentCluster>();
 		next_index = 0;
-		id2cluster = new HashMap<String, String>();
+		id2cluster = new Hashtable<String, String>();
 	}
 	
 	public DocumentCluster clusterByDoc(String id)
@@ -94,10 +92,10 @@ public class GlobalData {
 		return this.clusters.size();
 	}
 	
-	public void calcWeights(Document doc, Dict weights) 
+	public void calcWeights(Document doc, Hashtable<Integer, Double> weights) 
 	{		
 		
-		Dict wordCount = doc.getWordCount();
+		Hashtable<Integer, Integer> wordCount = doc.getWordCount();
 		
 		int Dt_size = id2document.size();
 		
@@ -115,15 +113,15 @@ public class GlobalData {
 		
 	}
 	
-	private int wordCounts(String[] strings, Dict d)
+	private int wordCounts(String[] strings, Hashtable<Integer, Integer> d)
 	{
 		int max_idx = addWords(strings);
 		
 		for (String w : strings) 
 		{
 			int idx = word2index.get(w);
-			Double val = d.getOrDefault(idx,  0.0);
-			val += 1.0;
+			int val = d.getOrDefault(idx,  0);
+			val += 1;
 			d.put(idx, val);
 		}
 		
@@ -176,21 +174,22 @@ public class GlobalData {
 	
 	private void addToRecent(Document doc) {
 		if (this.recent == null)
-			this.recent = new LinkedList<Document>();
-		
-		this.recent.addLast(doc);
+		{
+			this.recent = (List<Document>) Collections.synchronizedList(new ArrayList<Document>()); //new LinkedList<Document>();
+		}
+		this.recent.add(doc);
 		if (this.recent.size() > this.parameters.search_recents)
-			this.recent.removeFirst();
+			this.recent.remove(0);
 	}
 	
-	public HashMap<String, Integer>    word2index;
-	public HashMap<Integer, String>    index2word;
-	public HashMap<String, Document>   id2document;
-	public HashMap<Integer, Integer>   numberOfDocsIncludeWord;
-	public HashMap<String, DocumentCluster>  clusters;
+	public Hashtable<String, Integer>    word2index;
+	public Hashtable<Integer, String>    index2word;
+	public Hashtable<String, Document>   id2document;
+	public Hashtable<Integer, Integer>   numberOfDocsIncludeWord;
+	public Hashtable<String, DocumentCluster>  clusters;
 	int next_index;
-	public HashMap<String, String> id2cluster;
-	public LinkedList<Document> recent;
+	public Hashtable<String, String> id2cluster;
+	public List<Document> recent;
 	public Parameters parameters = new Parameters();
 	public LinkedList<String> cleanClusterQueue = null;
 	
@@ -216,15 +215,22 @@ public class GlobalData {
 		return tweetWithoutHashtagAndUrl;
 	}
 	
-	/*public void flushClustersAll(PrintStream out, int minsize)
+	public void flushClustersAll(PrintStream out)
 	{
 		for (String leadId : this.clusters.keySet()) {
 			DocumentCluster c = clusterByDoc(leadId);
 			
-			if (c.size() >= minsize)
+			boolean print = true;
+			if (c.size() < this.getParams().min_cluster_size)
+				print = false;
+			
+			else if(c.entropy() < this.getParams().min_cluster_entropy )
+				print = false;
+			
+			if (print)
 				out.println(c.toString());
 		} 
-	}*/
+	}
 	
 	public void flushClusters(PrintStream out)
 	{
@@ -239,6 +245,7 @@ public class GlobalData {
 		
 		
 		ArrayList<String> marktoremove = new ArrayList<String>();
+		int countDocs = 0;
 		for (String leadId : todelete) 
 		{
 			DocumentCluster cluster = clusterByDoc(leadId);
@@ -266,11 +273,13 @@ public class GlobalData {
 		
 		for (String id : marktoremove) {
 			this.id2cluster.remove(id);
+			this.id2document.remove(id);
+			countDocs++;
 		}
 		
 		
 		if (counter>0)
-			Session.getInstance().message(Session.INFO, "cleanClusters", "released "+counter+" clusters" );
+			Session.getInstance().message(Session.INFO, "cleanClusters", "released "+counter+" clusters (" + countDocs + " docs)" );
 	}
 
 	public Set<String> prepareListBeforeRelease() {
@@ -292,7 +301,7 @@ public class GlobalData {
 		return words;
 	}
 
-	public HashMap<String, String> getId2Cluster() {
+	public Hashtable<String, String> getId2Cluster() {
 		return id2cluster;
 	}
 
@@ -329,10 +338,14 @@ public class GlobalData {
 	{
 		int young = 0;
 		int old = 0;
-		for (String leadId : this.clusters.keySet()) 
+		
+		Enumeration<DocumentCluster> enumerator = clusters.elements();
+		
+		while(enumerator.hasMoreElements())
+		//for (String leadId : this.clusters.keySet()) 
 		{
-			DocumentCluster c = this.clusterByDoc(leadId);
-			if (c.canAdd(doc))
+			DocumentCluster c = enumerator.nextElement(); //this.clusterByDoc(leadId);
+			if (c.isOpen(doc))
 				young++;
 			else
 			{
@@ -345,7 +358,8 @@ public class GlobalData {
 		if (true)
 			wait = 0;
 		
-		Session.getInstance().message(Session.INFO, "markOldClusters", "marked " + old + " old clusters for cleanup");
+		if (old>0)
+			Session.getInstance().message(Session.INFO, "markOldClusters", "marked " + old + " old clusters for cleanup");
 	}
 	
 }

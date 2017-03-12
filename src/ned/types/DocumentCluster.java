@@ -1,24 +1,28 @@
 package ned.types;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.Hashtable;
+import java.util.List;
 
 public class DocumentCluster {
-	private ArrayList<String> idList;
-	private ArrayList<String> neighbor;
-	private ArrayList<Double> distance;
+	private List<String> idList;
+	private List<String> neighbor;
+	private List<Double> distance;
 	String leadId;
 	private long starttime;
+	private long lasttime;
 	private double entropy;
 	
 	public DocumentCluster(Document leadDocument)
 	{
-		this.idList = new ArrayList<String>();
-		this.neighbor = new ArrayList<String>();
-		this.distance = new ArrayList<Double>();
+		this.idList = (List<String>) Collections.synchronizedList(new ArrayList<String>()); //new ArrayList<String>();
+		this.neighbor = (List<String>) Collections.synchronizedList(new ArrayList<String>()); //new ArrayList<String>();
+		this.distance = (List<Double>) Collections.synchronizedList(new ArrayList<Double>()); //new ArrayList<Double>();
 		this.leadId = leadDocument.getId();
 		this.starttime = leadDocument.getTimestamp();
+		this.lasttime  = leadDocument.getTimestamp();
 		entropy = -1;
 		addDocument(leadDocument, null, null); //Double.MAX_VALUE);
 	}
@@ -32,6 +36,8 @@ public class DocumentCluster {
 	public void addDocument(Document doc, Document myNeighbor, Double distance) 
 	{
 		this.idList.add(doc.getId());
+		this.lasttime = doc.getTimestamp();
+		
 		String id = null;
 		if (myNeighbor != null)
 		{
@@ -45,8 +51,17 @@ public class DocumentCluster {
 		
 		entropy = -1;
 	}
+	
+	public boolean isOpen(Document doc)
+	{
+		long delta = doc.getTimestamp() - this.starttime ;
+		if (delta > GlobalData.getInstance().getParams().max_thread_delta_time)
+			return false;
+				
+		return true;
+	}
 
-	public boolean canAdd(Document doc) {
+	/*public boolean canAdd(Document doc) {
 		long timestamp = doc.getTimestamp();
 		
 		long delta = timestamp - this.starttime ;
@@ -55,7 +70,7 @@ public class DocumentCluster {
 			return false;
 				
 		return true;
-	}
+	}*/
 	
 	public String toString()
 	{
@@ -76,14 +91,17 @@ public class DocumentCluster {
 		for (int i =0; i<this.idList.size(); i++)
 		{
 			String leadId = idList.get(i);
-			String nId = this.neighbor.get(i);
 			
+			String nId = this.neighbor.get(i);
 			sb.append(leadId).append("\t").append(nId).append("\t").append(this.distance.get(i));
 			
 			Document leadDoc = gd.id2document.get( leadId );
 			sb.append("\t").append( leadDoc.getCleanText() );
 
-			Document nDoc = gd.id2document.get(nId);
+			Document nDoc = null;
+			if(i>0) { //this is placeholder for the lead - skip
+				nDoc = gd.id2document.get(nId);
+			}
 			String text = nDoc == null ? "NA" : nDoc.getCleanText();
 			sb.append("\t").append(text);
 			sb.append("\n");
@@ -105,7 +123,7 @@ public class DocumentCluster {
 		{
 			Document doc = gd.id2document.get(id);
 
-			Dict tmp = doc.getWordCount();
+			Hashtable<Integer, Integer> tmp = doc.getWordCount();
 			for (Integer i : tmp.keySet())
 			{
 				int count = wordcount.getOrDefault(i, 0); 
@@ -146,7 +164,7 @@ public class DocumentCluster {
 		return this.idList.size();
 	}
 	
-	public ArrayList<String> getIdList()
+	public List<String> getIdList()
 	{
 		return idList;
 	}

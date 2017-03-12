@@ -1,14 +1,14 @@
 package ned.types;
 
-import java.util.List;
+import java.util.Enumeration;
 
 public class Document {
     private double cacheNorm;
     private String id;
     private String text ;
     private String[] words;
-    private Dict weights ;
-    private Dict wordCount ;
+    private java.util.Hashtable<Integer, Double> weights ;
+    private java.util.Hashtable<Integer, Integer> wordCount ;
     private int dimension;
     
     public int max_idx;
@@ -28,13 +28,17 @@ public class Document {
         this.cleanText = String.join(" ", words);
     }
 
-    public double Norm()
+    synchronized public double Norm()
     {
         if (cacheNorm >= 0)
             return cacheNorm;
 
         double res = 0;
-        for (double v : getWeights().values()) {
+        Enumeration<Double> values = getWeights().elements();
+        
+        while(values.hasMoreElements())
+        {
+			double v = values.nextElement();
             res += v * v;
         }
 
@@ -56,7 +60,13 @@ public class Document {
         }
 
         double dot = 0.0;
-        for (Integer key : right.getWeights().keySet()) {
+        
+        //right.getWeights().keySet().retainAll(left.getWeights().keySet())
+        
+        Enumeration<Integer> keys = right.getWeights().keys();
+        while( keys.hasMoreElements() )
+        {
+        	Integer key = keys.nextElement();
 			if (left.getWeights().containsKey(key))
             {
                 dot += right.getWeights().get(key) * left.getWeights().get(key);
@@ -80,14 +90,19 @@ public class Document {
 		return text;
 	}
 
-	public Dict getWeights() {
+	public java.util.Hashtable<Integer, Double> getWeights() {
 		if (weights == null) 
 		{
-			weights = new Dict();
-			
-			GlobalData gd = GlobalData.getInstance();
-			gd.addDocument(this);
-			gd.calcWeights(this, weights);
+			synchronized(this) {
+				if (weights!=null) //some other process already handlde
+					return weights;
+				
+				weights = new java.util.Hashtable<Integer, Double>();
+				
+				GlobalData gd = GlobalData.getInstance();
+				gd.addDocument(this);
+				gd.calcWeights(this, weights);
+			}
 		}
 		return weights;
 	}
@@ -104,14 +119,14 @@ public class Document {
 		return dimension;
 	}
 
-	Dict getWordCount() {
+	java.util.Hashtable<Integer, Integer> getWordCount() {
 		if (wordCount == null)
-			wordCount = new Dict();
+			wordCount = new java.util.Hashtable<Integer, Integer>();
 		
 		return wordCount;
 	}
 
-	void setWordCount(Dict wordCount) {
+	void setWordCount(java.util.Hashtable<Integer, Integer> wordCount) {
 		this.wordCount = wordCount;
 	}
 

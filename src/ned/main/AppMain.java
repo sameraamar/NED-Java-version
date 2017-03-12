@@ -7,23 +7,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
+import ned.hash.DocumentHandler;
 import ned.hash.LSHForest;
-import ned.hash.LSHForestThreads;
-import ned.types.Dict;
 import ned.types.Document;
 import ned.types.GlobalData;
 import ned.types.Session;
-import ned.types.ThreadManagerHelper;
 import ned.types.Utility;
 
 public class AppMain {
@@ -42,33 +34,12 @@ public class AppMain {
 	}
 	public static void main(String[] args) throws IOException {
 		GlobalData gd = GlobalData.getInstance();
-		boolean multi_thread = gd.getParams().lsh_forest_threads > 1;
 		
-		LSHForest forest1 = null;
-		LSHForestThreads[] forest2 = null;
-		if (multi_thread)
-		{
-			forest2 = new LSHForestThreads[ gd.getParams().lsh_forest_threads ];
-			int split = gd.getParams().number_of_tables / gd.getParams().lsh_forest_threads;
-			for(int k = 0; k<forest2.length; k++) 
-			{
-				forest2[k] = new LSHForestThreads(split,
-					 gd.getParams().hyperplanes, 
-					 gd.getParams().inital_dimension, 
-					 gd.getParams().max_bucket_size);
-				
-				forest2[k].setDaemon(true);
-				forest2[k].start();
-			}
-		}
-		else
-		{
-			forest1 = new LSHForest(gd.getParams().number_of_tables, 
+		LSHForest forest = null;
+		forest = new LSHForest(gd.getParams().number_of_tables, 
 				 gd.getParams().hyperplanes, 
 				 gd.getParams().inital_dimension, 
-				 gd.getParams().max_bucket_size);
-		}
-		
+				 gd.getParams().max_bucket_size);		
 		
 		String folder = "C:\\data\\events_db\\petrovic";
 		String[] files = {"petrovic_00000000.gz",
@@ -134,7 +105,6 @@ public class AppMain {
 	                   };
 		//files = new String[] {"test.json.gz"};
 
-		JsonParser jsonParser = new JsonParser();
 
 		int processed = 0;
 		int middle_processed = 0;
@@ -142,8 +112,8 @@ public class AppMain {
 		boolean stop = false;
 		long base = System.nanoTime();
 		long middletime = base; 
-		long firsttweet = 0;
-		long lasttweet;
+		long firstdoc = 0;
+		long lastdoc;
 
 		String threadsFileName = "c:/temp/threads.txt";
 		PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
@@ -169,6 +139,7 @@ public class AppMain {
 			while(!stop && line != null)
 	        {
 				cursor += 1;
+				
 				if (cursor <= offset)
 				{
 					if (cursor % offset_p == 0)
@@ -178,41 +149,15 @@ public class AppMain {
 					continue;
 				}
 				
-				JsonObject jsonObj = jsonParser.parse(line).getAsJsonObject();
-				String text = jsonObj.get("text").getAsString();
-				String id = jsonObj.get("id_str").getAsString();
-				String created_at = jsonObj.get("created_at").getAsString();
-				long timestamp = jsonObj.get("timestamp").getAsLong();
+				Document doc = DocumentHandler.preprocessor(line);
+				if (firstdoc == 0)
+					firstdoc = doc.getTimestamp();
 				
-				if (firsttweet == 0)
-					firsttweet = timestamp;
-				lasttweet = timestamp;
+				lastdoc = doc.getTimestamp();
 				
-	            Document doc = new Document(id, text, timestamp); //id == "94816822100099073" is for Amy Winhouse event
-	            doc.setCreatedAt(created_at);
-	        	Dict weights = doc.getWeights();
+				DocumentHandler.process(forest, doc);
+				//GlobalData.releaseOldDocuments();
 
-	        	List<String> set;
-	        	if (multi_thread)
-	        	{
-		            for (int k=0; k<forest2.length; k++)
-		            	forest2[k].addDocumentRequest(doc);
-		            
-		            set = null;
-		            for (int k=0; k<forest2.length; k++)
-		            {
-		            	List<String> set1 = forest2[k].addDocumentResponse();
-		            	if (set == null)
-		            		set = set1;
-		            	else
-		            		set.addAll(set1);
-		            }
-	        	}
-	        	else
-		        	set = forest1.AddDocument(doc);
-
-	            ThreadManagerHelper.afterLSHMapping(doc, set);
-	            
 	            processed ++;
 	            middle_processed++;
 	            
@@ -226,7 +171,7 @@ public class AppMain {
 	            	double average2 = 1.0 * TimeUnit.NANOSECONDS.toMillis(tmp) / middle_processed;
 	            	average2 = Math.round(100.0 * average2) / 100.0;
 	            	
-	            	long reportedtime = lasttweet - firsttweet;
+	            	long reportedtime = lastdoc - firstdoc;
 	            	
 	            	StringBuffer msg = new StringBuffer();
 	            	msg.append( "Processed " ).append ( processed ).append(" docs. ");
@@ -235,9 +180,8 @@ public class AppMain {
 	            	msg.append("[reported ").append( Utility.humanTime( reportedtime ) ).append("]. ");
 	            	msg.append("(overall AHT: ").append(average1).append(" ms). ");
 	            	msg.append("(AHT: ").append(average2).append(" ms). ");
-	            	msg.append("Cursor: ").append(id);
-	            	if (multi_thread)
-	            		msg.append(" #threads: ").append(checkThreads(forest2));
+	            	msg.append("Cursor: ").append(doc.getId());
+	            	msg.append("Dim: ").append( forest.getDimension() );
 	            	
 	            	Session.getInstance().message(Session.INFO, "Reader", msg.toString());
 	            	
@@ -258,6 +202,7 @@ public class AppMain {
 	            		Session.getInstance().message(Session.INFO, "Reader", "doing some cleanup...");
 	            		gd.markOldClusters(doc);
 	            		gd.flushClusters(out);
+	            		System.gc();
 	            	}
 	            }
 	            
@@ -274,7 +219,7 @@ public class AppMain {
 
 		//ThreadManagerHelper.pprint(out);
 		
-		gd.flushClusters(out);
+		gd.flushClustersAll(out);
 		
 		out.close();
 

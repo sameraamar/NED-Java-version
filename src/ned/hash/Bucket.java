@@ -1,53 +1,54 @@
 package ned.hash;
 
-import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import ned.types.Document;
 
 public class Bucket
 {
-    private LinkedList<Document> docList = new LinkedList<Document>();
-
-    public int maxBucketSize ;
-
+	private Hashtable<String, Document> documents;
+	private ConcurrentLinkedQueue<String> queue;
+    private int maxBucketSize ;
 
     public Bucket(int maxBucketSize)
     {
         this.maxBucketSize = maxBucketSize;
+        documents = new Hashtable<String, Document>();
+        queue = new ConcurrentLinkedQueue<String>();
     }
 
-    public void Append(Document doc)
+    synchronized public void Append(Document doc)
     {
-        getDocList().addLast(doc);
-        if (getCount() > maxBucketSize)
+    	String id = doc.getId();
+        documents.put(id, doc);
+        queue.add(id);
+        
+        if (queue.size() > maxBucketSize)
         {
-            getDocList().removeFirst();
+        	id = queue.poll();
+            documents.remove(id);
         }
     }
 
     public String toString() 
     {
-    	return docList.toString();
+    	return documents.toString();
     }
-    
-	public int getCount() {
-		return (getDocList().size());
-	}
-
-	public LinkedList<Document> getDocList() {
-		return docList;
-	}
 	
 	public List<String> getDocIDsList(String excludeId) {
-		List<String> list = new ArrayList<String>();
-		for (Document doc : docList) {
-			if (excludeId.equals(doc.getId()))
-					continue;
-			
-			list.add(doc.getId());
-		}
+		Object[] ids = queue.toArray();
+		
+		List<String> list = new LinkedList<String>();
+		for (Object id : ids) {
+			if (excludeId.equals(id))
+				continue;
+		
+			list.add((String)id);
+		} 
+
 		return list;
 	}
 

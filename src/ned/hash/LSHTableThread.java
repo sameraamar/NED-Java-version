@@ -2,7 +2,6 @@ package ned.hash;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
 import ned.types.Document;
 
 public class LSHTableThread extends Thread 

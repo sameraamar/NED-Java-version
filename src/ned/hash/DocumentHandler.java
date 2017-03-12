@@ -1,0 +1,138 @@
+package ned.hash;
+
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import ned.types.Document;
+import ned.types.GlobalData;
+import ned.types.Session;
+import ned.types.ThreadManagerHelper;
+
+public class DocumentHandler extends Thread {
+	private static LinkedList<DocumentHandler>  list;
+
+	LSHForest forest;
+	Document doc;
+	
+	Document nearest;
+	Double dist;
+	
+	public DocumentHandler(LSHForest forest, Document doc) 
+	{
+		this.doc = doc;
+		this.forest = forest;
+	}
+	
+	@Override
+	public void run() {
+    	List<String> set = forest.AddDocument(this.doc);
+
+        Object[] candidate = ThreadManagerHelper.postLSHMapping(this.doc, set);
+        
+        nearest = (Document)candidate[0];
+        dist = (Double)candidate[1];
+	}
+
+	//**************************************************************
+	public static Document preprocessor(String json)
+	{
+		JsonParser jsonParser = new JsonParser();
+		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
+		String text = jsonObj.get("text").getAsString();
+		String id = jsonObj.get("id_str").getAsString();
+		String created_at = jsonObj.get("created_at").getAsString();
+		long timestamp = jsonObj.get("timestamp").getAsLong();
+				
+        Document doc = new Document(id, text, timestamp); //id == "94816822100099073" is for Amy Winhouse event
+        doc.setCreatedAt(created_at);
+        Hashtable<Integer, Double> weights = doc.getWeights();
+
+        
+		return doc;
+	}
+	
+	public static void process(LSHForest forest, Document doc)
+	{
+		if(list == null)
+		{
+			list = new LinkedList<DocumentHandler>();
+		}
+ 		
+		DocumentHandler h = new DocumentHandler(forest, doc);
+		h.start();
+		list.add(h);
+		
+		GlobalData gd = GlobalData.getInstance();
+		if (list.size() == gd.getParams().number_of_threads)
+		{
+			while(!list.isEmpty())
+			{
+				//h = list.poll();
+				try 
+				{
+					h = list.poll();
+					h.join();
+					ThreadManagerHelper.mapToClusterHelper(h.doc, h.nearest, h.dist);
+				} 
+				catch (InterruptedException e) 
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		
+			}
+		
+		}
+	}
+	
+		/*if(list == null)
+		{
+			GlobalData gd = GlobalData.getInstance();
+			list = new DocumentHandler[gd.getParams().number_of_threads];
+		}
+		
+		
+		
+		
+		
+		while(true)
+		{
+			for (i=0; i<list.length; i++)
+				if (list[i] == null || !list[i].isAlive())
+					break;
+			
+			if(i<list.length)
+				break;
+			
+			for(i = 0; i < list.length; i++)
+				try 
+				{
+					list[i].join();
+				} catch (InterruptedException e) 
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}			
+			
+			
+			for(i = 0; i<list.length; i++)
+			{
+				ThreadManagerHelper.mapToClusterHelper(list[i].doc, list[i].nearest, list[i].dist);
+			}
+			
+			//GlobalData gd = GlobalData.getInstance();
+			//gd.markOldClusters(list[i-1].doc);
+		}
+		
+		if (i < list.length)
+		{
+			list[i] = new DocumentHandler(forest, doc);
+			list[i].start();
+		}
+	}*/
+	
+}
