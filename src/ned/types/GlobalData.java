@@ -16,18 +16,18 @@ public class GlobalData {
 	public class Parameters 
 	{
 		public int number_of_threads = 200;
-		public int print_limit = 5000;
-		public int number_of_tables = 70;
-		public int hyperplanes = 10;
+		public int print_limit = 2000;
+		public int number_of_tables = 60;
+		public int hyperplanes = 12;
 		public int max_bucket_size = 300;
 		public int max_documents = 100000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 8800000;
+		public int offset = 0; //8800000;
 		public int search_recents = 200;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.95;
 		public double min_cluster_size = 3;
-		public int inital_dimension = 1000000;
+		public int inital_dimension = 50000;
 		public int dimension_jumps = 20000;
 	}
 	
