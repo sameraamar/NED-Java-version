@@ -1,6 +1,7 @@
 package ned.hash;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -51,7 +52,7 @@ public class LSHTable
     	
     	newDimension = dimension + GlobalData.getInstance().getParams().dimension_jumps;
     	
-		Session.getInstance().message(Session.DEBUG, "FixDimension", "Finxing to a new dimension: " + newDimension);
+		Session.getInstance().message(Session.DEBUG, "FixDimension", "Fixing to a new dimension: " + newDimension);
     	
     	int delta = newDimension - dimension;
     	for (int i = 0 ; i<hyperPlanesNumber; i++)

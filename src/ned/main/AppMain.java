@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import ned.hash.DocumentHandler;
 import ned.hash.LSHForest;
 import ned.types.Document;
@@ -125,8 +126,17 @@ public class AppMain {
 		//threadsFileName.isDaemon(true);
 		//thread.start();
 		
+		DocumentProcessorExecutor executer = new DocumentProcessorExecutor(forest, gd.getParams().number_of_threads);
+		
+		int delay = 10; //seconds
+		MyMonitorThread threadMonitor  = new MyMonitorThread(executer.getExecutor(), delay);
+		
+		threadMonitor.isDaemon();
+		threadMonitor.start();
+		
 		int offset = gd.getParams().offset;
 		int offset_p = (int)(offset * 0.05);
+		boolean flushData = false;
 		for (String filename : files) {
 			if (stop)
 				break;
@@ -150,14 +160,18 @@ public class AppMain {
 				}
 				
 				Document doc = DocumentHandler.preprocessor(line);
+				
 				if (firstdoc == 0)
 					firstdoc = doc.getTimestamp();
 				
 				lastdoc = doc.getTimestamp();
 				
-				DocumentHandler.process(forest, doc);
-				//GlobalData.releaseOldDocuments();
-
+				if (doc.getWords().size() > 0)
+				{
+					executer.execute(doc);
+					//DocumentHandler.process(forest, doc);
+				}
+								
 	            processed ++;
 	            middle_processed++;
 	            
@@ -175,17 +189,41 @@ public class AppMain {
 	            	
 	            	StringBuffer msg = new StringBuffer();
 	            	msg.append( "Processed " ).append ( processed ).append(" docs. ");
-	            	msg.append(gd.clustersSize()).append(" clusters.");
 	            	msg.append("[spent ").append(  Utility.humanTime( TimeUnit.NANOSECONDS.toSeconds(passed) ) ).append("]. ");
 	            	msg.append("[reported ").append( Utility.humanTime( reportedtime ) ).append("]. ");
 	            	msg.append("(overall AHT: ").append(average1).append(" ms). ");
 	            	msg.append("(AHT: ").append(average2).append(" ms). ");
-	            	msg.append("Cursor: ").append(doc.getId());
-	            	msg.append("Dim: ").append( forest.getDimension() );
+	            	//msg.append("Cursor: ").append(doc.getId());
+	            	msg.append(". Dim: ").append( forest.getDimension() );
 	            	
 	            	Session.getInstance().message(Session.INFO, "Reader", msg.toString());
 	            	
-            		/*Session.getInstance().message(Session.INFO, "Reader", "doing some cleanup...");
+	            	/*
+	            	msg = new StringBuffer();
+	            	msg.append("\tidf('i')=").append(gd.getIDF(gd.word2index.getOrDefault("i",-1)));
+	            	msg.append(" / idf('the')=").append(gd.getIDF(gd.word2index.getOrDefault("the",-1)));
+	            	msg.append(" / idf('rt')=").append(gd.getIDF(gd.word2index.getOrDefault("rt",-1)));
+	            	Session.getInstance().message(Session.INFO, "IDF", msg.toString()); 
+	            	*/
+	            	
+	            	//flushData = processed % (3*gd.getParams().print_limit) == 0;
+	        		if(flushData)
+	        		{
+	            		//executer.await();
+	        			//DocumentHandler.waitForSuProcesses();
+	            		Session.getInstance().message(Session.INFO, "Reader", "doing some cleanup...");
+	            		gd.markOldClusters(gd.recent.get(0));
+
+	            		flushData = false;
+	            	}
+
+	            	if ( processed % (50*gd.getParams().print_limit) == 0 )
+	            	{
+	            		Session.getInstance().message(Session.INFO, "Reader", "Run GC");
+	            		System.gc();
+	            	}
+
+	        		/*Session.getInstance().message(Session.INFO, "Reader", "doing some cleanup...");
 	            	gd.markOldClusters(doc);
 	            	synchronized(thread) {
 	            		thread.notify();
@@ -197,13 +235,8 @@ public class AppMain {
             		middletime = System.nanoTime();
             		middle_processed = 0;
 	            	
-	            	if (processed % (15*gd.getParams().print_limit) == 0)
-	            	{
-	            		Session.getInstance().message(Session.INFO, "Reader", "doing some cleanup...");
-	            		gd.markOldClusters(doc);
-	            		gd.flushClusters(out);
-	            		System.gc();
-	            	}
+	            	//if (processed % (15*gd.getParams().print_limit) == 0)
+
 	            }
 	            
 	            if (processed == gd.getParams().max_documents)
@@ -217,7 +250,9 @@ public class AppMain {
 		
 		long current = System.nanoTime();
 
-		//ThreadManagerHelper.pprint(out);
+		executer.shutdown();
+		//DocumentHandler.waitForSuProcesses();
+		threadMonitor.shutdown();
 		
 		gd.flushClustersAll(out);
 		

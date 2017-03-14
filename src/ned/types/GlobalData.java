@@ -12,23 +12,25 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ned.modules.Twokenize;
+
 public class GlobalData {
 	public class Parameters 
 	{
-		public int number_of_threads = 200;
-		public int print_limit = 2000;
+		public int number_of_threads = 10000;
+		public int print_limit = 5000;
 		public int number_of_tables = 60;
 		public int hyperplanes = 12;
-		public int max_bucket_size = 300;
-		public int max_documents = 100000;
+		public int max_bucket_size = 100;
+		public int max_documents = 200000;
 		public int max_thread_delta_time = 3600; //seconds
 		public int offset = 0; //8800000;
-		public int search_recents = 200;
+		public int search_recents = 100;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.95;
 		public double min_cluster_size = 3;
 		public int inital_dimension = 50000;
-		public int dimension_jumps = 20000;
+		public int dimension_jumps = 5000;
 	}
 	
 	private static GlobalData globalData = null;
@@ -40,27 +42,35 @@ public class GlobalData {
 		return globalData;
 	}
 	
-	class Cluster 
-	{
-		DocumentCluster cluster;
-		ArrayList<String> documents;
-		
-		public Cluster(DocumentCluster cluster)
-		{
-			documents = new ArrayList<String>();
-			documents.add(cluster.leadId);
-		}
-	}
+	
+	
+	public Hashtable<String, Integer>    word2index;
+	//public Hashtable<Integer, String>    index2word;
+	public Hashtable<String, Document>   id2document;
+	
+	//for calculating IDF
+	int numberOfDocuments;
+	private Hashtable<Integer, Double> word2idf;
+
+	public Hashtable<Integer, Integer>   numberOfDocsIncludeWord;
+	public Hashtable<String, DocumentCluster>  clusters;
+	public Hashtable<String, String> id2cluster;
+	public List<Document> recent;
+	public Parameters parameters = new Parameters();
+	public List<String> cleanClusterQueue = null;
+	
 	
 	private GlobalData()
 	{	
 		word2index  = new Hashtable<String , Integer>();
-		index2word  = new Hashtable<Integer, String>();
+		//index2word  = new Hashtable<Integer, String>();
 		id2document = new Hashtable<String , Document>();
 		numberOfDocsIncludeWord = new Hashtable<Integer, Integer>();
-		cleanClusterQueue = new LinkedList<String>();
+		//cleanClusterQueue = new LinkedList<String>();
+		cleanClusterQueue = (List<String>) Collections.synchronizedList(new LinkedList<String>()); //new LinkedList<Document>();
 		clusters = new Hashtable<String, DocumentCluster>();
-		next_index = 0;
+		numberOfDocuments = 0;
+		word2idf = new Hashtable<Integer, Double>();
 		id2cluster = new Hashtable<String, String>();
 	}
 	
@@ -87,17 +97,53 @@ public class GlobalData {
 		return this.clusters.get(index);
 	}*/
 	
-	public int clustersSize()
+	/*public int clustersSize()
 	{
 		return this.clusters.size();
+	}*/
+	
+
+	
+	public double calcIDF(int word) 
+	{		
+		double numerator = (numberOfDocuments + 0.5) / numberOfDocsIncludeWord.get(word);
+		numerator = Math.log10(numerator);
+		
+		double denominator = Math.log10(numberOfDocuments + 1.0);	
+		
+		return numerator / denominator;
+	}
+	
+	public double getIDF(int k)
+	{
+		return word2idf.get(k);
+	}
+	
+	
+	public double getOrDefault(int k)
+	{
+		return word2idf.getOrDefault(k, -1.0);
 	}
 	
 	public void calcWeights(Document doc, Hashtable<Integer, Double> weights) 
+	{
+		Hashtable<Integer, Integer> wordCount = doc.getWordCount();
+		Enumeration<Integer> tmp = wordCount.keys();
+		
+		while(tmp.hasMoreElements())
+		{
+			int k = tmp.nextElement();
+			double a = wordCount.get(k) * this.word2idf.get(k);
+			weights.put(k, a);
+		}
+	}
+	
+	public void calcWeights1(Document doc, Hashtable<Integer, Double> weights) 
 	{		
 		
 		Hashtable<Integer, Integer> wordCount = doc.getWordCount();
 		
-		int Dt_size = id2document.size();
+		int Dt_size = numberOfDocuments; //id2document.size();
 		
 		for (Integer k : wordCount.keySet()) {
 			double numerator = (Dt_size + 0.5) / numberOfDocsIncludeWord.get(k);
@@ -113,11 +159,11 @@ public class GlobalData {
 		
 	}
 	
-	private int wordCounts(String[] strings, Hashtable<Integer, Integer> d)
+	private int wordCounts(List<String> list, Hashtable<Integer, Integer> d)
 	{
-		int max_idx = addWords(strings);
+		int max_idx = addWords(list);
 		
-		for (String w : strings) 
+		for (String w : list) 
 		{
 			int idx = word2index.get(w);
 			int val = d.getOrDefault(idx,  0);
@@ -128,11 +174,11 @@ public class GlobalData {
 		return max_idx;
 	}
 	
-	private int addWords(String[] strings)
+	private int addWords(List<String> list)
 	{
 		int max = 0;
 		
-		for (String w : strings) 
+		for (String w : list) 
 		{
 			int tmp = addWord(w);
 			if (tmp > max)
@@ -148,7 +194,7 @@ public class GlobalData {
 		if (idx == -1) 
 		{
 			idx = word2index.size();
-			index2word.put(idx, word);
+			//index2word.put(idx, word);
 			word2index.put(word, idx);
 		}
 		
@@ -168,8 +214,12 @@ public class GlobalData {
 		
 		doc.setDimension ( d );
 		id2document.put(doc.getId(), doc);
+		numberOfDocuments++;
 		
 		addToRecent(doc);
+		
+		for (int i : doc.getWordCount().keySet()) 
+			word2idf.put(i, calcIDF(i));
 	}
 	
 	private void addToRecent(Document doc) {
@@ -181,18 +231,7 @@ public class GlobalData {
 		if (this.recent.size() > this.parameters.search_recents)
 			this.recent.remove(0);
 	}
-	
-	public Hashtable<String, Integer>    word2index;
-	public Hashtable<Integer, String>    index2word;
-	public Hashtable<String, Document>   id2document;
-	public Hashtable<Integer, Integer>   numberOfDocsIncludeWord;
-	public Hashtable<String, DocumentCluster>  clusters;
-	int next_index;
-	public Hashtable<String, String> id2cluster;
-	public List<Document> recent;
-	public Parameters parameters = new Parameters();
-	public LinkedList<String> cleanClusterQueue = null;
-	
+
 	public String tweetWithoutURL(String text)
 	{
 		//Create Regex pattern to find urls
@@ -234,6 +273,7 @@ public class GlobalData {
 	
 	public void flushClusters(PrintStream out)
 	{
+		System.out.println("flushClusters");
 		flushClusters(out, null);
 	}
 	
@@ -284,20 +324,22 @@ public class GlobalData {
 
 	public Set<String> prepareListBeforeRelease() {
 		Set<String> todelete = new HashSet<String>();
+		
 		while (!cleanClusterQueue.isEmpty()) {
-			String docId = cleanClusterQueue.removeFirst(); 
+			String docId = cleanClusterQueue.remove(0); 
 			String leadId = clusterByDoc(docId).leadId;
 			todelete.add(leadId);
 		}
 		return todelete;
 	}
 	
-	public String[] identifyWords(String text) {
+	public List<String> identifyWords(String text) {
 		
-		//List<String> words = Twokenize.tokenize(text);
+		List<String> words = Twokenize.tokenizeRawTweetText(text.toLowerCase());
+		
 		//StringTokenizer st = new StringTokenizer(text, delim);
-		String text2 = tweetWithoutURL(text);
-		String[] words = text2.toLowerCase().split("\\W+"); //("\\P{L}+");
+		//String text2 = tweetWithoutURL(text);
+		//String[] words = text2.toLowerCase().split("\\W+"); //("\\P{L}+");
 		return words;
 	}
 
@@ -360,6 +402,20 @@ public class GlobalData {
 		
 		if (old>0)
 			Session.getInstance().message(Session.INFO, "markOldClusters", "marked " + old + " old clusters for cleanup");
+	}
+
+	public String memoryGlance() {
+		return String.format("\t[monitor] Words: %d, Documents: %d, Clusters %d, Recent: %d",
+				this.word2index.size(),
+				this.id2document.size(),
+				this.clusters.size(),
+				this.recent==null ? 0 : this.recent.size()
+			);
+	}
+
+	public void markForCleanup(String leadId) 
+	{
+		cleanClusterQueue.add(leadId);
 	}
 	
 }

@@ -1,12 +1,13 @@
 package ned.types;
 
 import java.util.Enumeration;
+import java.util.List;
 
 public class Document {
     private double cacheNorm;
     private String id;
     private String text ;
-    private String[] words;
+    private List<String> words;
     private java.util.Hashtable<Integer, Double> weights ;
     private java.util.Hashtable<Integer, Integer> wordCount ;
     private int dimension;
@@ -28,6 +29,14 @@ public class Document {
         this.cleanText = String.join(" ", words);
     }
 
+	@Override
+	protected void finalize() throws Throwable {
+		int f = 9/0;
+		System.out.println("Document: I am in finalize( )function !!!");
+		super.finalize();
+	}
+	
+	
     synchronized public double Norm()
     {
         if (cacheNorm >= 0)
@@ -107,7 +116,7 @@ public class Document {
 		return weights;
 	}
 
-	public String[] getWords() {
+	public List<String> getWords() {
 		return words;
 	}
 

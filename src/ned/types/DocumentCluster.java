@@ -30,6 +30,7 @@ public class DocumentCluster {
 	@Override
 	protected void finalize() throws Throwable {
 		int f = 9/0;
+		System.out.println("DocumentCluster: I am in finalize( )function !!!");
 		super.finalize();
 	}
 	
@@ -87,7 +88,7 @@ public class DocumentCluster {
 		sb.append(" Entropy: ").append(ent);
 		sb.append(" Age: ").append(this.age()).append(" (s)\n");;
 		
-		sb.append("id\tnearest\tdistance\ttext1\ttext2\n");
+		sb.append("id\tnearest\tdistance\ttext\tnearest_text\n");
 		for (int i =0; i<this.idList.size(); i++)
 		{
 			String leadId = idList.get(i);

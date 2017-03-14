@@ -7,5 +7,6 @@
 			<attribute name="javadoc_location" value="jar:file:/C:/data/Java/gson-2.6.2-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="C:/data/Java/stanford-corenlp-full-2016-10-31/stanford-corenlp-3.7.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

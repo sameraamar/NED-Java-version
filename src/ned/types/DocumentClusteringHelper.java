@@ -3,7 +3,7 @@ package ned.types;
 import java.io.PrintStream;
 import java.util.List;
 
-public class ThreadManagerHelper {
+public class DocumentClusteringHelper {
 	private static Document determineClosest(Document doc, List<String> list)
 	{
 		double minDist = 1.0;
@@ -30,7 +30,7 @@ public class ThreadManagerHelper {
 	
 	public static Object[] postLSHMapping(Document doc, List<String> set)
 	{
-		Document nearest = ThreadManagerHelper.determineClosest(doc, set);
+		Document nearest = DocumentClusteringHelper.determineClosest(doc, set);
 		
 		Double dist = null;
 		if (nearest != null)
@@ -112,7 +112,7 @@ public class ThreadManagerHelper {
 			{
 				createNewThread = true;
 				if (cluster != null)
-					data.cleanClusterQueue.addLast(cluster.leadId);
+					data.markForCleanup(cluster.leadId);
 			}
 		}
 		

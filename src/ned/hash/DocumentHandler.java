@@ -10,7 +10,7 @@ import com.google.gson.JsonParser;
 import ned.types.Document;
 import ned.types.GlobalData;
 import ned.types.Session;
-import ned.types.ThreadManagerHelper;
+import ned.types.DocumentClusteringHelper;
 
 public class DocumentHandler extends Thread {
 	private static LinkedList<DocumentHandler>  list;
@@ -27,16 +27,20 @@ public class DocumentHandler extends Thread {
 		this.forest = forest;
 	}
 	
+	
 	@Override
-	public void run() {
-    	List<String> set = forest.AddDocument(this.doc);
+	public void run() 
+	{
+		List<String> set = forest.AddDocument(this.doc);
 
-        Object[] candidate = ThreadManagerHelper.postLSHMapping(this.doc, set);
+        Object[] candidate = DocumentClusteringHelper.postLSHMapping(this.doc, set);
         
         nearest = (Document)candidate[0];
         dist = (Double)candidate[1];
-	}
+		DocumentClusteringHelper.mapToClusterHelper(doc, nearest, dist);
 
+	}
+	
 	//**************************************************************
 	public static Document preprocessor(String json)
 	{
@@ -55,7 +59,7 @@ public class DocumentHandler extends Thread {
 		return doc;
 	}
 	
-	public static void process(LSHForest forest, Document doc)
+	public static boolean process(LSHForest forest, Document doc)
 	{
 		if(list == null)
 		{
@@ -69,70 +73,30 @@ public class DocumentHandler extends Thread {
 		GlobalData gd = GlobalData.getInstance();
 		if (list.size() == gd.getParams().number_of_threads)
 		{
-			while(!list.isEmpty())
-			{
-				//h = list.poll();
-				try 
-				{
-					h = list.poll();
-					h.join();
-					ThreadManagerHelper.mapToClusterHelper(h.doc, h.nearest, h.dist);
-				} 
-				catch (InterruptedException e) 
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-		
-			}
-		
+			waitForSuProcesses();
+			return true;
 		}
+		return false;
 	}
 	
-		/*if(list == null)
+	public static void waitForSuProcesses()
+	{
+
+		while(!list.isEmpty())
 		{
-			GlobalData gd = GlobalData.getInstance();
-			list = new DocumentHandler[gd.getParams().number_of_threads];
-		}
-		
-		
-		
-		
-		
-		while(true)
-		{
-			for (i=0; i<list.length; i++)
-				if (list[i] == null || !list[i].isAlive())
-					break;
-			
-			if(i<list.length)
-				break;
-			
-			for(i = 0; i < list.length; i++)
-				try 
-				{
-					list[i].join();
-				} catch (InterruptedException e) 
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}			
-			
-			
-			for(i = 0; i<list.length; i++)
+			try 
 			{
-				ThreadManagerHelper.mapToClusterHelper(list[i].doc, list[i].nearest, list[i].dist);
+				DocumentHandler h = list.poll();
+				h.join();
+				//ThreadManagerHelper.mapToClusterHelper(h.doc, h.nearest, h.dist);
+			} 
+			catch (InterruptedException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			
-			//GlobalData gd = GlobalData.getInstance();
-			//gd.markOldClusters(list[i-1].doc);
-		}
-		
-		if (i < list.length)
-		{
-			list[i] = new DocumentHandler(forest, doc);
-			list[i].start();
-		}
-	}*/
 	
+		}
+
+	}	
 }

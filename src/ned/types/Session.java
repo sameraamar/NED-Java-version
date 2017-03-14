@@ -30,7 +30,7 @@ public class Session {
 		if (this.logLevel < logLevel)
 			return;
 		
-		System.out.println("MSG: " + msg);
+		System.out.println(msg);
 	}
 	
 }

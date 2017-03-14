@@ -79,6 +79,13 @@ public class Twokenize {
     static String thingsThatSplitWords = "[^\\s\\.,?\"]";
     static String embeddedApostrophe = thingsThatSplitWords+"+['’′]" + thingsThatSplitWords + "*";
     
+    public static String NOT(String part) {
+    	StringBuilder sb = new StringBuilder();
+    	//(?!ignoreme|ignoreme2|ignoremeN)
+    	sb.append("(?!").append(part).append(")");
+    	return sb.toString();
+    }
+    
     public static String OR(String... parts) {
         String prefix="(?:";
         StringBuilder sb = new StringBuilder();
@@ -157,29 +164,6 @@ public class Twokenize {
     static String Bound = "(?:\\W|^|$)";
     public static String Email = "(?<=" +Bound+ ")[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}(?=" +Bound+")";
 
-    // We will be tokenizing using these regexps as delimiters
-    // Additionally, these things are "protected", meaning they shouldn't be further split themselves.
-    static Pattern Protected  = Pattern.compile(
-            OR(
-                    Hearts,
-                    url,
-                    Email,
-                    timeLike,
-                    //numNum,
-                    numberWithCommas,
-                    numComb,
-                    emoticon,
-                    Arrows,
-                    entity,
-                    punctSeq,
-                    arbitraryAbbrev,
-                    separators,
-                    decorations,
-                    embeddedApostrophe,
-                    Hashtag,  
-                    AtMention
-            ));
-
     // Edge punctuation
     // Want: 'foo' => ' foo '
     // While also:   don't => don't
@@ -193,9 +177,38 @@ public class Twokenize {
     static String edgePunct    = "[" + edgePunctChars + "]";
     static String notEdgePunct = "[a-zA-Z0-9]"; // content characters
     static String offEdge = "(^|$|:|;|\\s|\\.|,)";  // colon here gets "(hello):" ==> "( hello ):"
+    static String tweetLang = "(rt|brb)";  // ignore some words 
     static Pattern EdgePunctLeft  = Pattern.compile(offEdge + "("+edgePunct+"+)("+notEdgePunct+")");
     static Pattern EdgePunctRight = Pattern.compile("("+notEdgePunct+")("+edgePunct+"+)" + offEdge);
 
+    // We will be tokenizing using these regexps as delimiters
+    // Additionally, these things are "protected", meaning they shouldn't be further split themselves.
+    static Pattern Protected  = Pattern.compile(
+            OR(     
+            		
+                    arbitraryAbbrev,
+                    embeddedApostrophe,
+                    Hashtag
+            ));
+
+    static Pattern Excluded  = Pattern.compile(
+            OR(     
+            		entity,
+            		Hearts,
+                    url,
+                    Email,
+                    timeLike,
+                    numberWithCommas,
+                    numComb,
+                    emoticon,
+                    Arrows,
+                    punctSeq,
+                    separators,
+                    decorations,
+                    AtMention,
+                    edgePunct
+            ));
+    
     public static String splitEdgePunct (String input) {
         Matcher m1 = EdgePunctLeft.matcher(input);
         input = m1.replaceAll("$1$2 $3");
@@ -255,7 +268,7 @@ public class Twokenize {
 
         // Group the indices and map them to their respective portion of the string
         List<List<String>> splitGoods = new ArrayList<List<String>>(indices.size()/2);
-        for (int i=0; i<indices.size(); i+=2) {
+        for (int  i=0; i<indices.size(); i+=2) {
             String goodstr = splitPunctText.substring(indices.get(i),indices.get(i+1));
             List<String> splitstr = Arrays.asList(goodstr.trim().split(" "));
             splitGoods.add(splitstr);
@@ -289,9 +302,15 @@ public class Twokenize {
         }
         return master;
     }
+
     /** "foo   bar " => "foo bar" */
     public static String squeezeWhitespace (String input){
         return Whitespace.matcher(input).replaceAll(" ").trim();
+    }
+
+    /** exclude some types of words */
+    public static String exclude (String input){
+        return Excluded.matcher(input).replaceAll(" ").trim();
     }
 
     // Final pass tokenization based on special patterns
@@ -308,6 +327,7 @@ public class Twokenize {
 
     /** Assume 'text' has no HTML escaping. **/
     public static List<String> tokenize(String text){
+    	text = exclude(text);
         return simpleTokenize(squeezeWhitespace(text));
     }
 
@@ -336,7 +356,7 @@ public class Twokenize {
 
     /** Tokenizes tweet texts on standard input, tokenizations on standard output.  Input and output UTF-8. */
     public static void main(String[] args) throws IOException {
-        BufferedReader input = new BufferedReader(new InputStreamReader(System.in,"UTF-8"));
+        /*BufferedReader input = new BufferedReader(new InputStreamReader(System.in,"UTF-8"));
         PrintStream output = new PrintStream(System.out, true, "UTF-8");
     	String line;
     	while ( (line = input.readLine()) != null) {
@@ -344,10 +364,34 @@ public class Twokenize {
     		for (int i=0; i<toks.size(); i++) {
     			output.print(toks.get(i));
     			if (i < toks.size()-1) {
-    				output.print(" ");
+    				output.print(",");
     			}
     		}
     		output.print("\n");
+    	}*/
+    	
+    	
+    	
+        String lines[]  = {"this \nis	samer@email.com			@samer				!	 a   #hashtag    &lt; testy",
+        		"*busy* do home work ㅠㅠ",
+        		"rt july better than june ) #julywish"};
+        
+    
+    	for(String line : lines)
+    	{
+        String orig = line;
+    	  
+    	  Pattern Whitespace = Pattern.compile("[\\s\\p{Zs}]+");
+    	  System.out.println("Original: " + line);
+    	  
+    	  line = Excluded.matcher(line).replaceAll(" ").trim();
+    	  System.out.println("After excluded: " + line);
+      	
+    	  
+    	  line = Whitespace.matcher(line).replaceAll(" ").trim();
+    	  System.out.println("After whitespaces: " + line);   
+    	  
+    	  System.out.println( tokenizeRawTweetText(orig) );
     	}
     }
     
