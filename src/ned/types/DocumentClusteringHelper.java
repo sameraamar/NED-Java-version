@@ -4,6 +4,8 @@ import java.io.PrintStream;
 import java.util.List;
 
 public class DocumentClusteringHelper {
+	
+	
 	private static Document determineClosest(Document doc, List<String> list)
 	{
 		double minDist = 1.0;

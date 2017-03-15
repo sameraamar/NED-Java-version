@@ -28,9 +28,24 @@ public class DocumentCluster {
 	}
 	
 	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof DocumentCluster) 
+		{
+			String other = ((DocumentCluster)obj).leadId;
+			return this.leadId.equals(other);
+		}
+		
+		return false;
+	}
+	
+	@Override
+	public int hashCode() 
+	{
+		return leadId.hashCode();
+	}
+	
+	@Override
 	protected void finalize() throws Throwable {
-		int f = 9/0;
-		System.out.println("DocumentCluster: I am in finalize( )function !!!");
 		super.finalize();
 	}
 	
@@ -120,7 +135,9 @@ public class DocumentCluster {
 		
 		HashMap<Integer, Integer> wordcount = new HashMap<Integer, Integer>();
 		int N = 0;
-		for(String id : idList)
+		List<String> tmpList = (List<String>) Collections.synchronizedList(idList);
+		
+		for(String id : tmpList)
 		{
 			Document doc = gd.id2document.get(id);
 

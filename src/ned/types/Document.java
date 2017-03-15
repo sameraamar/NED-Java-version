@@ -28,14 +28,28 @@ public class Document {
         this.words = GlobalData.getInstance().identifyWords(text);
         this.cleanText = String.join(" ", words);
     }
-
+	
 	@Override
-	protected void finalize() throws Throwable {
-		int f = 9/0;
-		System.out.println("Document: I am in finalize( )function !!!");
-		super.finalize();
+	public boolean equals(Object obj) {
+		if (obj instanceof Document) 
+		{
+			String other = ((Document)obj).id;
+			return this.id.equals(other);
+		}
+		
+		return false;
 	}
 	
+	@Override
+	public int hashCode() 
+	{
+		return id.hashCode();
+	}
+	
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+	}
 	
     synchronized public double Norm()
     {

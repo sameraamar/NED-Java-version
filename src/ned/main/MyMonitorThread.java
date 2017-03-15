@@ -54,13 +54,19 @@ public class MyMonitorThread extends Thread
         		Session.getInstance().message(Session.INFO, "[monitor]", gd.memoryGlance());
         				
         		if (executor != null)
-        			Session.getInstance().message(Session.INFO, "[monitor]", this.executor.toString());  		
-                
+        		{
+        			String msg = this.executor.toString();
+        			msg = msg.substring(msg.indexOf('[')+1, msg.indexOf(']'));
+        			Session.getInstance().message(Session.INFO, "[monitor]", "\t" + msg);  		
+        		}
+        		
                 try {            
 	                StringBuffer msg = new StringBuffer();
 	            	msg.append("\tidf('i')=").append(gd.getOrDefault(gd.word2index.getOrDefault("i",-1)));
-	            	msg.append(" / idf('the')=").append(gd.getOrDefault(gd.word2index.getOrDefault("the",-1)));
-	            	msg.append(" / idf('rt')=").append(gd.getOrDefault(gd.word2index.getOrDefault("rt",-1)));
+	            	msg.append(", idf('the')=").append(gd.getOrDefault(gd.word2index.getOrDefault("the",-1)));
+	            	msg.append(", idf('rt')=").append(gd.getOrDefault(gd.word2index.getOrDefault("rt",-1)));
+	            	msg.append(", idf('ramadan')=").append(gd.getOrDefault(gd.word2index.getOrDefault("ramadan",-1)));
+	            	
 	            	Session.getInstance().message(Session.INFO, "[monitor]", msg.toString());
                 } catch (NullPointerException e) {
                 }
@@ -68,7 +74,7 @@ public class MyMonitorThread extends Thread
                 
                 if(flush)
                 {
-            		Session.getInstance().message(Session.INFO, "Reader", "doing some cleanup...");
+            		Session.getInstance().message(Session.INFO, "[monitor]", "doing some cleanup...");
             		
             		gd.markOldClusters(gd.recent.get(0));
             		gd.flushClusters(out);

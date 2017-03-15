@@ -8,7 +8,7 @@ public class Session {
 	
 	private int logLevel = INFO;
 	
-	//singlton
+	//singleton
 	private static Session instance;
 	
 	public static Session getInstance() { 
@@ -19,7 +19,7 @@ public class Session {
 		
 		return instance;
 	}
-	//singlton
+	//singleton
 	
 	private Session() 
 	{

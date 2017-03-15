@@ -27,6 +27,7 @@ public class WorkerThread implements Runnable
 
     private void processCommand() 
     {
+		Document test = new Document("id", "test GC", 11111);
 		if (doc.getWords().size() == 0)
 			return;
 		

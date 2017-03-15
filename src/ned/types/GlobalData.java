@@ -17,20 +17,20 @@ import ned.modules.Twokenize;
 public class GlobalData {
 	public class Parameters 
 	{
-		public int number_of_threads = 10000;
+		public int number_of_threads = 5000;
 		public int print_limit = 5000;
 		public int number_of_tables = 60;
 		public int hyperplanes = 12;
 		public int max_bucket_size = 100;
-		public int max_documents = 200000;
+		public int max_documents = 20000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 0; //8800000;
-		public int search_recents = 100;
+		public int offset = 0 ; //8800000;
+		public int search_recents = 1000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.95;
 		public double min_cluster_size = 3;
 		public int inital_dimension = 50000;
-		public int dimension_jumps = 5000;
+		public int dimension_jumps = 50000;
 	}
 	
 	private static GlobalData globalData = null;
