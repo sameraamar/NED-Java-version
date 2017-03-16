@@ -66,6 +66,7 @@ public class MyMonitorThread extends Thread
 	            	msg.append(", idf('the')=").append(gd.getOrDefault(gd.word2index.getOrDefault("the",-1)));
 	            	msg.append(", idf('rt')=").append(gd.getOrDefault(gd.word2index.getOrDefault("rt",-1)));
 	            	msg.append(", idf('ramadan')=").append(gd.getOrDefault(gd.word2index.getOrDefault("ramadan",-1)));
+	            	msg.append("Queue: ").append(gd.queue.size());
 	            	
 	            	Session.getInstance().message(Session.INFO, "[monitor]", msg.toString());
                 } catch (NullPointerException e) {

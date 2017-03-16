@@ -9,6 +9,7 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,7 +19,7 @@ public class GlobalData {
 	public class Parameters 
 	{
 		public int number_of_threads = 5000;
-		public int print_limit = 5000;
+		public int print_limit = 1000;
 		public int number_of_tables = 60;
 		public int hyperplanes = 12;
 		public int max_bucket_size = 100;
@@ -42,8 +43,7 @@ public class GlobalData {
 		return globalData;
 	}
 	
-	
-	
+	public ConcurrentLinkedQueue<String> queue; 
 	public Hashtable<String, Integer>    word2index;
 	//public Hashtable<Integer, String>    index2word;
 	public Hashtable<String, Document>   id2document;
@@ -70,6 +70,7 @@ public class GlobalData {
 		cleanClusterQueue = (List<String>) Collections.synchronizedList(new LinkedList<String>()); //new LinkedList<Document>();
 		clusters = new Hashtable<String, DocumentCluster>();
 		numberOfDocuments = 0;
+		queue = new ConcurrentLinkedQueue<String>();
 		word2idf = new Hashtable<Integer, Double>();
 		id2cluster = new Hashtable<String, String>();
 	}
@@ -273,7 +274,7 @@ public class GlobalData {
 	
 	public void flushClusters(PrintStream out)
 	{
-		System.out.println("flushClusters");
+		//System.out.println("flushClusters");
 		flushClusters(out, null);
 	}
 	

@@ -29,18 +29,17 @@ public class WorkerThread implements Runnable
     {
 		Document test = new Document("id", "test GC", 11111);
 		if (doc.getWords().size() == 0)
+		{
+	        this.doc.nearestDetermined = true;
 			return;
-		
+		}
     	Hashtable<Integer, Double> weights = doc.getWeights();
 		
     	List<String> set = forest.AddDocument(this.doc);
 
-        Object[] candidate = DocumentClusteringHelper.postLSHMapping(this.doc, set);
-        
-        Document nearest = (Document)candidate[0];
-        Double dist = (Double)candidate[1];
-        
-        DocumentClusteringHelper.mapToClusterHelper(doc, nearest, dist);
+        DocumentClusteringHelper.postLSHMapping(this.doc, set);
+        this.doc.nearestDetermined = true;
+        //DocumentClusteringHelper.mapToClusterHelper(doc);
     }
 
     public Document getDocument()

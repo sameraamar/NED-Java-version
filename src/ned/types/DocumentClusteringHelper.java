@@ -6,10 +6,10 @@ import java.util.List;
 public class DocumentClusteringHelper {
 	
 	
-	private static Document determineClosest(Document doc, List<String> list)
+	private static void determineClosest(Document doc, List<String> list)
 	{
-		double minDist = 1.0;
-		Document nearest = null;
+		//double minDist = 1.0;
+		//Document nearest = null;
 		for (String rightId : list) {
 			
 			Document right = GlobalData.getInstance().id2document.get(rightId);
@@ -17,51 +17,21 @@ public class DocumentClusteringHelper {
 			if ( right == null || rightId.equals(doc.getId()) )
 				continue;
 			
-			//Document right = GlobalData.getInstance().id2document.get(rightId);
-			double tmp = Document.Distance(doc, right);
-			if (nearest==null || tmp < minDist)
-			{
-				minDist = tmp;
-				nearest = right;
-			}
+			doc.updateNearest(right);
 			
 		}
-		
-		return nearest;
 	}
 	
-	public static Object[] postLSHMapping(Document doc, List<String> set)
+	public static void postLSHMapping(Document doc, List<String> set)
 	{
-		Document nearest = DocumentClusteringHelper.determineClosest(doc, set);
-		
-		Double dist = null;
-		if (nearest != null)
-			dist = Document.Distance(doc, nearest);
+		DocumentClusteringHelper.determineClosest(doc, set);
 		
 		//handle recent documents
-		Object[] candidate = searchInRecentDocuments(doc);
-		Double recentDist = null;
-		Document recentDoc = null;
-		if (candidate[0] != null) //there is something
-		{
-			recentDist = (Double)candidate[1];
-			recentDoc = (Document)candidate[0];
-		}
-		if (nearest == null || (recentDist != null && dist>recentDist) )
-		{
-			nearest = recentDoc;
-			dist = recentDist;	
-		}
-		
-		candidate[0] = nearest;
-		candidate[1] = dist;
-		return candidate;
+		searchInRecentDocuments(doc);
 	}
 	
-	public static Object[] searchInRecentDocuments(Document doc) 
+	public static void searchInRecentDocuments(Document doc) 
 	{
-		Document nearest = null;
-		double min_dist = 1.0;
 		GlobalData gd = GlobalData.getInstance();
 		
 		//java.util.concurrent.ConcurrentLinkedDeque<Document> list = new java.util.concurrent.ConcurrentLinkedDeque<Document>();
@@ -73,24 +43,23 @@ public class DocumentClusteringHelper {
 			if (r.getId().equals(doc.getId()))
 				continue;
 
-			double dist = Document.Distance(doc,  r);
-			if (nearest == null || dist<min_dist)
-			{
-				nearest = r;
-				min_dist = dist;
-			}
+			doc.updateNearest(r);
 		}
-		
-		Object[] res = new Object[2];
-		res[0] = nearest;
-		res[1] = min_dist;
-		return res;
 	}
 	
-	public static void mapToClusterHelper(Document doc, Document nearest, Double distance)
+	public static void mapToClusterHelper(Document doc)
 	{
+		GlobalData data = GlobalData.getInstance();
+		
+		Document nearest = null;
+		Double distance = null;
+		if (doc.nearest != null)
+		{
+			nearest =  data.id2document.get(doc.nearest);
+			distance = doc.nearestDist;
+		}
+		
 		boolean createNewThread = false;
-		GlobalData data = GlobalData.getInstance(); 
 		
 		if (nearest == null)
 			createNewThread = true;
@@ -113,20 +82,13 @@ public class DocumentClusteringHelper {
 			else 
 			{
 				createNewThread = true;
-				if (cluster != null)
-					data.markForCleanup(cluster.leadId);
 			}
 		}
 		
 		if (createNewThread)
 		{
 			data.createCluster(doc);
-			
-			//DocumentCluster cluster = new DocumentCluster(doc);
-			//int idx = data.getClusters().add(cluster);
-			//data.getId2Cluster().put(doc.getId(), idx);
 		}
-		
 	}
 	
 	public static void pprint(PrintStream out)

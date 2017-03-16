@@ -12,34 +12,34 @@ import ned.types.GlobalData;
 import ned.types.Session;
 import ned.types.DocumentClusteringHelper;
 
-public class DocumentHandler extends Thread {
-	private static LinkedList<DocumentHandler>  list;
-
-	LSHForest forest;
-	Document doc;
+public class DocumentHandler {
+//	private static LinkedList<DocumentHandler>  list;
+//
+//	LSHForest forest;
+//	Document doc;
 	
-	Document nearest;
-	Double dist;
+//	Document nearest;
+//	Double dist;
 	
 	public DocumentHandler(LSHForest forest, Document doc) 
 	{
-		this.doc = doc;
-		this.forest = forest;
+//		this.doc = doc;
+//		this.forest = forest;
 	}
 	
 	
-	@Override
-	public void run() 
-	{
-		List<String> set = forest.AddDocument(this.doc);
-
-        Object[] candidate = DocumentClusteringHelper.postLSHMapping(this.doc, set);
-        
-        nearest = (Document)candidate[0];
-        dist = (Double)candidate[1];
-		DocumentClusteringHelper.mapToClusterHelper(doc, nearest, dist);
-
-	}
+//	@Override
+//	public void run() 
+//	{
+//		List<String> set = forest.AddDocument(this.doc);
+//
+//        Object[] candidate = DocumentClusteringHelper.postLSHMapping(this.doc, set);
+//        
+//        nearest = (Document)candidate[0];
+//        dist = (Double)candidate[1];
+//		DocumentClusteringHelper.mapToClusterHelper(doc, nearest, dist);
+//
+//	}
 	
 	//**************************************************************
 	public static Document preprocessor(String json)
@@ -59,44 +59,44 @@ public class DocumentHandler extends Thread {
 		return doc;
 	}
 	
-	public static boolean process(LSHForest forest, Document doc)
-	{
-		if(list == null)
-		{
-			list = new LinkedList<DocumentHandler>();
-		}
- 		
-		DocumentHandler h = new DocumentHandler(forest, doc);
-		h.start();
-		list.add(h);
-		
-		GlobalData gd = GlobalData.getInstance();
-		if (list.size() == gd.getParams().number_of_threads)
-		{
-			waitForSuProcesses();
-			return true;
-		}
-		return false;
-	}
+//	public static boolean process(LSHForest forest, Document doc)
+//	{
+//		if(list == null)
+//		{
+//			list = new LinkedList<DocumentHandler>();
+//		}
+// 		
+//		DocumentHandler h = new DocumentHandler(forest, doc);
+//		h.start();
+//		list.add(h);
+//		
+//		GlobalData gd = GlobalData.getInstance();
+//		if (list.size() == gd.getParams().number_of_threads)
+//		{
+//			waitForSuProcesses();
+//			return true;
+//		}
+//		return false;
+//	}
 	
-	public static void waitForSuProcesses()
-	{
-
-		while(!list.isEmpty())
-		{
-			try 
-			{
-				DocumentHandler h = list.poll();
-				h.join();
-				//ThreadManagerHelper.mapToClusterHelper(h.doc, h.nearest, h.dist);
-			} 
-			catch (InterruptedException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-	
-		}
-
-	}	
+//	public static void waitForSuProcesses()
+//	{
+//
+//		while(!list.isEmpty())
+//		{
+//			try 
+//			{
+//				DocumentHandler h = list.poll();
+//				h.join();
+//				//ThreadManagerHelper.mapToClusterHelper(h.doc, h.nearest, h.dist);
+//			} 
+//			catch (InterruptedException e) 
+//			{
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//	
+//		}
+//
+//	}	
 }

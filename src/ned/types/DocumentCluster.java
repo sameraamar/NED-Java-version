@@ -8,8 +8,8 @@ import java.util.List;
 
 public class DocumentCluster {
 	private List<String> idList;
-	private List<String> neighbor;
-	private List<Double> distance;
+	//private List<String> neighbor;
+	//private List<Double> distance;
 	String leadId;
 	private long starttime;
 	private long lasttime;
@@ -18,8 +18,8 @@ public class DocumentCluster {
 	public DocumentCluster(Document leadDocument)
 	{
 		this.idList = (List<String>) Collections.synchronizedList(new ArrayList<String>()); //new ArrayList<String>();
-		this.neighbor = (List<String>) Collections.synchronizedList(new ArrayList<String>()); //new ArrayList<String>();
-		this.distance = (List<Double>) Collections.synchronizedList(new ArrayList<Double>()); //new ArrayList<Double>();
+		//this.neighbor = (List<String>) Collections.synchronizedList(new ArrayList<String>()); //new ArrayList<String>();
+		//this.distance = (List<Double>) Collections.synchronizedList(new ArrayList<Double>()); //new ArrayList<Double>();
 		this.leadId = leadDocument.getId();
 		this.starttime = leadDocument.getTimestamp();
 		this.lasttime  = leadDocument.getTimestamp();
@@ -46,6 +46,7 @@ public class DocumentCluster {
 	
 	@Override
 	protected void finalize() throws Throwable {
+		//System.out.println("DocumentCluster - finalize");
 		super.finalize();
 	}
 	
@@ -54,16 +55,16 @@ public class DocumentCluster {
 		this.idList.add(doc.getId());
 		this.lasttime = doc.getTimestamp();
 		
-		String id = null;
-		if (myNeighbor != null)
-		{
-			id = myNeighbor.getId();
-		}
-		else
-			distance = null;
-		
-		this.neighbor.add(id);
-		this.distance.add(distance);
+//		String id = null;
+//		if (myNeighbor != null)
+//		{
+//			id = myNeighbor.getId();
+//		}
+//		else
+//			distance = null;
+//		
+		//this.neighbor.add(id);
+		//this.distance.add(distance);
 		
 		entropy = -1;
 	}
@@ -106,18 +107,17 @@ public class DocumentCluster {
 		sb.append("id\tnearest\tdistance\ttext\tnearest_text\n");
 		for (int i =0; i<this.idList.size(); i++)
 		{
-			String leadId = idList.get(i);
+			String docId = idList.get(i);
+			Document doc = gd.id2document.get(docId);
 			
-			String nId = this.neighbor.get(i);
-			sb.append(leadId).append("\t").append(nId).append("\t").append(this.distance.get(i));
-			
-			Document leadDoc = gd.id2document.get( leadId );
-			sb.append("\t").append( leadDoc.getCleanText() );
-
 			Document nDoc = null;
 			if(i>0) { //this is placeholder for the lead - skip
-				nDoc = gd.id2document.get(nId);
+				nDoc = gd.id2document.get(doc.nearest);
 			}
+			
+			sb.append(docId).append("\t").append(doc.nearest).append(String.format("\t%.7f", doc.nearestDist));
+			sb.append("\t").append( doc.getCleanText() );
+
 			String text = nDoc == null ? "NA" : nDoc.getCleanText();
 			sb.append("\t").append(text);
 			sb.append("\n");

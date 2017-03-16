@@ -16,12 +16,18 @@ public class Document {
 	private long timestamp;
 	private String cleanText;
 	private String created_at;
+	public String nearest;
+	public double nearestDist;
+	public boolean nearestDetermined;
 
     public Document(String id, String text, long timestamp)
     {
     	this.id = id;
         this.text = text;
         this.weights = null;
+        this.nearest = null;
+    	this.nearestDist = 1.0;
+    	this.nearestDetermined = false;
         this.timestamp = timestamp;
         this.cacheNorm = -1;
         this.wordCount = null;
@@ -48,6 +54,7 @@ public class Document {
 	
 	@Override
 	protected void finalize() throws Throwable {
+		//System.out.println("Document - finalize");
 		super.finalize();
 	}
 	
@@ -167,6 +174,15 @@ public class Document {
 
 	public void setCreatedAt(String created_at) {
 		this.created_at = created_at;
+	}
+
+	public void updateNearest(Document right) {
+		double tmp = Document.Distance(this, right);
+		if (nearest==null || tmp < nearestDist)
+		{
+			nearestDist = tmp;
+			nearest = right.getId();
+		}
 	}
 
 

@@ -74,7 +74,7 @@ public class Twokenize {
     static String aa2  = "[^A-Za-z](?:[A-Za-z]\\.){1,}[A-Za-z](?=" + boundaryNotDot + ")";
     static String standardAbbreviations = "\\b(?:[Mm]r|[Mm]rs|[Mm]s|[Dd]r|[Ss]r|[Jj]r|[Rr]ep|[Ss]en|[Ss]t)\\.";
     static String arbitraryAbbrev = "(?:" + aa1 +"|"+ aa2 + "|" + standardAbbreviations + ")";
-    static String separators  = "(?:--+|―|—|~|–|=)";
+    static String separators  = "(?:--+|―|—|/|\\\\|~|–|-|=)";
     static String decorations = "(?:[♫♪]+|[★☆]+|[♥❤♡]+|[\\u2639-\\u263b]+|[\\ue001-\\uebbb]+)";
     static String thingsThatSplitWords = "[^\\s\\.,?\"]";
     static String embeddedApostrophe = thingsThatSplitWords+"+['’′]" + thingsThatSplitWords + "*";
@@ -374,7 +374,8 @@ public class Twokenize {
     	
         String lines[]  = {"this \nis	samer@email.com			@samer				!	 a   #hashtag    &lt; testy",
         		"*busy* do home work ㅠㅠ",
-        		"rt july better than june ) #julywish"};
+        		"rt july better than june ) #julywish",
+        		"rt #wowfakta logizomechanophobia / cyberphobia \\ * : - orang yang takut komputer"};
         
     
     	for(String line : lines)
