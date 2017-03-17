@@ -21,7 +21,7 @@ public class DocumentProcessorExecutor {
 		executor = Executors.newFixedThreadPool(number_of_threads);		
 	}
 	
-	public void execute(Document doc)
+	public void submit(Document doc)
 	{
 		Runnable worker = new WorkerThread(forest, doc);
 		executor.execute(worker);
