@@ -1,16 +1,31 @@
-package ned.main;
+package ned.tools;
+
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Hashtable;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import ned.hash.LSHForest;
 import ned.types.Document;
 import ned.types.DocumentClusteringThread;
@@ -18,69 +33,61 @@ import ned.types.GlobalData;
 import ned.types.Session;
 import ned.types.Utility;
 
-public class AppMain {
+public class ExpandPositiveDS {
 
-		
-	private static LSHForest forest;
-	private static DocumentProcessorExecutor executer;
-	private static ExecutorMonitorThread threadMonitor;
-	private static DocumentClusteringThread clustering;
 	
+	private static SortedMap<String, JudgmentEntry> map;
+	private static MapToTopicExecuter mapper;
+	public static int counter = 0;
 
 	public static void main(String[] args) throws IOException
 	{
 		try {
-			GlobalData gd = GlobalData.getInstance();
 			
-			String threadsFileName = "/tmp/threads.txt";
+			long base = System.nanoTime();
 			
-			if (System.getProperty("os.name").startsWith("Windows"))
-				threadsFileName = "c:/temp/threads.txt";
-			
-			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
-			
-			forest = new LSHForest(gd.getParams().number_of_tables, 
-					 gd.getParams().hyperplanes, 
-					 gd.getParams().inital_dimension, 
-					 gd.getParams().max_bucket_size);		
-			
-			executer = new DocumentProcessorExecutor(forest, gd.getParams().number_of_threads);
-	    	clustering = new DocumentClusteringThread(out);
+			String judgment_extended = "/tmp/threads.txt";
+			String filename = "/Users/ramidabbah/private/mandoma/samer_a/data/relevance_judgments_00000000";
+			if (System.getProperty("os.name").startsWith("Windows")){
+				judgment_extended = "c:/temp/threads.txt";
 
-	    	Session.getInstance().message(Session.ERROR, "Reader", "Starting Monitor...");
-			int delay = gd.getParams().monitor_timer_seconds; //seconds
-			threadMonitor  = new MyMonitorThread(executer.getExecutor(), delay);
+				 filename = "C:\\data\\events_db\\petrovic\\relevance_judgments_00000000";
+			}
+			PrintStream out = new PrintStream(new FileOutputStream(judgment_extended));
 
+			
+			loadLabeledTweets(filename);
+			
+			int size = map.size();
+			mapper = new MapToTopicExecuter(map, GlobalData.getInstance().getParams().number_of_threads);
+			
 			doMain(out);
 			
+			mapper.shutdown();
+			
+			dumpLabeledTweets(filename+".txt");
+			
+			System.out.println("added " + counter + " entries");
+			System.out.println("the map was " + size + ". But now " + map.size() + " (delta of " + (map.size()-size) + ")");
+			
 			out.close();
+			
+			System.out.println("Finished in " + (TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-base)/1000.0) + " seconds.");
 			
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {
-
 			
-			if ( executer != null )
-				executer.shutdown();
-			
-			if (threadMonitor != null)
-				threadMonitor.shutdown();
-						
-			if ( clustering != null )
-				clustering.shutdown();
-
 		}
+
+
 	}
 
 	public static void doMain(PrintStream out) throws IOException {
 		GlobalData gd = GlobalData.getInstance();
 		
 		
-		String folder = "/Users/ramidabbah/private/mandoma/samer_a/data";
-		
-		if (System.getProperty("os.name").startsWith("Windows"))
-			folder = "C:\\data\\events_db\\petrovic";
-
+		String folder = "/Users/ramidabbah/private/mandoma/samer_a/data/";
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
 	                    "petrovic_01000000.gz",
@@ -142,45 +149,21 @@ public class AppMain {
 	                    "petrovic_29000000.gz",
 	                    "petrovic_29500000.gz"  
 	                   };
-		//files = new String[] {"test.json.gz"};
 
 		int processed = 0;
 		int middle_processed = 0;
 		int cursor = 0;
 		boolean stop = false;
 		long base = System.nanoTime();
-		long middletime = base; 
-		long firstdoc = 0;
-		long lastdoc;
-
-		printParameters(out);
-
-
-		//CleanupThread thread = new CleanupThread(out);
-		//threadsFileName.isDaemon(true);
-		//thread.start();
-		threadMonitor.start();
+		long middletime = base;
+		
+		
     	Session.getInstance().message(Session.ERROR, "Reader", "Loading data...");
 
-    	clustering.start();
-
- 		System.setProperty("java.util.concurrent.ForkJoinPool.common‌​.parallelism", "2000");
-    	
-		int offset = gd.getParams().offset;
-		int offset_p = (int)(offset * 0.05);
-		boolean flushData = false;
-		int fileidx = -1;
+    	int offset = gd.getParams().offset;
 		for (String filename : files) {
-			fileidx ++;
-			
 			if (stop)
 				break;
-			
-			if(fileidx < gd.getParams().skip_files)
-			{
-            	Session.getInstance().message(Session.INFO, "Reader", "Skipping file " + fileidx );
-				continue;
-			}
 			
 			GZIPInputStream stream = new GZIPInputStream(new FileInputStream(folder + "/" + filename));
 			Reader decoder = new InputStreamReader(stream, "UTF-8");
@@ -190,37 +173,28 @@ public class AppMain {
 			while(!stop && line != null)
 	        {
 				cursor += 1;
-				
-				if (cursor <= offset)
+				if(cursor < offset)
 				{
-					if (cursor % offset_p == 0)
-		            	Session.getInstance().message(Session.INFO, "Reader", "Skipped " + cursor + " documents.");
+					if(cursor % 50000 == 0)
+						System.out.println("Cursor " + cursor);
 					
+					line=buffered.readLine();
+					continue;					
+				}
+				
+				Document doc = Document.parse(line, false);
+				if(doc == null)
+				{
 					line=buffered.readLine();
 					continue;
 				}
 				
-				Document doc = Document.parse(line, true);
-				if(doc == null)
-					continue;
+				mapper.submit(line);
 				
-				synchronized (gd.queue) 
-				{
-					gd.queue.add(doc.getId());
-				}
-				//gd.addDocument(doc);
-				//gd.addToRecent(doc);
-				//executer.submit(doc);
-				
-				WorkerThread w = new WorkerThread(forest, doc);
-				w.run();
-								
 	            processed ++;
-	            middle_processed++;
 
 	            if (processed % (gd.getParams().print_limit) == 0)
 	            {
-	            	//gd.flushClusters(out);
 	        		long tmp = System.nanoTime() - middletime;
 	            	double average2 = 1.0 * TimeUnit.NANOSECONDS.toMillis(tmp) / middle_processed;
 	            	average2 = Math.round(100.0 * average2) / 100.0;
@@ -230,7 +204,6 @@ public class AppMain {
 	            	long seconds = TimeUnit.NANOSECONDS.toSeconds( System.nanoTime() - base);
 	            	msg.append(" elapsed time: ").append(Utility.humanTime(seconds));
 	            	msg.append("(AHT: ").append(average2).append(" ms). ");
-	            	msg.append("Dim: ").append( forest.getDimension() );
 	            	
 	            	Session.getInstance().message(Session.INFO, "Reader", msg.toString());
 	            	
@@ -238,7 +211,7 @@ public class AppMain {
             		middle_processed = 0;
 	            }
 	            
-	            if (processed == gd.getParams().max_documents)
+	            if (processed >= gd.getParams().max_documents)
 	            	stop = true;
 	            
 	            line=buffered.readLine();
@@ -247,25 +220,81 @@ public class AppMain {
 	        
 		}
 		
-
 		long current = System.nanoTime();
-		//wait till all processes finish
-		executer.shutdown();
-    	Session.getInstance().message(Session.INFO, "Main", "Waiting for clustering thread to finish...");
-
-    	if(clustering!=null)
-    		clustering.shutdown();
-    	
-    	if(gd.clusters.size() > 0)
-    		System.out.println("!!!! not all clusters were saved. Still in memory: " + gd.clusters.size());
-    	
-    	gd.flushClustersAll(out);
 
 		long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);
 		Session.getInstance().message(Session.INFO, "Summary", "Done in " + Utility.humanTime(seconds) );
 	}
 	
-
+	public static void loadLabeledTweets(String filename) throws IOException
+	{		
+		FileInputStream stream = new FileInputStream(filename);
+		Reader decoder = new InputStreamReader(stream, "UTF-8");
+		BufferedReader buffered = new BufferedReader(decoder);
+		
+		System.out.println("Loading file: " + filename + " to memory");
+		
+		map = new TreeMap<String, JudgmentEntry>(new Comparator<String> () 
+										        {  
+										            public int compare(String left, String right){  
+										                 long diff = Long.parseUnsignedLong(right) - Long.parseUnsignedLong(left);  //Descending
+										                 if (diff == 0)
+										                	 return 0;
+										                 
+										                 if(diff < 0)
+										                	 return 1;
+										
+										                 return -1;
+										            }  
+										            
+										        });
+		
+		String line=buffered.readLine();
+		int count = 0;
+		int failed = 0;
+		int skip = 0;
+		while(line != null)
+        {
+			JsonParser jsonParser = new JsonParser();
+			JsonObject jsonObj = jsonParser.parse(line).getAsJsonObject();
+			int topic = jsonObj.get("topic_id").getAsInt();
+			
+			JsonElement tweet = jsonObj.get("json");
+			if(tweet==null || tweet.isJsonNull())
+			{
+				skip++;
+				line=buffered.readLine();
+				continue;
+			}
+			
+			String json = jsonObj.get("json").toString();
+			Document doc = Document.parse(json, false);
+			if(doc == null)
+			{	
+				failed ++;
+				line=buffered.readLine();
+				continue;
+			}
+			count ++;
+			
+			JudgmentEntry entry = new JudgmentEntry();
+			entry.doc = doc;
+			entry.docJson = json;
+			entry.topic = topic;
+			
+			map.put(doc.getId(), entry);
+			
+			if(count % 1000 == 0)
+				System.out.println("Loaded " + count);
+			
+			line=buffered.readLine();
+			
+        }
+		
+		buffered.close();
+		System.out.println("File loaded: "+count+" successful, "+ failed +" failed, "+ skip +" skipped.");
+		
+	}
 	
 	private static void printParameters(PrintStream out) 
 	{
@@ -276,4 +305,43 @@ public class AppMain {
 	    out.println(params);
 	}
 
+	private static void dumpLabeledTweets(String filename) throws UnsupportedEncodingException, FileNotFoundException
+	{
+		FileOutputStream stream = new FileOutputStream(filename);
+		//Writer decoder = new OutputStreamWriter(stream, "UTF-8");
+		//BufferedWriter buffered = new BufferedWriter(decoder);
+		PrintStream out = new PrintStream(stream);
+		
+		System.out.println("Saving to file: " + filename );
+		
+		
+		//String[] elements = new String[map.keySet().size()];
+		//map.keySet().toArray(elements);
+		
+		//Arrays.sort(elements, 
+		//		);
+		for(String id : map.keySet())
+		{
+		//for (int i=0; i<elements.length; i++)
+		//{
+		//	String id = (String)elements[i];
+			JudgmentEntry element = map.get(id);
+			
+			StringBuffer entry = new StringBuffer();
+			entry.append("{\"_id\": ");
+			entry.append(element.doc.getId());
+			entry.append(", \"json\": ");
+			entry.append(element.docJson);
+			entry.append(", \"status\": \"Loaded\", \"topic_id\": ");
+			entry.append(element.topic);
+			entry.append("}");
+
+
+			
+			out.println(entry.toString());
+		}
+		
+		out.close();
+		System.out.println("Done saving: "+map.keySet().size()+" items.");
+	}
 }

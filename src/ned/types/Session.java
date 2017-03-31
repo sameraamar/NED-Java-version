@@ -8,8 +8,13 @@ public class Session {
 	
 	private int logLevel = INFO;
 	
-	//singlton
+	//singleton
 	private static Session instance;
+	
+	public boolean isDebugMode()
+	{
+		return this.logLevel >= DEBUG;
+	}
 	
 	public static Session getInstance() { 
 		if (instance == null)
@@ -19,7 +24,7 @@ public class Session {
 		
 		return instance;
 	}
-	//singlton
+	//singleton
 	
 	private Session() 
 	{
@@ -30,7 +35,7 @@ public class Session {
 		if (this.logLevel < logLevel)
 			return;
 		
-		System.out.println("MSG: " + msg);
+		System.out.println(msg);
 	}
 	
 }

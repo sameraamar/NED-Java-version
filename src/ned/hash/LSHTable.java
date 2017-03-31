@@ -1,12 +1,14 @@
 package ned.hash;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.Hashtable;
-import java.util.LinkedList;
+import java.util.List;
 
-import ned.types.Dict;
 import ned.types.Document;
+import ned.types.GlobalData;
 import ned.types.Session;
 import ned.types.Utility;
 
@@ -45,10 +47,14 @@ public class LSHTable
     	}
     }
 
-    private void FixDimension(int newDimension) 
+    synchronized private void FixDimension(int newDimension) 
     {
     	if (dimension > newDimension)
     		return;
+    	
+    	newDimension = dimension + GlobalData.getInstance().getParams().dimension_jumps;
+    	
+		Session.getInstance().message(Session.DEBUG, "FixDimension", "Fixing to a new dimension: " + newDimension);
     	
     	int delta = newDimension - dimension;
     	for (int i = 0 ; i<hyperPlanesNumber; i++)
@@ -57,7 +63,6 @@ public class LSHTable
     		{
         		getHyperPlane(i).add( Utility.randomFill() );
     		}
-    		
     	}
     	
     	dimension = newDimension;
@@ -69,30 +74,32 @@ public class LSHTable
     	Session session = Session.getInstance();
     	
     	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
-    	Dict weights = doc.getWeights();
+    	Hashtable<Integer, Double> weights = doc.getWeights();
 		if (doc.getDimension() >= this.dimension) 
 		{
-			this.FixDimension(doc.getDimension() + 5000);
+			this.FixDimension(doc.getDimension());
 		}
 		
+		int doubleScale = GlobalData.getInstance().getParams().DOUBLE_SCALE;
     	for (int i = 0 ; i<hyperPlanesNumber; i++)
     	{
     		double tmp = 0;
-    		
+
 			for (Integer j : weights.keySet()) 
     		{
     			tmp += weights.get(j) * getHyperPlane(i).get(j);
     		}
-			session.message(Session.DEBUG, "GenerateHashCode", ""+ tmp);
 
+			if(doubleScale>0)
+				tmp = BigDecimal.valueOf(tmp).setScale(doubleScale, RoundingMode.HALF_UP).doubleValue();
+			
     		st.append( tmp>=0 ? "1" : "0" );
-    		session.message(Session.DEBUG, "GenerateHashCode", "\nLOG");
     	}
     	
         return st.toString();
     }
 
-    public LinkedList<Document> AddDocument(Document doc)
+    public List<String> AddDocument(Document doc)
     {
         String code = GenerateHashCode(doc);
         if (buckets.get(code) == null)
@@ -100,7 +107,7 @@ public class LSHTable
 
         buckets.get(code).Append(doc);
 
-        return buckets.get(code).getDocList();
+        return buckets.get(code).getDocIDsList(doc.getId());
     }
     
     public String toString() 
@@ -139,6 +146,10 @@ public class LSHTable
 
 	private ArrayList<Double>[] getHyperPlanes() {
 		return hyperPlanes;
+	}
+
+	public int getDimension() {
+		return this.dimension;
 	}
 
 }
