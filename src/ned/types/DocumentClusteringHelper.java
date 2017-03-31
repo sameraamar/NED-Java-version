@@ -79,7 +79,7 @@ public class DocumentClusteringHelper {
 		//long base = System.currentTimeMillis();
 		GlobalData gd = GlobalData.getInstance();
 		list.parallelStream().filter( rightId-> {
-			return ( gd.getDocumentFromRedis("id2document", rightId)!=null && doc.getId().compareTo(rightId) > 0 ) ;
+			return ( doc.getId().compareTo(rightId) > 0 ) ;
 			} ).forEach(rightId-> {
 				
 				doc.updateNearest(gd.getDocumentFromRedis("id2document", rightId));
@@ -124,6 +124,9 @@ public class DocumentClusteringHelper {
         @SuppressWarnings("unchecked")
 		List<String> compare = (List<String>) GlobalData.getInstance().recent.clone();
         compare.addAll(set);
+        
+        
+        
 		
 		msg.append(compare.size()).append(" items. ");
 
@@ -135,14 +138,21 @@ public class DocumentClusteringHelper {
         long milestone = System.currentTimeMillis();
 		DocumentClusteringHelper.determineClosest1(doc, compare);
         msg.append(" Serial: ").append(System.currentTimeMillis()-milestone).append("\t");
-
+        String fromSerial=doc.getNearest();
+        
+        // final diction is determineClosest2
         milestone = System.currentTimeMillis();
         DocumentClusteringHelper.determineClosest2(doc, compare);
         msg.append(" Stream: ").append(System.currentTimeMillis()-milestone).append("\t");
+        
+        String fromStream=doc.getNearest();
 
+        if(fromStream!=null && !fromStream.equals(fromSerial)){
+        	System.out.println("OOOOOOOOOOOOO");
+        }
 		milestone = System.currentTimeMillis();
-		DocumentClusteringHelper.determineClosest3(doc, compare);
-        msg.append(" Fork+Stream: ").append(System.currentTimeMillis()-milestone).append("\t");
+		//DocumentClusteringHelper.determineClosest3(doc, compare);
+       // msg.append(" Fork+Stream: ").append(System.currentTimeMillis()-milestone).append("\t");
         
         doc.setCacheFlag(false);
         
@@ -151,7 +161,7 @@ public class DocumentClusteringHelper {
         
         //msg.append("java.util.concurrent.ForkJoinPool.common‌​.parallelism=").append(System.getProperty("java.util.concurrent.ForkJoinPool.common‌​.parallelism"));
         
-		System.out.println(msg.toString());
+		//System.out.println(msg.toString());
 	}
 
 	/*@SuppressWarnings("unchecked")

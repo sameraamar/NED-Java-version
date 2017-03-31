@@ -90,7 +90,7 @@ public class WorkerThread implements Runnable
 			long time1 = System.currentTimeMillis() - base;
 			
 			base = System.currentTimeMillis();
-			set  = forest.addDocument4(this.doc);
+			//set  = forest.addDocument4(this.doc);
 			long time2 = System.currentTimeMillis() - base;
 
 			//System.out.println("parallel - serial: " + (time2-time1));
@@ -100,10 +100,12 @@ public class WorkerThread implements Runnable
 			//Step 3: post LSH mapping 
 	        DocumentClusteringHelper.postLSHMapping(doc, set);
 		}
-		else
+		else{
 			this.doc.setNearestDetermined(true);
-        //update the document in redis with the update doc //setNearestDetermined
-        gd.setDocumentFromRedis("id2document", doc.getId(), doc);
+	        //update the document in redis with the update doc //setNearestDetermined
+	        gd.setDocumentFromRedis("id2document", doc.getId(), doc);
+		}
+		
     }
 
     public Document getDocument()
