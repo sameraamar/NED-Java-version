@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -31,19 +32,19 @@ public class GlobalData {
 	{
 		public int DOUBLE_SCALE = 5; //precision scale for double
 		public int monitor_timer_seconds = 5; //seconds
-		public int number_of_threads = 500;
+		public int number_of_threads = 100000;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
-		public int hyperplanes = 13;
+		public int hyperplanes = 2;
 		public int max_bucket_size = 2000;
-		public int max_documents = 20000; //1_200_000;
-		public int max_thread_delta_time = 600; //seconds
+		public int max_documents = 50000; //1_200_000;
+		public int max_thread_delta_time = 3600; //seconds
 		public int offset = 0; //8800000-17*500000;
 		public int skip_files = 0;//17;
 		public int search_recents = 2000;
 		public double threshold = 0.6;
-		public double min_cluster_entropy = 0.0;
-		public double min_cluster_size = 3;
+		public double min_cluster_entropy = 1.0;
+		public double min_cluster_size = 5;
 		public int inital_dimension = 50000;
 		public int dimension_jumps = 50000;
 	}
@@ -68,9 +69,9 @@ public class GlobalData {
 	public Hashtable<Integer, Integer>   numberOfDocsIncludeWord;
 	public Hashtable<String, DocumentCluster>  clusters;
 	public Hashtable<String, String> id2cluster;
-	public ArrayList<String> recent;
+	public List<String> recent;
 	public Parameters parameters = new Parameters();
-	public List<String> cleanClusterQueue = null;
+	public Set<String> cleanClusterQueue = null;
 	private JedisPool jedisPool = null;
 	private RedisSerializer<Object> docSerializer ;
 	
@@ -138,7 +139,7 @@ public class GlobalData {
 		word2index  = new Hashtable<String , Integer>();
 		id2document = new Hashtable<String , Document>();
 		numberOfDocsIncludeWord = new Hashtable<Integer, Integer>();
-		cleanClusterQueue = (List<String>) Collections.synchronizedList(new LinkedList<String>()); //new LinkedList<Document>();
+		cleanClusterQueue = (Set<String>) Collections.synchronizedSet(new HashSet<String>()); //new LinkedList<Document>();
 		clusters = new Hashtable<String, DocumentCluster>();
 		numberOfDocuments = 0;
 		queue = new ConcurrentLinkedQueue<String>();
@@ -321,7 +322,7 @@ public class GlobalData {
 		{
 			synchronized (this) {
 				if(this.recent == null)
-					this.recent = new ArrayList<String>(); //(List<String>) Collections.synchronizedList(new ArrayList<String>()); //new LinkedList<Document>();
+					this.recent = Collections.synchronizedList(new ArrayList<String>()); //new LinkedList<Document>();
 			}
 		}
 		Integer lock = 0;
@@ -388,7 +389,9 @@ public class GlobalData {
 		if (todelete == null)
 			todelete = prepareListBeforeRelease();
 		
-		
+		if(todelete.size() > 0)
+    		Session.getInstance().message(Session.DEBUG, "Reader", "doing some memory cleanup");
+
 		ArrayList<String> marktoremove = new ArrayList<String>();
 		int countDocs = 0;
 		for (String leadId : todelete) 
@@ -440,18 +443,16 @@ public class GlobalData {
 	public Set<String> prepareListBeforeRelease() {
 		Set<String> todelete = new HashSet<String>();
 		
-		while (!cleanClusterQueue.isEmpty()) {
-			String docId = cleanClusterQueue.remove(0); 
+		Iterator<String> itr = cleanClusterQueue.iterator();
+		
+		while (itr.hasNext()) {
+			String docId = itr.next(); 
 			DocumentCluster c = clusterByDoc(docId);
-			/*if(c == null)
-			{
-				Session.getInstance().message(Session.ERROR, "prepareListBeforeRelease", "Cluster for id is null: " + docId);
-			}*/
-			if(c != null)
-			{
-				String leadId = c.leadId;
-				todelete.add(leadId);
-			}
+
+			String leadId = c.leadId;
+			todelete.add(leadId);
+			
+			itr.remove();
 		}
 		return todelete;
 	}
@@ -527,12 +528,12 @@ public class GlobalData {
 	public String memoryGlance() 
 	{
 		long len = redisSize(ID2DOCUMENT);
-		return String.format("\t[monitor] Words: %d, Documents %d, Clusters %d, Recent: %d",
-				this.word2index.size(),
-				//this.id2document.size(),
+		return String.format("\t[monitor] Processed %d documents. In memory: Documents=%d, Clusters=%d, Recent=%d, words=%d",
+				numberOfDocuments,
 				len,
 				this.clusters.size(),
-				this.recent==null ? 0 : this.recent.size()
+				this.recent==null ? 0 : this.recent.size(),
+				this.word2index.size()
 			);
 	}
 

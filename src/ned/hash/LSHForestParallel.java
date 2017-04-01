@@ -20,7 +20,7 @@ public class LSHForestParallel extends LSHForestAbstract {
 	public List<String> addDocument(Document doc)
     {
 		final GlobalData gd = GlobalData.getInstance();
-		final HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
+		
 		ArrayList< Future<List<String>> > neighbors = new ArrayList< Future<List<String>> >(numberOfTables);
 		
 		for (int i = 0; i<numberOfTables; i++)
@@ -28,6 +28,33 @@ public class LSHForestParallel extends LSHForestAbstract {
 			neighbors.add( gd.executer.addToLSH(tables[i], doc) );
 		}
 		
+		List<String> res = processResults(neighbors, doc);
+		return res;
+    }
+
+	public List<String> addDocument5(Document doc)
+	{
+		int d = 8/0;
+		return null;
+	}
+
+	@Override
+	public ArrayList<Future<List<String>>> addDocumentFuture(Document doc) 
+	{
+		final GlobalData gd = GlobalData.getInstance();
+		ArrayList< Future<List<String>> > neighbors = new ArrayList< Future<List<String>> >(numberOfTables);
+		
+		for (int i = 0; i<numberOfTables; i++)
+		{
+			neighbors.add( gd.executer.addToLSH(tables[i], doc) );
+		}
+		return neighbors;
+	}
+	
+	public List<String> processResults(ArrayList< Future<List<String>> > neighbors, Document doc)
+	{
+		final HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
+
 		for (int i = 0; i<numberOfTables; i++)
 		{
 			List<String> tmpList = null;
@@ -63,14 +90,7 @@ public class LSHForestParallel extends LSHForestAbstract {
         int compare_with = 3*numberOfTables;
         int toIndex = Math.min(compare_with, output.size());
         List<String> res = output.subList(0, toIndex);
-        
         return res;
-    }
-
-	@Override
-	public List<String> addDocument5(Document doc) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

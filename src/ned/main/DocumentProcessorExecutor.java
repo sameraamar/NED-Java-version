@@ -24,7 +24,8 @@ public class DocumentProcessorExecutor {
 	
 	public void submit(Document doc)
 	{
-		Runnable worker = new WorkerThread(forest, doc);
+		WorkerThread worker = new WorkerThread(forest, doc);
+		worker.preRun();
 		worker.run();
 		//executor.execute(worker);
 	}

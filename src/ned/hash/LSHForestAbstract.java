@@ -1,6 +1,8 @@
 package ned.hash;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
 
 import ned.types.Document;
 
@@ -19,9 +21,17 @@ abstract public class LSHForestAbstract {
 		}
 	}
 
+	public ArrayList<Future<List<String>>>  addDocumentFuture(Document doc)
+	{
+		return null;
+	}
+	public List<String> processResults(ArrayList< Future<List<String>> > neighbors, Document doc)
+	{
+		return null;
+	}
+
 	abstract public List<String> addDocument(Document doc);
 	abstract public List<String> addDocument5(Document doc);
-
 
 
 	public int getTablesNumber() {
@@ -44,4 +54,5 @@ abstract public class LSHForestAbstract {
 	public int getDimension() {
 		return this.tables[0].getDimension();
 	}
+
 }

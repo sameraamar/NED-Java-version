@@ -39,8 +39,8 @@ public class AppMain {
 				threadsFileName = "c:/temp/threads.txt";
 			
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
-			/*
-			forest = new LSHForestParallel(gd.getParams().number_of_tables, 
+			
+			/*forest = new LSHForestParallel(gd.getParams().number_of_tables, 
 					 gd.getParams().hyperplanes, 
 					 gd.getParams().inital_dimension, 
 					 gd.getParams().max_bucket_size);
@@ -49,6 +49,7 @@ public class AppMain {
 					 gd.getParams().hyperplanes, 
 					 gd.getParams().inital_dimension, 
 					 gd.getParams().max_bucket_size);
+				 
 			gd.executer = new DocumentProcessorExecutor(forest, gd.getParams().number_of_threads);
 	    	clustering = new DocumentClusteringThread(out);
 
@@ -165,9 +166,10 @@ public class AppMain {
 		//threadsFileName.isDaemon(true);
 		//thread.start();
 		threadMonitor.start();
-    	Session.getInstance().message(Session.ERROR, "Reader", "Loading data...");
+    	Session.getInstance().message(Session.ERROR, "Reader", "monitoring thread started");
 
     	clustering.start();
+    	Session.getInstance().message(Session.INFO, "Reader", "clustering thread started");
 
  		System.setProperty("java.util.concurrent.ForkJoinPool.common‌​.parallelism", "2000");
     	
@@ -181,6 +183,7 @@ public class AppMain {
 			if (stop)
 				break;
 			
+	    	Session.getInstance().message(Session.INFO, "Reader", "reading from file: " + filename);
 			if(fileidx < gd.getParams().skip_files)
 			{
             	Session.getInstance().message(Session.INFO, "Reader", "Skipping file " + fileidx );

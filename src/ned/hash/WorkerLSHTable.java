@@ -22,7 +22,4 @@ public class WorkerLSHTable implements Callable<List<String>>
 		List<String> neighbors = Collections.synchronizedList( table.AddDocument(doc) );
 		return neighbors;
 	}
-
-	
-
 }

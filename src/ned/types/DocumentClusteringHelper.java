@@ -1,14 +1,10 @@
 package ned.types;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DocumentClusteringHelper {
@@ -62,6 +58,10 @@ public class DocumentClusteringHelper {
 		//long base = System.currentTimeMillis();
 		GlobalData gd = GlobalData.getInstance();
 		list.parallelStream().filter( rightId-> {
+			
+			if(rightId==null)
+				System.out.println(">>>>>>>>>>>>>>>>>>>>>>> how can rightId be null");
+			
 			return ( doc.getId().compareTo(rightId) > 0 ) ;
 			} ).forEach(rightId-> {
 				
@@ -111,8 +111,18 @@ public class DocumentClusteringHelper {
 		long base = System.currentTimeMillis();
 		StringBuffer msg = new StringBuffer("time: to compare ");
 		//handle recent documents
-        @SuppressWarnings("unchecked")
-		List<String> compare = (List<String>) GlobalData.getInstance().recent.clone();
+		
+
+        for(String s : set)
+        {
+        	if(s == null)
+        		System.out.println("DocumentClusterHelp.post(set): >>>>>>>>>>>>>>>>> something strange");
+        }
+		
+        
+        List<String> compare = new ArrayList<String>();
+        GlobalData.getInstance().recent.forEach(id -> compare.add(id));
+        
         compare.addAll(set);
         
         

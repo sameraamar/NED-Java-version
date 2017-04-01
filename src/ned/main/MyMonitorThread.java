@@ -25,7 +25,7 @@ public class MyMonitorThread extends ExecutorMonitorThread
 		Session.getInstance().message(Session.INFO, "[monitor]", gd.memoryGlance());
 
 		StringBuffer msg = new StringBuffer();
-		msg.append("\tN=").append(gd.numberOfDocuments).append(", ni=").append(gd.numberOfDocsIncludeWord.get(gd.word2index.getOrDefault("i",-1)));
+		msg.append("\tn('i')=").append(gd.numberOfDocsIncludeWord.get(gd.word2index.getOrDefault("i",-1)));
 		msg.append(String.format("  idf('i')==%.5f", gd.getIDFOrDefault(gd.word2index.getOrDefault("i",-1))));
 		msg.append(String.format(", idf('rt')==%.5f", gd.getIDFOrDefault(gd.word2index.getOrDefault("rt",-1))));
 		msg.append(String.format(", idf('ramadan')=%.5f", gd.getIDFOrDefault(gd.word2index.getOrDefault("ramadan",-1))));
@@ -46,7 +46,8 @@ public class MyMonitorThread extends ExecutorMonitorThread
 		if(gd.recent!=null && gd.recent.size()>1)
 		{
 			Document doc = gd.getDocumentFromRedis("id2document", gd.recent.get(gd.recent.size()-1));
-			msg.append("\tlast document time: " ).append(doc.getCreatedAt()).append("\n");
+			if(doc != null)
+				msg.append("\tlast document time: " ).append(doc.getCreatedAt()).append("\n");
 		}
 		Session.getInstance().message(Session.INFO, "[monitor]", msg.toString());
         
