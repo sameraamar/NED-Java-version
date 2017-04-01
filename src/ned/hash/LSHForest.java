@@ -18,21 +18,12 @@ import java.util.stream.Stream;
 import ned.types.Document;
 import ned.types.GlobalData;
 
-public class LSHForest {
-	
-	private int numberOfTables ;
-	private LSHTable[] tables = null;
+public class LSHForest extends LSHForestAbstract 
+{
 	
 	public LSHForest(int tablesNumer, int hyperPlanesNumber, int dimension, int maxBucketSize) 
 	{
-		this.numberOfTables = tablesNumer;
-		tables = new LSHTable[tablesNumer];
-		for (int i = 0; i<tablesNumer; i++)
-		{
-			tables[i] = new LSHTable(hyperPlanesNumber, dimension, maxBucketSize);
-			
-		}
-
+		super(tablesNumer, hyperPlanesNumber, dimension, maxBucketSize);
 	}
 
 	public List<String> addDocument3(Document doc)
@@ -123,7 +114,46 @@ public class LSHForest {
 		
         return output;
     }
-	
+	public List<String> addDocument5(Document doc)
+    {
+		final HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
+		Stream<LSHTable> tablesSTream=Arrays.stream(tables);
+		 tablesSTream.parallel().
+		map(table->table.AddDocument(doc))
+		.forEach(tmpList->{
+			for (String tmp : tmpList) {
+				if (tmp.compareTo( doc.getId() ) >= 0)
+					continue;
+				
+				Integer c = hitCounts.getOrDefault(tmp, 0);
+				hitCounts.put(tmp, c+1);
+			}
+			
+		});
+		 ArrayList<String> output = new ArrayList<String>();
+        output.addAll(hitCounts.keySet());
+        
+        output.sort( new Comparator<String> () 
+					        {  
+					            @Override  
+					            public int compare(String left, String right){  
+					            	if(hitCounts.get(right) !=null && hitCounts.get(left)!=null){
+					            		 return hitCounts.get(right) - hitCounts.get(left) ;  //Descending  
+					            	}
+					            	else{
+					            		return 0;
+					            	}
+					            }  
+					            
+					        }
+        ); 
+        
+        int compare_with = 3*numberOfTables;
+        int toIndex = Math.min(compare_with, output.size());
+        List<String> res = output.subList(0, toIndex);
+        
+        return res;
+    }
 	
 	public List<String> addDocument(Document doc)
     {
@@ -162,46 +192,6 @@ public class LSHForest {
         
         return res;
     }
-	
-	/*
-	public HashSet<String> AddDocument2(Document doc)
-	{
-		HashSet<String> res = new HashSet<String>();
-		
-		for (int i = 0; i<numberOfTables; i++)
-		{
-			LinkedList<Document> tmpList = tables[i].AddDocument(doc);
-			
-			//add to the set
-			for (Document entry : tmpList) {
-				res.add(entry.getId());
-			}
-			
-		}
-		
-		return res;
-    }
-    */
-	
-	public String toString()
-	{
-		StringBuffer sb = new StringBuffer();
-		
-		for (int i = 0; i<numberOfTables; i++) 
-		{
-			sb.append( tables[i].toString() );
-		
-			sb.append("\n");
-		}
-		return sb.toString();
-	}
-	
-	public int getTablesNumber() {
-		return numberOfTables;
-	}
 
-	public int getDimension() {
-		return this.tables[0].getDimension();
-	}
 
 }

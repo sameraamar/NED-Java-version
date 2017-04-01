@@ -15,6 +15,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
+
+import ned.main.DocumentProcessorExecutor;
 import ned.modules.Twokenize;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -29,25 +31,25 @@ public class GlobalData {
 	{
 		public int DOUBLE_SCALE = 5; //precision scale for double
 		public int monitor_timer_seconds = 5; //seconds
-		public int number_of_threads = 50000;
+		public int number_of_threads = 500;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
-		public int max_documents = 10000;
-		public int max_thread_delta_time = 1800; //seconds
+		public int max_documents = 20000; //1_200_000;
+		public int max_thread_delta_time = 600; //seconds
 		public int offset = 0; //8800000-17*500000;
-		public int skip_files = 0;
+		public int skip_files = 0;//17;
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
-		public double min_cluster_size = 1;
+		public double min_cluster_size = 3;
 		public int inital_dimension = 50000;
 		public int dimension_jumps = 50000;
 	}
 	
 	private static GlobalData globalData = null;
-	private static ForkJoinPool forkPool;
+	//private static ForkJoinPool forkPool;
 	public static GlobalData getInstance() 
 	{
 		if (globalData == null)
@@ -72,7 +74,9 @@ public class GlobalData {
 	private JedisPool jedisPool = null;
 	private RedisSerializer<Object> docSerializer ;
 	
-	
+	//threads
+	public DocumentProcessorExecutor executer;
+
 	public RedisSerializer<Object> getDocSerializer() {
 		if(docSerializer==null){
 			docSerializer= new JdkSerializationRedisSerializer();
@@ -438,8 +442,16 @@ public class GlobalData {
 		
 		while (!cleanClusterQueue.isEmpty()) {
 			String docId = cleanClusterQueue.remove(0); 
-			String leadId = clusterByDoc(docId).leadId;
-			todelete.add(leadId);
+			DocumentCluster c = clusterByDoc(docId);
+			/*if(c == null)
+			{
+				Session.getInstance().message(Session.ERROR, "prepareListBeforeRelease", "Cluster for id is null: " + docId);
+			}*/
+			if(c != null)
+			{
+				String leadId = c.leadId;
+				todelete.add(leadId);
+			}
 		}
 		return todelete;
 	}

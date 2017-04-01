@@ -12,6 +12,8 @@ import java.util.zip.GZIPInputStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ned.hash.LSHForest;
+import ned.hash.LSHForestAbstract;
+import ned.hash.LSHForestParallel;
 import ned.types.Document;
 import ned.types.DocumentClusteringThread;
 import ned.types.GlobalData;
@@ -21,16 +23,15 @@ import ned.types.Utility;
 public class AppMain {
 
 		
-	private static LSHForest forest;
-	private static DocumentProcessorExecutor executer;
+	private static LSHForestAbstract forest;
 	private static ExecutorMonitorThread threadMonitor;
 	private static DocumentClusteringThread clustering;
 	
 
 	public static void main(String[] args) throws IOException
 	{
+		GlobalData gd = GlobalData.getInstance();
 		try {
-			GlobalData gd = GlobalData.getInstance();
 			
 			String threadsFileName = "/tmp/threads.txt";
 			
@@ -38,18 +39,22 @@ public class AppMain {
 				threadsFileName = "c:/temp/threads.txt";
 			
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
-			
+			/*
+			forest = new LSHForestParallel(gd.getParams().number_of_tables, 
+					 gd.getParams().hyperplanes, 
+					 gd.getParams().inital_dimension, 
+					 gd.getParams().max_bucket_size);
+			*/
 			forest = new LSHForest(gd.getParams().number_of_tables, 
 					 gd.getParams().hyperplanes, 
 					 gd.getParams().inital_dimension, 
-					 gd.getParams().max_bucket_size);		
-			
-			executer = new DocumentProcessorExecutor(forest, gd.getParams().number_of_threads);
+					 gd.getParams().max_bucket_size);
+			gd.executer = new DocumentProcessorExecutor(forest, gd.getParams().number_of_threads);
 	    	clustering = new DocumentClusteringThread(out);
 
 	    	Session.getInstance().message(Session.ERROR, "Reader", "Starting Monitor...");
 			int delay = gd.getParams().monitor_timer_seconds; //seconds
-			threadMonitor  = new MyMonitorThread(executer.getExecutor(), delay);
+			threadMonitor  = new MyMonitorThread(gd.executer.getExecutor(), delay);
 
 			doMain(out);
 			
@@ -60,8 +65,8 @@ public class AppMain {
 		} finally {
 
 			
-			if ( executer != null )
-				executer.shutdown();
+			if ( gd.executer != null )
+				gd.executer.shutdown();
 			
 			if (threadMonitor != null)
 				threadMonitor.shutdown();
@@ -208,13 +213,9 @@ public class AppMain {
 				{
 					gd.queue.add(doc.getId());
 				}
-				//gd.addDocument(doc);
-				//gd.addToRecent(doc);
-				//executer.submit(doc);
-				
-				WorkerThread w = new WorkerThread(forest, doc);
-				w.run();
 								
+				gd.executer.submit(doc);
+				
 	            processed ++;
 	            middle_processed++;
 
@@ -250,7 +251,7 @@ public class AppMain {
 
 		long current = System.nanoTime();
 		//wait till all processes finish
-		executer.shutdown();
+		gd.executer.shutdown();
     	Session.getInstance().message(Session.INFO, "Main", "Waiting for clustering thread to finish...");
 
     	if(clustering!=null)

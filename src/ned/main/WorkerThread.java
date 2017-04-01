@@ -1,12 +1,13 @@
 package ned.main;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.IntStream;
 
-import ned.hash.LSHForest;
+import ned.hash.LSHForestAbstract;
 import ned.types.Document;
 import ned.types.DocumentClusteringHelper;
 import ned.types.GlobalData;
@@ -14,9 +15,9 @@ import ned.types.GlobalData;
 public class WorkerThread implements Runnable 
 {
 	private Document doc;
-	private LSHForest forest;
+	private LSHForestAbstract forest;
 	
-    public WorkerThread(LSHForest forest, Document doc)
+    public WorkerThread(LSHForestAbstract forest, Document doc)
     {
         this.doc = doc;
         this.forest = forest;
@@ -27,78 +28,40 @@ public class WorkerThread implements Runnable
     {
         processCommand();
     }
-
-    
-    private void testParallelStream()
-    {
-		/*
-		 * final Set<String> thNames = Collections.synchronizedSet(new
-		 * HashSet<String>());
-		 * 
-		 * 
-		 * for (int i = 0; i < 1_000_000; ++i) { forkJoinPool.submit(() -> { try
-		 * { Thread.sleep(1); thNames.add(Thread.currentThread().getName());
-		 * System.out.println("Size: " + thNames.size() + " activeCount: " +
-		 * forkJoinPool.getActiveThreadCount() + " parallelism: " +
-		 * forkJoinPool.getParallelism()); } catch (Exception e) { throw new
-		 * RuntimeException(e); } }); }
-		 */
-		Date start = new Date();
-		long sum = 0;
-		IntStream.range(1, 1_000_000).parallel().forEach(x -> {
-				System.out.println(x);
-				});
-		Date start1 = new Date();
-
-		ForkJoinPool forkJoinPool = GlobalData.getForkPool();
-		
-		try {
-			forkJoinPool.submit(() ->
-			// parallel task here, for example
-			IntStream.range(1, 1_000_000).parallel().forEach(x -> System.out.println("with=" + x))).get();
-		} catch (InterruptedException | ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		Date start2 = new Date();
-
-		long without = start1.getTime() - start.getTime();
-		long with = start2.getTime() - start1.getTime();
-
-		System.out.println(without + "," + with);
-		
-		int h = 8/0;
-    }
     
     private void processCommand() 
     {
     	GlobalData gd = GlobalData.getInstance();
 
-    	
-    	
     	//Step 1: (after parse) should be in main thread (chronological order)
     	gd.addDocument(doc);
 		
-    	//testParallelStream();
-    	
 		if (doc.getWords().size() > 0)
 		{
 	        //Step 2: Can be parallelized per table
 			long base = System.currentTimeMillis();
-			List<String> set  = forest.addDocument(this.doc);
-			long time1 = System.currentTimeMillis() - base;
+			//List<String> set  = forest.addDocument(this.doc);
+			long time1 = System.currentTimeMillis() ;
+			
+			long serialD=time1-base;
 			
 			base = System.currentTimeMillis();
-			//set  = forest.addDocument4(this.doc);
-			long time2 = System.currentTimeMillis() - base;
+			List<String> set1  = forest.addDocument5(this.doc);
+			long time2 = System.currentTimeMillis();
+			
+			long parallelD=time2-time1;
+			/*if(parallelD / serialD>1){
+				System.out.println("serial -parallel : " + (parallelD / serialD));
+			}*/
 
-			//System.out.println("parallel - serial: " + (time2-time1));
+			
 			
 			//Step 2.5: (nice to have) synchronized milestone
 
-			//Step 3: post LSH mapping 
-	        DocumentClusteringHelper.postLSHMapping(doc, set);
+			//Step 3: post LSH mapping
+			
+			gd.executer.postLSH(doc, Collections.synchronizedList(set1));
+	        //DocumentClusteringHelper.postLSHMapping(doc, set);
 		}
 		else{
 			this.doc.setNearestDetermined(true);

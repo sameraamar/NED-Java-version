@@ -47,23 +47,6 @@ public class DocumentClusteringHelper {
 					doc.updateNearest((Document)x[0]);
 				});
 				
-				/*Object[] x = null;
-				try{
-					x = nearest.get();
-	
-					doc.updateNearest((Document)x[0]);
-				} 
-				catch (NoSuchElementException e)
-				{
-					System.out.println("!!!!!!!!!!!!!!!!!!!!! Could not find a good neighbor for: " + doc.getId());
-				}*/
-				
-//				DocumentClusteringHelper.mapToClusterHelper(doc);
-//				
-//				GlobalData.getInstance().markOldClusters(doc.getId());
-//				
-//				GlobalData.getInstance().queue.poll();
-				
 				doc.setNearestDetermined(true);
 		        //update the document in redis with the update doc //setNearestDetermined
 				GlobalData.getInstance().setDocumentFromRedis("id2document", doc.getId(), doc);
@@ -98,19 +81,26 @@ public class DocumentClusteringHelper {
 		//double minDist = 1.0;
 		//Document nearest = null;
 		for (String rightId : list) {
-			Document right = gd.getDocumentFromRedis("id2document", rightId);
-
-			//Document right = GlobalData.getInstance().id2document.get(rightId);
-					
-			if ( right == null )
+			
+			if(rightId == null)
+			{
+				System.out.println("WE HAVE A BUG>>>>>>>>> the rightId is null (determineClosets1)");
 				continue;
+			}
 			
 			if ( doc.getId().compareTo(rightId) <= 0 ) 
+				continue;
+			
+			Document right = gd.getDocumentFromRedis("id2document", rightId);
+
+			int i = 0;
+			if ( right == null )
 				continue;
 			
 			doc.updateNearest(right);
 			
 		}
+		
 		
 		doc.setNearestDetermined(true);
         gd.setDocumentFromRedis("id2document", doc.getId(), doc);
@@ -126,30 +116,20 @@ public class DocumentClusteringHelper {
         compare.addAll(set);
         
         
-        
-		
 		msg.append(compare.size()).append(" items. ");
 
-        //Samer: DocumentClusteringHelper.searchInRecentDocuments(doc);
         msg.append(" concatenation: ").append(System.currentTimeMillis()-base).append("\t");
          
         doc.setCacheFlag(true);
 		
         long milestone = System.currentTimeMillis();
-		DocumentClusteringHelper.determineClosest1(doc, compare);
-        msg.append(" Serial: ").append(System.currentTimeMillis()-milestone).append("\t");
-        String fromSerial=doc.getNearest();
-        
-        // final diction is determineClosest2
-        milestone = System.currentTimeMillis();
-        DocumentClusteringHelper.determineClosest2(doc, compare);
+        if(compare.size() < 500)
+        	DocumentClusteringHelper.determineClosest1(doc, compare);
+        else
+        	DocumentClusteringHelper.determineClosest2(doc, compare);
+
         msg.append(" Stream: ").append(System.currentTimeMillis()-milestone).append("\t");
         
-        String fromStream=doc.getNearest();
-
-        if(fromStream!=null && !fromStream.equals(fromSerial)){
-        	System.out.println("OOOOOOOOOOOOO");
-        }
 		milestone = System.currentTimeMillis();
 		//DocumentClusteringHelper.determineClosest3(doc, compare);
        // msg.append(" Fork+Stream: ").append(System.currentTimeMillis()-milestone).append("\t");
