@@ -249,7 +249,7 @@ public class GlobalData {
 	public void addDocument(Document doc) 
 	{
 		int d = wordCounts( doc.getWords(), doc.getWordCount());
-		doc.setDimension ( d );
+		doc.setMaxWordIndex ( d );
 		
 		numberOfDocuments++;
 		if (d > 0)

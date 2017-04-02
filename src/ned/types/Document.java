@@ -18,7 +18,7 @@ public class Document implements Serializable{
     private List<String> words;
     //private Hashtable<Integer, Double> weights ;
     private Hashtable<Integer, Integer> wordCount ;
-    private int dimension;
+    private int maxWordIndex;
     
     public int max_idx;
 	private String cleanText;
@@ -264,8 +264,8 @@ public class Document implements Serializable{
 		return id;
 	}
 
-	public int getDimension() {
-		return dimension;
+	public int getMaxWordIndex() {
+		return maxWordIndex;
 	}
 
 	Hashtable<Integer, Integer> getWordCount() {		
@@ -276,8 +276,8 @@ public class Document implements Serializable{
 		this.wordCount = wordCount;
 	}
 
-	void setDimension(int dimension) {
-		this.dimension = dimension;
+	void setMaxWordIndex(int maxIndex) {
+		this.maxWordIndex = maxIndex;
 	}
 
 	public long getTimestamp() {

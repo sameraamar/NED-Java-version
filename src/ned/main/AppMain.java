@@ -35,9 +35,22 @@ public class AppMain {
 			
 			String threadsFileName = "/tmp/threads.txt";
 			
-			if (System.getProperty("os.name").startsWith("Windows"))
-				threadsFileName = "c:/temp/threads.txt";
+			String inputFolder;
+			String outputFolder;
+			if (args!=null && args.length>=1)
+			{
+				inputFolder = args[0];
+				//outputFolder = args[2];
+			}
+			else{
+				inputFolder = "/Users/ramidabbah/private/mandoma/samer_a/data";
+				if (System.getProperty("os.name").startsWith("Windows"))
+					inputFolder = "C:\\datfdgdfgfda\\events_db\\petrovic";
+			}
 			
+			outputFolder = inputFolder + "/out";
+			threadsFileName = outputFolder + "/threads.txt";
+
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
 			/*forest = new LSHForestParallel(gd.getParams().number_of_tables, 
@@ -57,7 +70,7 @@ public class AppMain {
 			int delay = gd.getParams().monitor_timer_seconds; //seconds
 			threadMonitor  = new MyMonitorThread(gd.executer.getExecutor(), delay);
 
-			doMain(out);
+			doMain(out, inputFolder);
 			
 			out.close();
 			
@@ -78,15 +91,9 @@ public class AppMain {
 		}
 	}
 
-	public static void doMain(PrintStream out) throws IOException {
+	public static void doMain(PrintStream out, String inputFolder) throws IOException {
 		GlobalData gd = GlobalData.getInstance();
 		
-		
-		String folder = "/Users/ramidabbah/private/mandoma/samer_a/data";
-		
-		if (System.getProperty("os.name").startsWith("Windows"))
-			folder = "C:\\data\\events_db\\petrovic";
-
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
 	                    "petrovic_01000000.gz",
@@ -190,7 +197,7 @@ public class AppMain {
 				continue;
 			}
 			
-			GZIPInputStream stream = new GZIPInputStream(new FileInputStream(folder + "/" + filename));
+			GZIPInputStream stream = new GZIPInputStream(new FileInputStream(inputFolder + "/" + filename));
 			Reader decoder = new InputStreamReader(stream, "UTF-8");
 			BufferedReader buffered = new BufferedReader(decoder);
 			

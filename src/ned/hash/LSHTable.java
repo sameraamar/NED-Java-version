@@ -75,9 +75,9 @@ public class LSHTable
     	
     	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
     	Hashtable<Integer, Double> weights = doc.getWeights();
-		if (doc.getDimension() >= this.dimension) 
+		if (doc.getMaxWordIndex() >= this.dimension) 
 		{
-			this.FixDimension(doc.getDimension());
+			this.FixDimension(doc.getMaxWordIndex());
 		}
 		
 		int doubleScale = GlobalData.getInstance().getParams().DOUBLE_SCALE;
