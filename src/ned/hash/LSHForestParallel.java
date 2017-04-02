@@ -51,7 +51,7 @@ public class LSHForestParallel extends LSHForestAbstract {
 		return neighbors;
 	}
 	
-	public List<String> processResults(ArrayList< Future<List<String>> > neighbors, Document doc)
+	public List<String> processResults(List< Future<List<String>> > neighbors, Document doc)
 	{
 		final HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 

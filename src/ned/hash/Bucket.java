@@ -46,8 +46,8 @@ public class Bucket
     	List<String> list = bucketList.parallelStream()
 		.filter( id -> {
 					//Document right = gb.id2document.get(rightId);
-					if(id == null)
-						return false;
+					//if(id == null)
+					//	return false;
 					
 					return ( id.compareTo(excludeId)<0 ) ;
 					} )
