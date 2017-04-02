@@ -50,7 +50,7 @@ public class WorkerThread implements Runnable
 		else{
 			this.doc.setNearestDetermined(true);
 	        //update the document in redis with the update doc //setNearestDetermined
-	        gd.setDocumentFromRedis("id2document", doc.getId(), doc);
+	        gd.setDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getId(), doc);
 		}
 	}
     

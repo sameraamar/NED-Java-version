@@ -45,7 +45,7 @@ public class MyMonitorThread extends ExecutorMonitorThread
 		msg = new StringBuffer();
 		if(gd.recent!=null && gd.recent.size()>1)
 		{
-			Document doc = gd.getDocumentFromRedis("id2document", gd.recent.get(gd.recent.size()-1));
+			Document doc = gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT, gd.recent.get(gd.recent.size()-1));
 			if(doc != null)
 				msg.append("\tlast document time: " ).append(doc.getCreatedAt()).append("\n");
 		}

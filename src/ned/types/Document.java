@@ -297,7 +297,7 @@ public class Document implements Serializable{
 		if(rightId == null)
 			return;
 		
-		Document right = GlobalData.getInstance().getDocumentFromRedis("id2document", rightId);
+		Document right = GlobalData.getInstance().getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
 		updateNearest(right);
 	}
 

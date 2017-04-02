@@ -69,7 +69,7 @@ public class DocumentClusteringThread extends Thread {
 			if (id == null)
 				return null;
 			
-			Document doc = gd.getDocumentFromRedis("id2document",id);
+			Document doc = gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
 			if(doc == null || !doc.isNearestDetermined())
 				return null;
 		

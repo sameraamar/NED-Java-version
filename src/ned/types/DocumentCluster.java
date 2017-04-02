@@ -108,11 +108,11 @@ public class DocumentCluster {
 		for (int i =0; i<this.idList.size(); i++)
 		{
 			String docId = idList.get(i);
-			Document doc = gd.getDocumentFromRedis("id2document",docId);
+			Document doc = gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT,docId);
 			
 			Document nDoc = null;
 			if(i>0) { //this is placeholder for the lead - skip
-				nDoc =gd.getDocumentFromRedis("id2document",doc.getNearest()); //gd.id2document.get(doc.getNearest());
+				nDoc =gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT,doc.getNearest()); //gd.id2document.get(doc.getNearest());
 			}
 			
 			sb.append(docId).append("\t");
@@ -147,7 +147,7 @@ public class DocumentCluster {
 		
 		for(String id : tmpList)
 		{
-			Document doc = gd.getDocumentFromRedis("id2document",id);
+			Document doc = gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
 
 			//Document doc = gd.id2document.get(id);
 
@@ -182,7 +182,7 @@ public class DocumentCluster {
 			return 0;
 		
 		String id = this.idList.get(s-1);
-		Document doc = GlobalData.getInstance().getDocumentFromRedis("id2document",id);
+		Document doc = GlobalData.getInstance().getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
 
 		//Document doc = GlobalData.getInstance().id2document.get(id);
 		long lasttime = doc.getTimestamp();

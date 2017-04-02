@@ -115,7 +115,7 @@ public class HashtableRedis<T>
 	
 	public static void main(String[] args) 
 	{
-		HashtableRedis<Document> hmap = new HashtableRedis<Document>("id2document", Document.class);
+		HashtableRedis<Document> hmap = new HashtableRedis<Document>(GlobalData.ID2DOCUMENT, Document.class);
 		
 		Document doc = new Document("86383662215598080", "this is a test", 12121212);
 		hmap.newEntry(doc.getId(), doc);

@@ -21,13 +21,13 @@ public class DocumentClusteringHelper {
 							return ( doc.getId().compareTo(rightId) > 0 ) ;
 							} )
 					.map( rightId -> {
-						Document right = GlobalData.getInstance().getDocumentFromRedis("id2document", rightId);
+						Document right = GlobalData.getInstance().getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
 						int i=0;
 						while(right==null) 
 						{
 							i++;
 							
-							right = GlobalData.getInstance().getDocumentFromRedis("id2document", rightId);
+							right = GlobalData.getInstance().getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
 						}
 						Object[] result = { doc, new Double( Document.Distance(doc, right) ) };
 						return result;
@@ -45,7 +45,7 @@ public class DocumentClusteringHelper {
 				
 				doc.setNearestDetermined(true);
 		        //update the document in redis with the update doc //setNearestDetermined
-				GlobalData.getInstance().setDocumentFromRedis("id2document", doc.getId(), doc);
+				GlobalData.getInstance().setDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getId(), doc);
 		    } catch (Throwable thr) {
 				thr.printStackTrace();
 			}
@@ -65,10 +65,10 @@ public class DocumentClusteringHelper {
 			return ( doc.getId().compareTo(rightId) > 0 ) ;
 			} ).forEach(rightId-> {
 				
-				doc.updateNearest(gd.getDocumentFromRedis("id2document", rightId));
+				doc.updateNearest(gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId));
 			});
 		doc.setNearestDetermined(true);
-        gd.setDocumentFromRedis("id2document", doc.getId(), doc);
+        gd.setDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getId(), doc);
 
 		//long ms = System.currentTimeMillis() - base;
 		//System.out.println("determineClosest: " + list.size() + " - " + ms + " ms.");
@@ -91,7 +91,7 @@ public class DocumentClusteringHelper {
 			if ( doc.getId().compareTo(rightId) <= 0 ) 
 				continue;
 			
-			Document right = gd.getDocumentFromRedis("id2document", rightId);
+			Document right = gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
 
 			int i = 0;
 			if ( right == null )
@@ -103,7 +103,7 @@ public class DocumentClusteringHelper {
 		
 		
 		doc.setNearestDetermined(true);
-        gd.setDocumentFromRedis("id2document", doc.getId(), doc);
+        gd.setDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getId(), doc);
 	}
 	
 	public static void postLSHMapping(Document doc, List<String> set)
@@ -186,7 +186,7 @@ public class DocumentClusteringHelper {
 		Double distance = null;
 		if (doc.getNearest() != null)
 		{
-			 nearest = GlobalData.getInstance().getDocumentFromRedis("id2document",doc.getNearest());
+			 nearest = GlobalData.getInstance().getDocumentFromRedis(GlobalData.ID2DOCUMENT,doc.getNearest());
 
 
 			//nearest =  data.id2document.get(doc.getNearest());
