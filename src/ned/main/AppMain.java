@@ -63,7 +63,10 @@ public class AppMain {
 			String outputFolder = arguments.getOrDefault("-ofolder", inputFolder + "/out");
 
 			String threadsFileName = outputFolder + "/" + arguments.getOrDefault("-threads", "threads.txt" );
-			
+
+			System.out.println("Max documents:" + gd.getParams().max_documents);
+			System.out.println("input folder:" + inputFolder);
+			System.out.println("thread file:" + threadsFileName);
 
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
