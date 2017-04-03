@@ -88,6 +88,15 @@ public class Document implements Serializable{
             return cacheNorm;
 
         double res = 0;
+        res=getWeights().entrySet().parallelStream()
+        .mapToDouble(entry->
+        	
+        	entry.getValue().doubleValue()*entry.getValue().doubleValue()
+           
+        ).sum();
+        
+        
+        /*
         Enumeration<Double> values = getWeights().elements();
         
         while(values.hasMoreElements())
@@ -95,7 +104,7 @@ public class Document implements Serializable{
 			double v = values.nextElement();
             res += v * v;
         }
-
+*/
         res = Math.sqrt(res);
         
         if (cacheOn)

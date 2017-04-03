@@ -26,7 +26,7 @@ public class LSHForest extends LSHForestAbstract
 		super(tablesNumer, hyperPlanesNumber, dimension, maxBucketSize);
 	}
 
-	public List<String> addDocument3(Document doc)
+	public List<String> addDocument51(Document doc)
     {
 		HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 		
