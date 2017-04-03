@@ -41,7 +41,7 @@ public class Bucket
     public List<String> getDocIDsList(String excludeId) 
     {
     	@SuppressWarnings("unchecked")
-		ArrayList<String> bucketList = (ArrayList<String>)documents.clone();
+		List<String> bucketList = Collections.synchronizedList((ArrayList<String>)documents.clone());
     	
     	List<String> list = bucketList.parallelStream()
 		.filter( id -> {
