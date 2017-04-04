@@ -136,7 +136,7 @@ public class DocumentClusteringHelper {
         if(compare.size() < 500)
         	DocumentClusteringHelper.determineClosest1(doc, compare);
         else
-        	DocumentClusteringHelper.determineClosest2(doc, compare);
+        	DocumentClusteringHelper.determineClosest5(doc, compare);
 
         msg.append(" Stream: ").append(System.currentTimeMillis()-milestone).append("\t");
         
@@ -178,6 +178,11 @@ public class DocumentClusteringHelper {
 		}
 	}*/
 	
+	private static void determineClosest5(Document doc, List<String> compare) {
+		determineClosest2(doc,compare);
+		
+	}
+
 	public static void mapToClusterHelper(Document doc)
 	{
 		GlobalData data = GlobalData.getInstance();
@@ -238,5 +243,17 @@ public class DocumentClusteringHelper {
 			}
 		}
 	}
+	
+	 public static <T> List<T> intersection(List<T> list1, List<T> list2) {
+	        List<T> list = new ArrayList<T>();
+
+	        for (T t : list1) {
+	            if(list2.contains(t)) {
+	                list.add(t);
+	            }
+	        }
+
+	        return list;
+	    }
 	
 }
