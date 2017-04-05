@@ -34,7 +34,7 @@ public class WorkerThread implements Runnable
 			long time1 = System.currentTimeMillis() - base;
 			
 			base = System.currentTimeMillis();
-			//List<String> set  = forest.addDocument4(this.doc);
+			//List<String> set  = forest.addDocument5(this.doc);
 			long time2 = System.currentTimeMillis() - base;
 
 			//System.out.println("parallel - serial: " + (time2-time1));

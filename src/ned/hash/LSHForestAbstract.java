@@ -25,7 +25,7 @@ abstract public class LSHForestAbstract {
 	{
 		return null;
 	}
-	public List<String> processResults(ArrayList< Future<List<String>> > neighbors, Document doc)
+	public List<String> processResults(List< Future<List<String>> > neighbors, Document doc)
 	{
 		return null;
 	}

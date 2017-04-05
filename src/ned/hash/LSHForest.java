@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
@@ -26,7 +27,7 @@ public class LSHForest extends LSHForestAbstract
 		super(tablesNumer, hyperPlanesNumber, dimension, maxBucketSize);
 	}
 
-	public List<String> addDocument3(Document doc)
+	public List<String> addDocument32(Document doc)
     {
 		HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 		
@@ -65,7 +66,7 @@ public class LSHForest extends LSHForestAbstract
         return res;
     }
 	
-	public List<String> addDocument4(Document doc)
+	public List<String> addDocument5(Document doc)
     {
 		final HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 		
@@ -75,25 +76,28 @@ public class LSHForest extends LSHForestAbstract
 			.map(table -> {
 				 return table.AddDocument(doc);
 			})
-			.forEach(tmpList -> {
+			.forEach(tmpList->{
 				
-				for (String tmp : tmpList) {
-					if (tmp.compareTo( doc.getId() ) >= 0)
-						continue;
-					
-					//synchronized(hitCounts) {
+				 for (String tmp : tmpList) {
+						if (tmp.compareTo( doc.getId() ) >= 0)
+							continue;
+						
 						Integer c = hitCounts.getOrDefault(tmp, 0);
 						hitCounts.put(tmp, c+1);
-					//}
-				}
+					}
 			});
-		
-		/*boolean breakme = false;
-		for (String h : hitCounts.keySet())
-		{
-			if (hitCounts.get(h) > 5)
-				breakme = true;
-		}*/
+			
+				
+				/*
+				 * for (String tmp : tmpList) {
+				if (tmp.compareTo( doc.getId() ) >= 0)
+					continue;
+				
+				Integer c = hitCounts.getOrDefault(tmp, 0);
+				hitCounts.put(tmp, c+1);
+			}*/
+					
+			
 				
 		ArrayList<String> output = new ArrayList<String>(3*numberOfTables);
 		hitCounts.entrySet()
@@ -114,22 +118,35 @@ public class LSHForest extends LSHForestAbstract
 		
         return output;
     }
-	public List<String> addDocument5(Document doc)
+	public List<String> addDocument(Document doc)
     {
 		final HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
+		 ForkJoinPool forkJoinPool = new ForkJoinPool();
 		Stream<LSHTable> tablesSTream=Arrays.stream(tables);
-		 tablesSTream.parallel().
-		map(table->table.AddDocument(doc))
-		.forEach(tmpList->{
-			for (String tmp : tmpList) {
-				if (tmp.compareTo( doc.getId() ) >= 0)
-					continue;
+		
+			forkJoinPool.submit(() ->
+
+			 tablesSTream.parallel().
+			map(table->table.AddDocument(doc))
+			.forEach(tmpList->{
+				for (String tmp : tmpList) {
+					//System.out.println(tmp);
+					
+					if (tmp.compareTo( doc.getId() ) >= 0)
+						continue;
+					
+					Integer c = hitCounts.getOrDefault(tmp, 0);
+					synchronized (hitCounts){
+						hitCounts.put(tmp, c+1);
+					}
+					
+				}
 				
-				Integer c = hitCounts.getOrDefault(tmp, 0);
-				hitCounts.put(tmp, c+1);
-			}
+			}));
 			
-		});
+			forkJoinPool.shutdown();
+			
+		
 		 ArrayList<String> output = new ArrayList<String>();
         output.addAll(hitCounts.keySet());
         
@@ -155,7 +172,7 @@ public class LSHForest extends LSHForestAbstract
         return res;
     }
 	
-	public List<String> addDocument(Document doc)
+	public List<String> addDocument52(Document doc)
     {
 		final HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 		

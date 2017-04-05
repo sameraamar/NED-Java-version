@@ -88,6 +88,15 @@ public class Document implements Serializable{
             return cacheNorm;
 
         double res = 0;
+        res=getWeights().entrySet().parallelStream()
+        .mapToDouble(entry->
+        	
+        	entry.getValue().doubleValue()*entry.getValue().doubleValue()
+           
+        ).sum();
+        
+        
+        /*
         Enumeration<Double> values = getWeights().elements();
         
         while(values.hasMoreElements())
@@ -95,7 +104,7 @@ public class Document implements Serializable{
 			double v = values.nextElement();
             res += v * v;
         }
-
+*/
         res = Math.sqrt(res);
         
         if (cacheOn)
@@ -106,12 +115,13 @@ public class Document implements Serializable{
 
     public static double Distance(Document left, Document right)
     {
-        double res = 0.0;
-
-        double norm1 = right.Norm();
-        double norm2 = left.Norm();
-        double norms = norm1 * norm2;
-
+    	double res = 0.0;
+    	 
+    	 List<String> commonWords = DocumentClusteringHelper.intersection(left.getWords(), right.getWords());
+    	if(commonWords.isEmpty()){
+    		//System.out.println("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
+    		return 1;
+    	}
         Hashtable<Integer, Double> leftWeights = left.getWeights();
 		Hashtable<Integer, Double> rightWeights = right.getWeights();
 		if (rightWeights.size() > leftWeights.size())
@@ -120,8 +130,13 @@ public class Document implements Serializable{
             leftWeights = rightWeights;
             rightWeights = tmp;
         }
-
+		
+    	
+    	
         double dot = 0.0;
+        double norm1 = right.Norm();
+        double norm2 = left.Norm();
+        double norms = norm1 * norm2;
         
         //right.getWeights().keySet().retainAll(left.getWeights().keySet())
         

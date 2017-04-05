@@ -57,6 +57,8 @@ public class DocumentClusteringHelper {
 	{
 		//long base = System.currentTimeMillis();
 		GlobalData gd = GlobalData.getInstance();
+		ForkJoinPool forkJoinPool = new ForkJoinPool();
+		forkJoinPool.submit(() ->
 		list.parallelStream().filter( rightId-> {
 			
 			if(rightId==null)
@@ -66,7 +68,8 @@ public class DocumentClusteringHelper {
 			} ).forEach(rightId-> {
 				
 				doc.updateNearest(gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId));
-			});
+			}));
+		forkJoinPool.shutdown();
 		doc.setNearestDetermined(true);
         gd.setDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getId(), doc);
 
@@ -136,7 +139,7 @@ public class DocumentClusteringHelper {
         if(compare.size() < 500)
         	DocumentClusteringHelper.determineClosest1(doc, compare);
         else
-        	DocumentClusteringHelper.determineClosest2(doc, compare);
+        	DocumentClusteringHelper.determineClosest5(doc, compare);
 
         msg.append(" Stream: ").append(System.currentTimeMillis()-milestone).append("\t");
         
@@ -178,6 +181,11 @@ public class DocumentClusteringHelper {
 		}
 	}*/
 	
+	private static void determineClosest5(Document doc, List<String> compare) {
+		determineClosest2(doc,compare);
+		
+	}
+
 	public static void mapToClusterHelper(Document doc)
 	{
 		GlobalData data = GlobalData.getInstance();
@@ -238,5 +246,17 @@ public class DocumentClusteringHelper {
 			}
 		}
 	}
+	
+	 public static <T> List<T> intersection(List<T> list1, List<T> list2) {
+	        List<T> list = new ArrayList<T>();
+
+	        for (T t : list1) {
+	            if(list2.contains(t)) {
+	                list.add(t);
+	            }
+	        }
+
+	        return list;
+	    }
 	
 }

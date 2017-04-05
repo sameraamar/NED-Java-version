@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import com.google.gson.Gson;
@@ -31,25 +33,40 @@ public class AppMain {
 	public static void main(String[] args) throws IOException
 	{
 		GlobalData gd = GlobalData.getInstance();
-		try {
+		try {			
+			Hashtable<String, String> arguments = new Hashtable<String, String>();
 			
-			String threadsFileName = "/tmp/threads.txt";
-			
-			String inputFolder;
-			String outputFolder;
-			if (args!=null && args.length>=1)
+			if(args.length > 0 && args[0] == "-help")
 			{
-				inputFolder = args[0];
-				//outputFolder = args[2];
-			}
-			else{
-				inputFolder = "/Users/ramidabbah/private/mandoma/samer_a/data";
-				if (System.getProperty("os.name").startsWith("Windows"))
-					inputFolder = "C:\\datfdgdfgfda\\events_db\\petrovic";
+				System.out.println("-ifolder <input-folder> -ofolder <output-folder> -threads <threads-file-name>");
+				return;
 			}
 			
-			outputFolder = inputFolder + "/out";
-			threadsFileName = outputFolder + "/threads.txt";
+			for (int i=0; i<args.length; i++)
+			{
+				if(args[i].startsWith("-"))
+				{
+					arguments.put(args[i], args[++i]);
+				}
+			}
+			
+			String inputFolder = "/Users/ramidabbah/private/mandoma/samer_a/data";
+			if (System.getProperty("os.name").startsWith("Windows"))
+				inputFolder = "C:\\data\\events_db\\petrovic";
+			
+			
+			inputFolder = arguments.getOrDefault("-ifolder", inputFolder);
+			int documentNumber = Integer.parseInt( arguments.getOrDefault("-max_doc", gd.getParams().max_documents+"") );
+			gd.getParams().max_documents = documentNumber;
+			
+			
+			String outputFolder = arguments.getOrDefault("-ofolder", inputFolder + "/out");
+
+			String threadsFileName = outputFolder + "/" + arguments.getOrDefault("-threads", "threads.txt" );
+
+			System.out.println("Max documents:" + gd.getParams().max_documents);
+			System.out.println("input folder:" + inputFolder);
+			System.out.println("thread file:" + threadsFileName);
 
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
@@ -178,7 +195,7 @@ public class AppMain {
     	clustering.start();
     	Session.getInstance().message(Session.INFO, "Reader", "clustering thread started");
 
- 		System.setProperty("java.util.concurrent.ForkJoinPool.common‌​.parallelism", "2000");
+ 		System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "2000");
     	
 		int offset = gd.getParams().offset;
 		int offset_p = (int)(offset * 0.05);

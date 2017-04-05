@@ -32,7 +32,7 @@ public class GlobalData {
 	{
 		public int DOUBLE_SCALE = 5; //precision scale for double
 		public int monitor_timer_seconds = 5; //seconds
-		public int number_of_threads = 100000;
+		public int number_of_threads = 90000;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 2;
@@ -44,7 +44,7 @@ public class GlobalData {
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 1.0;
-		public double min_cluster_size = 5;
+		public double min_cluster_size = 3;
 		public int inital_dimension = 50000;
 		public int dimension_jumps = 50000;
 	}
@@ -195,13 +195,19 @@ public class GlobalData {
 	{
 		Hashtable<Integer, Integer> wordCount = doc.getWordCount();
 		Enumeration<Integer> tmp = wordCount.keys();
-		
+		wordCount.entrySet()
+		   .parallelStream()
+		   .forEach(entry->{
+			   double a = entry.getValue() * this.word2idf.get(entry.getKey());
+				weights.put(entry.getKey(), a);
+		   });
+		/*
 		while(tmp.hasMoreElements())
 		{
 			int k = tmp.nextElement();
 			double a = wordCount.get(k) * this.word2idf.get(k);
 			weights.put(k, a);
-		}
+		}*/
 	}
 	
 	public int wordCounts(List<String> list, Hashtable<Integer, Integer> d)
