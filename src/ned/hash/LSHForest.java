@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
@@ -122,6 +123,8 @@ public class LSHForest extends LSHForestAbstract
     {
 		final HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 		 ForkJoinPool forkJoinPool = new ForkJoinPool();
+		 CountDownLatch latch = new CountDownLatch(tables.length);
+
 		Stream<LSHTable> tablesSTream=Arrays.stream(tables);
 		
 			forkJoinPool.submit(() ->
@@ -140,30 +143,40 @@ public class LSHForest extends LSHForestAbstract
 						hitCounts.put(tmp, c+1);
 					}
 					
+					
 				}
-				
+				latch.countDown();
 			}));
 			
-			forkJoinPool.shutdown();
 			
-		
+			
+			forkJoinPool.shutdown();
+			try {
+				latch.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		 ArrayList<String> output = new ArrayList<String>();
         output.addAll(hitCounts.keySet());
-        
+/*
         output.sort( new Comparator<String> () 
-					        {  
-					            @Override  
-					            public int compare(String left, String right){  
-					            	if(hitCounts.get(right) !=null && hitCounts.get(left)!=null){
-					            		 return hitCounts.get(right) - hitCounts.get(left) ;  //Descending  
-					            	}
-					            	else{
-					            		return 0;
-					            	}
-					            }  
-					            
-					        }
-        ); 
+        {  
+            @Override  
+            public int compare(String left, String right){  
+            	if(hitCounts.get(right) !=null && hitCounts.get(left)!=null){
+            		 return hitCounts.get(right) - hitCounts.get(left) ;  //Descending  
+            	}
+            	else{
+            		return 0;
+            	}
+            }  
+            
+        }
+); 
+		 }
+        
+       */
         
         int compare_with = 3*numberOfTables;
         int toIndex = Math.min(compare_with, output.size());
