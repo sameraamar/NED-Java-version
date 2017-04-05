@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
@@ -120,24 +121,32 @@ public class LSHForest extends LSHForestAbstract
 	public List<String> addDocument(Document doc)
     {
 		final HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
+		 ForkJoinPool forkJoinPool = new ForkJoinPool();
 		Stream<LSHTable> tablesSTream=Arrays.stream(tables);
-		 tablesSTream.parallel().
-		map(table->table.AddDocument(doc))
-		.forEach(tmpList->{
-			for (String tmp : tmpList) {
-				//System.out.println(tmp);
-				
-				if (tmp.compareTo( doc.getId() ) >= 0)
-					continue;
-				
-				Integer c = hitCounts.getOrDefault(tmp, 0);
-				synchronized (hitCounts){
-					hitCounts.put(tmp, c+1);
+		
+			forkJoinPool.submit(() ->
+
+			 tablesSTream.parallel().
+			map(table->table.AddDocument(doc))
+			.forEach(tmpList->{
+				for (String tmp : tmpList) {
+					//System.out.println(tmp);
+					
+					if (tmp.compareTo( doc.getId() ) >= 0)
+						continue;
+					
+					Integer c = hitCounts.getOrDefault(tmp, 0);
+					synchronized (hitCounts){
+						hitCounts.put(tmp, c+1);
+					}
+					
 				}
 				
-			}
+			}));
 			
-		});
+			forkJoinPool.shutdown();
+			
+		
 		 ArrayList<String> output = new ArrayList<String>();
         output.addAll(hitCounts.keySet());
         
