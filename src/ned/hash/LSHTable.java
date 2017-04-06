@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
 
 import ned.types.Document;
 import ned.types.GlobalData;
@@ -86,14 +89,24 @@ public class LSHTable
     	{
     		double tmp = 0;
     		int index=i;
-    		tmp=weights.keySet().parallelStream().mapToDouble(j->weights.get(j) * getHyperPlane(index).get(j)).sum();
-    		
+    		// ForkJoinPool forkJoinPool = new ForkJoinPool();
+    		//Future<Double> future=forkJoinPool.submit(() ->{
+    		tmp+= weights.keySet().parallelStream().mapToDouble(j->weights.get(j) * getHyperPlane(index).get(j)).sum();
+    		//});
+    		//forkJoinPool.shutdown();
     		/*
 			for (Integer j : weights.keySet()) 
     		{
     			tmp += weights.get(j) * getHyperPlane(i).get(j);
     		}
-*/
+
+    		try {
+				tmp+=(Double)future.get();
+			} catch (InterruptedException | ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			*/
 			if(doubleScale>0)
 				tmp = BigDecimal.valueOf(tmp).setScale(doubleScale, RoundingMode.HALF_UP).doubleValue();
 			
