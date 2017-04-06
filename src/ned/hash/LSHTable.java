@@ -19,12 +19,12 @@ public class LSHTable
     private int dimension;
     
     private ArrayList<Double>[] hyperPlanes = null;
-    private java.util.Dictionary<String, Bucket> buckets = null;
+    private java.util.Dictionary<Long, Bucket> buckets = null;
     
     public LSHTable(int hyperPlanesNumber, int dimension, int maxBucketSize)
     {
     	this.hyperPlanesNumber = hyperPlanesNumber;
-        buckets = new Hashtable<String, Bucket>();
+        buckets = new Hashtable<Long, Bucket>();
         this.maxBucketSize = maxBucketSize;
         this.dimension = dimension;
         GenerateHyperPlanes();
@@ -68,7 +68,55 @@ public class LSHTable
     	dimension = newDimension;
     }
     
-    private String GenerateHashCode(Document doc)
+    private long GenerateHashCode(Document doc)
+    {
+    	
+    	boolean[] st = new boolean[hyperPlanesNumber];
+    	Session session = Session.getInstance();
+    	
+    	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
+    	Hashtable<Integer, Double> weights = doc.getWeights();
+		if (doc.getMaxWordIndex() >= this.dimension) 
+		{
+			this.FixDimension(doc.getMaxWordIndex());
+		}
+		
+		int doubleScale = GlobalData.getInstance().getParams().DOUBLE_SCALE;
+    	for (int i = 0 ; i<hyperPlanesNumber; i++)
+    	{
+    		double tmp = 0;
+    		int index=i;
+    		tmp=weights.keySet().parallelStream().mapToDouble(j->weights.get(j) * getHyperPlane(index).get(j)).sum();
+    		
+    		/*
+			for (Integer j : weights.keySet()) 
+    		{
+    			tmp += weights.get(j) * getHyperPlane(i).get(j);
+    		}
+*/
+			if(doubleScale>0)
+				tmp = BigDecimal.valueOf(tmp).setScale(doubleScale, RoundingMode.HALF_UP).doubleValue();
+			
+    		st[i]=( tmp>=0 ? true : false );
+    	}
+    	long res=convertBooleanArrayToLong(st);
+        return res;
+    }
+    
+    private long convertBooleanArrayToLong(boolean[] st){
+    	long res=0;
+    	for (int i = 0 ; i<hyperPlanesNumber; i++){
+    		if(st[i]){
+    			res+=Math.pow(10,i);
+    		}
+    		
+    	}
+		return res;
+    	
+    }
+    
+    
+    private String GenerateHashCode0(Document doc)
     {
     	StringBuffer st = new StringBuffer();
     	Session session = Session.getInstance();
@@ -99,9 +147,10 @@ public class LSHTable
         return st.toString();
     }
 
+
     public List<String> AddDocument(Document doc)
     {
-        String code = GenerateHashCode(doc);
+        long code = GenerateHashCode(doc);
         if (buckets.get(code) == null)
             buckets.put(code, new Bucket(maxBucketSize));
 
