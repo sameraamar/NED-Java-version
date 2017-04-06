@@ -57,6 +57,8 @@ public class DocumentClusteringHelper {
 	{
 		//long base = System.currentTimeMillis();
 		GlobalData gd = GlobalData.getInstance();
+		ForkJoinPool forkJoinPool = new ForkJoinPool();
+		forkJoinPool.submit(() ->
 		list.parallelStream().filter( rightId-> {
 			
 			if(rightId==null)
@@ -66,7 +68,8 @@ public class DocumentClusteringHelper {
 			} ).forEach(rightId-> {
 				
 				doc.updateNearest(gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId));
-			});
+			}));
+		forkJoinPool.shutdown();
 		doc.setNearestDetermined(true);
         gd.setDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getId(), doc);
 

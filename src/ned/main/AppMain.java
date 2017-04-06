@@ -195,7 +195,7 @@ public class AppMain {
     	clustering.start();
     	Session.getInstance().message(Session.INFO, "Reader", "clustering thread started");
 
- 		System.setProperty("java.util.concurrent.ForkJoinPool.common‌​.parallelism", ""+GlobalData.getInstance().parameters.number_of_threads);
+ 		System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "2000");
     	
 		int offset = gd.getParams().offset;
 		int offset_p = (int)(offset * 0.05);
