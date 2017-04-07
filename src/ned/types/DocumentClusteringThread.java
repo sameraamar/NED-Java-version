@@ -81,10 +81,14 @@ public class DocumentClusteringThread extends Thread {
 
 	public void shutdown() 
 	{
+		stop = true;
 		while (!gd.queue.isEmpty())
 		{
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+			}
 		}
-		stop = true;
 	}
 		
 }

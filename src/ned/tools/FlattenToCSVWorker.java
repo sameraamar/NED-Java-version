@@ -45,7 +45,18 @@ public class FlattenToCSVWorker extends ProcessorWorker
 		sb.append(retweets).append(",");
 		sb.append(likes).append(",");
 		sb.append(jRtwt).append(",");
-		sb.append(jRply);
+		sb.append(jRply).append(",");
+		
+		sb.append(FlattenDatasetMain.getTopic( id )).append(",");
+		
+		Entry entry = FlattenDatasetMain.id2group.get( id );
+		if(entry == null)
+			sb.append(",");
+		else
+		{
+			sb.append(entry.leadId).append(",");
+			sb.append(entry.level);
+		}
 		
 		out.println(sb.toString());
     }

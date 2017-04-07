@@ -24,10 +24,9 @@ import ned.types.Utility;
 
 public class FlattenDatasetMain {
 	private static FlattenToCSVExecutor mapper;
-	public static int counter = 0;
 	public static int processed;
 	private static Hashtable<String, Integer> positive;
-	private static Hashtable<String, Entry> id2group;
+	public static Hashtable<String, Entry> id2group;
 	//private static HashtableRedis<Entry> id2group;
 	private static ArrayList<String> ids;
 	
@@ -47,18 +46,18 @@ public class FlattenDatasetMain {
 			flattenLabeledData(filename, "c:/temp/relevance_judgments_00000000.csv");
 			
 			mapper = new FlattenToCSVExecutor(dataout, GlobalData.getInstance().getParams().number_of_threads);
+			id2group = new Hashtable<String, Entry>(); // HashtableRedis<Entry>("mapper.id2group", Entry.class);
 			
-			dataout.println( "id,userId,created_at,timestamp,retweets,likes,jRtwt,jRply" );
-			
-			ExecutorMonitorThread monitor = new ExecutorMonitorThread(mapper.getExecutor(), 2);
+			ExecutorMonitorThread monitor = new FlattenDatasetMonitor(mapper.getExecutor(), 2);
 			monitor.start();
 			
-			doMain(out);
+			doMain(out, 0);
+			dumpGroups("c:/temp/id2group.txt");
+			
+			doMain(out, 1);
 			
 			mapper.shutdown();
 			monitor.shutdown();
-			
-			System.out.println("added " + counter + " entries");
 			
 			out.close();
 			
@@ -73,7 +72,7 @@ public class FlattenDatasetMain {
 
 	}
 
-	public static void doMain(PrintStream out1) throws IOException {
+	public static void doMain(PrintStream out1, int scan) throws IOException {
 		GlobalData gd = GlobalData.getInstance();
 		
 		
@@ -146,8 +145,7 @@ public class FlattenDatasetMain {
 		boolean stop = false;
 		long base = System.nanoTime();
 		long middletime = base;
-		
-		id2group = new Hashtable<String, Entry>(); // HashtableRedis<Entry>("mapper.id2group", Entry.class);
+		int fileidx = 0;
 		//id2group.reset();
 		ids = new ArrayList<String>();
 		
@@ -155,8 +153,17 @@ public class FlattenDatasetMain {
 
     	int offset = gd.getParams().offset;
 		for (String filename : files) {
+			fileidx ++;
+
 			if (stop)
 				break;
+			
+	    	Session.getInstance().message(Session.INFO, "Reader", "reading from file: " + filename);
+			if(fileidx < gd.getParams().skip_files)
+			{
+            	Session.getInstance().message(Session.INFO, "Reader", "Skipping file " + fileidx );
+				continue;
+			}
 			
 			GZIPInputStream stream = new GZIPInputStream(new FileInputStream(folder + "/" + filename));
 			Reader decoder = new InputStreamReader(stream, "UTF-8");
@@ -175,7 +182,7 @@ public class FlattenDatasetMain {
 					continue;					
 				}
 
-				Document doc = Document.parse(line, true);
+				Document doc = Document.parse(line, scan==1);
 				if(doc == null)
 				{
 					line=buffered.readLine();
@@ -183,26 +190,35 @@ public class FlattenDatasetMain {
 				}
 				
 				ids.add(doc.getId());
-				mapper.submit(line);
+				if(scan == 1)
+					mapper.submit(line);
 				
-
-				String rply = doc.getReplyTo();
-				String rtwt = doc.getRetweetedId();
-				
-				if(rply == null && rtwt == null)
+				else if (scan == 0)
 				{
-					Entry e = new Entry(doc.getId(), 0);
-					id2group.put(doc.getId(), e);
-				}
-				else if(rply != null || rtwt != null)
-				{
-					String myLeadId = rtwt!=null ? rtwt : rply;
+					String rply = doc.getReplyTo();
+					String rtwt = doc.getRetweetedId();
 					
-					Entry leadE = id2group.get(myLeadId);
-					Entry e = new Entry(leadE.leadId, leadE.level+1);
-					id2group.put(doc.getId(), e);
+					if(rply == null && rtwt == null)
+					{
+						Entry e = new Entry(doc.getId(), 0);
+						id2group.put(doc.getId(), e);
+					}
+					else if(rply != null || rtwt != null)
+					{
+						String myLeadId = rtwt!=null ? rtwt : rply;
+						
+						Entry leadE = id2group.get(myLeadId);
+						if (leadE == null)
+						{
+							leadE = new Entry(myLeadId, 0);
+							id2group.put(myLeadId, leadE);
+						}
+
+						Entry e = new Entry(leadE.leadId, leadE.level+1);
+						id2group.put(doc.getId(), e);
+					}
+					
 				}
-				
 				
 	            processed ++;
 
@@ -213,7 +229,8 @@ public class FlattenDatasetMain {
 	            	average2 = Math.round(100.0 * average2) / 100.0;
 	            	
 	            	StringBuffer msg = new StringBuffer();
-	            	msg.append( "Processed " ).append ( processed ).append(" docs. ");
+	            	msg.append( "[Scan ").append(scan);
+	            	msg.append("] Processed " ).append ( processed ).append(" docs. ");
 	            	long seconds = TimeUnit.NANOSECONDS.toSeconds( System.nanoTime() - base);
 	            	msg.append(" elapsed time: ").append(Utility.humanTime(seconds));
 	            	msg.append("(AHT: ").append(average2).append(" ms). ");
@@ -233,8 +250,6 @@ public class FlattenDatasetMain {
 	        
 		}
 		
-		dumpGroups("c:/temp/id2group.txt");
-		
 		long current = System.nanoTime();
 
 		long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);
@@ -243,6 +258,7 @@ public class FlattenDatasetMain {
 	
 	private static void dumpGroups(String filename) throws FileNotFoundException 
 	{
+		System.out.println("Writing groups to file: " + filename);
 		PrintStream groupsOut = new PrintStream(filename);
 		
 		groupsOut.println("id,leadId,depth,topic");
@@ -321,6 +337,11 @@ public class FlattenDatasetMain {
 		output.close();
 		System.out.println("File loaded: "+count+" successful, "+ failed +" failed, "+ skip +" skipped.");
 		
+	}
+
+	public static Integer getTopic(String id) 
+	{
+		return positive.getOrDefault(id, -1);
 	}
 	
 }

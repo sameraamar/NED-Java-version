@@ -19,6 +19,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 
 import ned.main.DocumentProcessorExecutor;
 import ned.modules.Twokenize;
+import ned.types.GlobalData.Parameters;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -30,16 +31,17 @@ public class GlobalData {
 
 	public class Parameters 
 	{
+		public int ForkJoinPool = 2000;
 		public int DOUBLE_SCALE = 5; //precision scale for double
 		public int monitor_timer_seconds = 5; //seconds
-		public int number_of_threads = 100000;
+		public int number_of_threads = 50000;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
-		public int hyperplanes = 2;
+		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
-		public int max_documents = 50000; //1_200_000;
+		public int max_documents = 300000000; //52_200_000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 0; //8800000-17*500000;
+		public int offset = 0;//8500000-17*500000;
 		public int skip_files = 0;//17;
 		public int search_recents = 2000;
 		public double threshold = 0.6;
@@ -195,13 +197,19 @@ public class GlobalData {
 	{
 		Hashtable<Integer, Integer> wordCount = doc.getWordCount();
 		Enumeration<Integer> tmp = wordCount.keys();
-		
+		wordCount.entrySet()
+		   .parallelStream()
+		   .forEach(entry->{
+			   double a = entry.getValue() * this.word2idf.get(entry.getKey());
+				weights.put(entry.getKey(), a);
+		   });
+		/*
 		while(tmp.hasMoreElements())
 		{
 			int k = tmp.nextElement();
 			double a = wordCount.get(k) * this.word2idf.get(k);
 			weights.put(k, a);
-		}
+		}*/
 	}
 	
 	public int wordCounts(List<String> list, Hashtable<Integer, Integer> d)
@@ -500,6 +508,10 @@ public class GlobalData {
 		return parameters;
 	}
 
+	public void setParams(Parameters params) {
+		this.parameters = params;
+	}
+	
 	public void markOldClusters(String docId) 
 	{
 		int young = 0;

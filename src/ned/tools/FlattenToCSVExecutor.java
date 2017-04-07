@@ -13,6 +13,7 @@ public class FlattenToCSVExecutor extends ProcessorExecutor {
 	{
 		super(number_of_threads);
 		this.out = out;
+		out.println( "id,userId,created_at,timestamp,retweets,likes,jRtwt,jRply,topic_id,group,level" );
 	}
 	
 	protected Runnable createWorker(String line) {
