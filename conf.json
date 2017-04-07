@@ -1,0 +1,19 @@
+{
+  "DOUBLE_SCALE": 5,
+  "monitor_timer_seconds": 5,
+  "number_of_threads": 100,
+  "print_limit": 5000,
+  "number_of_tables": 70,
+  "hyperplanes": 2,
+  "max_bucket_size": 2000,
+  "max_documents": 2000,
+  "max_thread_delta_time": 3600,
+  "offset": 0,
+  "skip_files": 0,
+  "search_recents": 2000,
+  "threshold": 0.6,
+  "min_cluster_entropy": 1.0,
+  "min_cluster_size": 5.0,
+  "inital_dimension": 50000,
+  "dimension_jumps": 50000 
+}
