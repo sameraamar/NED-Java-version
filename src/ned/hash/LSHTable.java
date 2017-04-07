@@ -74,7 +74,7 @@ public class LSHTable
     private long GenerateHashCode(Document doc)
     {
     	
-    	boolean[] st = new boolean[hyperPlanesNumber];
+    	boolean[] st = new boolean [hyperPlanesNumber];
     	Session session = Session.getInstance();
     	
     	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
@@ -89,9 +89,11 @@ public class LSHTable
     	{
     		double tmp = 0;
     		int index=i;
-    		// ForkJoinPool forkJoinPool = new ForkJoinPool();
-    		//Future<Double> future=forkJoinPool.submit(() ->{
-    		tmp+= weights.keySet().parallelStream().mapToDouble(j->weights.get(j) * getHyperPlane(index).get(j)).sum();
+    		double tmp1 = 0;
+
+    		//ForkJoinPool forkJoinPool = new ForkJoinPool();
+    		//Future<?> future= forkJoinPool.submit(() ->{
+    		tmp+=weights.keySet().parallelStream().mapToDouble(j->weights.get(j) * getHyperPlane(index).get(j)).sum();
     		//});
     		//forkJoinPool.shutdown();
     		/*
@@ -99,16 +101,18 @@ public class LSHTable
     		{
     			tmp += weights.get(j) * getHyperPlane(i).get(j);
     		}
-
+*/
     		try {
-				tmp+=(Double)future.get();
-			} catch (InterruptedException | ExecutionException e) {
+    			//while(!future.isDone()){
+    			//Thread.sleep(5);
+    			//}
+				//tmp1+=(Double)future.get();
+			} catch ( Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			*/
-			if(doubleScale>0)
-				tmp = BigDecimal.valueOf(tmp).setScale(doubleScale, RoundingMode.HALF_UP).doubleValue();
+			//if(doubleScale>0)
+			//	tmp = BigDecimal.valueOf(tmp).setScale(doubleScale, RoundingMode.HALF_UP).doubleValue();
 			
     		st[i]=( tmp>=0 ? true : false );
     	}
