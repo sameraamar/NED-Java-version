@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
+import java.util.stream.IntStream;
 
 import ned.types.Document;
 import ned.types.GlobalData;
@@ -84,39 +85,13 @@ public class LSHTable
 			this.FixDimension(doc.getMaxWordIndex());
 		}
 		
-		int doubleScale = GlobalData.getInstance().getParams().DOUBLE_SCALE;
-    	for (int i = 0 ; i<hyperPlanesNumber; i++)
-    	{
-    		double tmp = 0;
-    		int index=i;
-    		double tmp1 = 0;
-
-    		//ForkJoinPool forkJoinPool = new ForkJoinPool();
-    		//Future<?> future= forkJoinPool.submit(() ->{
-    		tmp+=weights.keySet().parallelStream().mapToDouble(j->weights.get(j) * getHyperPlane(index).get(j)).sum();
-    		//});
-    		//forkJoinPool.shutdown();
-    		/*
-			for (Integer j : weights.keySet()) 
-    		{
-    			tmp += weights.get(j) * getHyperPlane(i).get(j);
-    		}
-*/
-    		try {
-    			//while(!future.isDone()){
-    			//Thread.sleep(5);
-    			//}
-				//tmp1+=(Double)future.get();
-			} catch ( Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			//if(doubleScale>0)
-			//	tmp = BigDecimal.valueOf(tmp).setScale(doubleScale, RoundingMode.HALF_UP).doubleValue();
+		IntStream.range(0, hyperPlanesNumber).forEach(i->{
 			
-    		st[i]=( tmp>=0 ? true : false );
-    	}
-    	long res=convertBooleanArrayToLong(st);
+			ArrayList<Double> hyperPlan = this.hyperPlanes[i];
+			double tmp=weights.keySet().parallelStream().mapToDouble(j->weights.get(j) * hyperPlan.get(j)).sum();
+			st[i]=( tmp>=0 ? true : false );
+		});
+		long res=convertBooleanArrayToLong(st);
         return res;
     }
     
