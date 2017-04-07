@@ -27,6 +27,8 @@ import redis.clients.jedis.JedisPoolConfig;
 
 public class GlobalData {
 	public static final String ID2DOCUMENT = "id2document";
+	public static final String WORD2INDEX = "word2index";
+
 
 	public class Parameters 
 	{
@@ -102,7 +104,9 @@ public class GlobalData {
 					config.setTestOnBorrow(false);
 					config.setTestOnReturn(false);
 					config.setTestWhileIdle(false);
-					jedisPool = new JedisPool(config,"localhost", 6379, 30000);
+					//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
+					jedisPool = new JedisPool(config,"localhost", 6379, 10000);
+
 				}
 			}
 		}
@@ -137,7 +141,7 @@ public class GlobalData {
 	private GlobalData()
 	{	
 		word2index  = new Hashtable<String , Integer>();
-		id2document = new Hashtable<String , Document>();
+	//	id2document = new Hashtable<String , Document>();
 		numberOfDocsIncludeWord = new Hashtable<Integer, Integer>();
 		cleanClusterQueue = (Set<String>) Collections.synchronizedSet(new HashSet<String>()); //new LinkedList<Document>();
 		clusters = new Hashtable<String, DocumentCluster>();
@@ -150,9 +154,11 @@ public class GlobalData {
 
 	private void clearRedisKeys()
 	{
+		
+		/*
 		if(id2document != null)
 			return;
-		
+		*/
 		Jedis jdis=getRedisClient();
 		jdis.del(ID2DOCUMENT);
 		jdis.close();
@@ -194,7 +200,7 @@ public class GlobalData {
 	public void calcWeights(Document doc, Hashtable<Integer, Double> weights)
 	{
 		Hashtable<Integer, Integer> wordCount = doc.getWordCount();
-		Enumeration<Integer> tmp = wordCount.keys();
+		//Enumeration<Integer> tmp = wordCount.keys();
 		wordCount.entrySet()
 		   .parallelStream()
 		   .forEach(entry->{
@@ -213,7 +219,17 @@ public class GlobalData {
 	public int wordCounts(List<String> list, Hashtable<Integer, Integer> d)
 	{
 		int max_idx = addWords(list);
-		
+		Jedis jedis=this.getRedisClient();
+		for (String w : list) 
+		{
+			String idx = jedis.hget(WORD2INDEX,w);
+			int intIdx=Integer.valueOf(idx);
+			int val = d.getOrDefault(intIdx,  0);
+			val += 1;
+			d.put(intIdx, val);
+		}
+		jedis.close();
+		/*
 		for (String w : list) 
 		{
 			int idx = word2index.get(w);
@@ -221,7 +237,7 @@ public class GlobalData {
 			val += 1;
 			d.put(idx, val);
 		}
-		
+		*/
 		return max_idx;
 	}
 	
@@ -240,6 +256,19 @@ public class GlobalData {
 	}	
 	private int addWord(String word)
 	{
+		
+		int idx =-1;
+		Jedis jedis=this.getRedisClient();
+		String idxStr =jedis.hget(WORD2INDEX, word);
+		if(idxStr==null || idxStr.isEmpty()){
+			idx=(int) this.redisSize(WORD2INDEX);
+			jedis.hset(WORD2INDEX, word, String.valueOf(idx));
+			
+			
+		}else{
+			idx=(int) this.redisSize(WORD2INDEX);
+		}
+		/*
 		int idx = word2index.getOrDefault(word, -1);
 		
 		if (idx == -1) 
@@ -248,8 +277,11 @@ public class GlobalData {
 			//index2word.put(idx, word);
 			word2index.put(word, idx);
 		}
-		
+		*/
+		jedis.close();
 		return idx;
+		
+		
 	}
 	
 	public void addDocument(Document doc) 
