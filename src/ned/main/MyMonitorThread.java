@@ -23,7 +23,7 @@ public class MyMonitorThread extends ExecutorMonitorThread
     protected void printHook() {
 		GlobalData gd = GlobalData.getInstance();
 		Session.getInstance().message(Session.INFO, "[monitor]", gd.memoryGlance());
-
+/*
 		StringBuffer msg = new StringBuffer();
 		msg.append("\tn('i')=").append(gd.numberOfDocsIncludeWord.get(gd.word2index.getOrDefault("i",-1)));
 		msg.append(String.format("  idf('i')==%.5f", gd.getIDFOrDefault(gd.word2index.getOrDefault("i",-1))));
@@ -51,14 +51,14 @@ public class MyMonitorThread extends ExecutorMonitorThread
 		}
 		Session.getInstance().message(Session.INFO, "[monitor]", msg.toString());
         
-        
+        */
         if(flush)
         {
     		Session.getInstance().message(Session.INFO, "[monitor]", "doing some cleanup...");
     		
     		gd.markOldClusters(gd.recent.get(0));
     		gd.flushClusters(out);
-    		//System.gc();
+    		System.gc();
         	flush = false;
         }
      

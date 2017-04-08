@@ -85,7 +85,7 @@ public class AppMain {
 
 	    	Session.getInstance().message(Session.ERROR, "Reader", "Starting Monitor...");
 			int delay = gd.getParams().monitor_timer_seconds; //seconds
-			threadMonitor  = new MyMonitorThread(gd.executer.getExecutor(), delay);
+			//threadMonitor  = new MyMonitorThread(gd.executer.getExecutor(), delay);
 
 			doMain(out, inputFolder);
 			

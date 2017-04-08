@@ -62,7 +62,7 @@ public class GlobalData {
 	}
 	
 	public ConcurrentLinkedQueue<String> queue; 
-	public Hashtable<String, Integer>    word2index;
+	//public Hashtable<String, Integer>    word2index;
 	public Hashtable<String, Document>   id2document = null;
 	
 	//for calculating IDF
@@ -140,7 +140,7 @@ public class GlobalData {
 
 	private GlobalData()
 	{	
-		word2index  = new Hashtable<String , Integer>();
+	//	word2index  = new Hashtable<String , Integer>();
 	//	id2document = new Hashtable<String , Document>();
 		numberOfDocsIncludeWord = new Hashtable<Integer, Integer>();
 		cleanClusterQueue = (Set<String>) Collections.synchronizedSet(new HashSet<String>()); //new LinkedList<Document>();
@@ -566,6 +566,7 @@ public class GlobalData {
 	public String memoryGlance() 
 	{
 		long len = redisSize(ID2DOCUMENT);
+		/*
 		return String.format("\t[monitor] Processed %d documents. In memory: Documents=%d, Clusters=%d, Recent=%d, words=%d",
 				numberOfDocuments,
 				len,
@@ -573,6 +574,9 @@ public class GlobalData {
 				this.recent==null ? 0 : this.recent.size(),
 				this.word2index.size()
 			);
+			
+			*/
+		return  null;
 	}
 
 
