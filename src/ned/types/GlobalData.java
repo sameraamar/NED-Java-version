@@ -572,7 +572,7 @@ public class GlobalData {
 				len,
 				this.clusters.size(),
 				this.recent==null ? 0 : this.recent.size(),
-				this.word2index.size()
+			//	this.word2index.size()
 			);
 			
 			*/
