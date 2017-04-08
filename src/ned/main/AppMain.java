@@ -189,7 +189,7 @@ public class AppMain {
 		//CleanupThread thread = new CleanupThread(out);
 		//threadsFileName.isDaemon(true);
 		//thread.start();
-		threadMonitor.start();
+		//threadMonitor.start();
     	Session.getInstance().message(Session.ERROR, "Reader", "monitoring thread started");
 
     	clustering.start();
