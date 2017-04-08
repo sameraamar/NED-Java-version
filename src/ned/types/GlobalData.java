@@ -116,12 +116,13 @@ public class GlobalData {
 		Jedis cn = null;
 		try {
 			if(jedisPool.getNumActive()<this.parameters.REDIS_MAX_CONNECTIONS){
-				cn = jedisPool.getResource();
+				return jedisPool.getResource();
+				
 			}else{
 				System.out.println("redisConnections=="+jedisPool.getNumActive());
 				System.out.println("this.parameters.REDIS_MAX_CONNECTIONS="+this.parameters.REDIS_MAX_CONNECTIONS);
 
-				Thread.sleep(100);
+				Thread.sleep(5);
 				cn=this.getRedisClient();
 			}
 			
@@ -183,6 +184,7 @@ public class GlobalData {
 		*/
 		Jedis jedis=getRedisClient();
 		jedis.del(ID2DOCUMENT);
+		jedis.del(WORD2INDEX);
 		
 		this.retunRedisClient(jedis);
 	}
