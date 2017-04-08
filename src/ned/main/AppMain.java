@@ -67,6 +67,7 @@ public class AppMain {
 			System.out.println("Max documents:" + gd.getParams().max_documents);
 			System.out.println("input folder:" + inputFolder);
 			System.out.println("thread file:" + threadsFileName);
+			System.out.println("REDIS_MAX_CONNECTIONS:" + gd.parameters.REDIS_MAX_CONNECTIONS);
 
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
@@ -85,7 +86,7 @@ public class AppMain {
 
 	    	Session.getInstance().message(Session.ERROR, "Reader", "Starting Monitor...");
 			int delay = gd.getParams().monitor_timer_seconds; //seconds
-			//threadMonitor  = new MyMonitorThread(gd.executer.getExecutor(), delay);
+			threadMonitor  = new MyMonitorThread(gd.executer.getExecutor(), delay);
 
 			doMain(out, inputFolder);
 			

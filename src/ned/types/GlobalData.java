@@ -3,6 +3,7 @@ package ned.types;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -32,6 +33,7 @@ public class GlobalData {
 
 	public class Parameters 
 	{
+		public int REDIS_MAX_CONNECTIONS = 200000;
 		public int DOUBLE_SCALE = 5; //precision scale for double
 		public int monitor_timer_seconds = 5; //seconds
 		public int number_of_threads = 50000;
@@ -39,7 +41,7 @@ public class GlobalData {
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
-		public int max_documents = 50000; //1_200_000;
+		public int max_documents = 5000000; //1_200_000;
 		public int max_thread_delta_time = 3600; //seconds
 		public int offset = 0; //8800000-17*500000;
 		public int skip_files = 0;//17;
@@ -97,7 +99,7 @@ public class GlobalData {
 				if(jedisPool==null)
 				{	
 					JedisPoolConfig config = new JedisPoolConfig();
-					config.setMaxTotal(10000);
+					config.setMaxTotal(this.parameters.REDIS_MAX_CONNECTIONS);
 					config.setMaxIdle(0);
 					config.setMinIdle(0);
 					config.setMaxWaitMillis(10);
@@ -105,16 +107,27 @@ public class GlobalData {
 					config.setTestOnReturn(false);
 					config.setTestWhileIdle(false);
 					//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
-					jedisPool = new JedisPool(config,"localhost", 6379, 10000);
+					jedisPool = new JedisPool(config,"localhost", 6379, 100000);
 
 				}
 			}
 		}
-
+		Date start=new Date();
 		Jedis cn = null;
 		try {
-			cn = jedisPool.getResource();
+			if(jedisPool.getNumActive()<this.parameters.REDIS_MAX_CONNECTIONS){
+				cn = jedisPool.getResource();
+			}else{
+				System.out.println("redisConnections=="+jedisPool.getNumActive());
+				System.out.println("this.parameters.REDIS_MAX_CONNECTIONS="+this.parameters.REDIS_MAX_CONNECTIONS);
+
+				Thread.sleep(100);
+				cn=this.getRedisClient();
+			}
+			
 		} catch (Exception e) {
+			System.out.println("e="+e.getMessage());
+
 			if(cn!=null)
 				cn.close();
 			
@@ -122,10 +135,19 @@ public class GlobalData {
 		}
 		finally {
 		}
-		  
+		Date finish=new Date();
+		long rediscoontime=start.getTime()-finish.getTime();
+		if(rediscoontime>10)
+		{
+			System.out.println("rediscoontime==="+rediscoontime);
+		    System.out.println("redisConnections="+jedisPool.getNumActive());
+		 }
 		return cn;
 	}
-
+	public void retunRedisClient(Jedis jedis) {
+		jedis.close();
+		return ;
+	}
 
 	public long redisSize(String hash) 
 	{
@@ -159,9 +181,10 @@ public class GlobalData {
 		if(id2document != null)
 			return;
 		*/
-		Jedis jdis=getRedisClient();
-		jdis.del(ID2DOCUMENT);
-		jdis.close();
+		Jedis jedis=getRedisClient();
+		jedis.del(ID2DOCUMENT);
+		
+		this.retunRedisClient(jedis);
 	}
 	
 	
@@ -228,7 +251,8 @@ public class GlobalData {
 			val += 1;
 			d.put(intIdx, val);
 		}
-		jedis.close();
+		//jedis.close();
+		retunRedisClient(jedis);
 		/*
 		for (String w : list) 
 		{
@@ -278,7 +302,8 @@ public class GlobalData {
 			word2index.put(word, idx);
 		}
 		*/
-		jedis.close();
+		//jedis.close();
+		retunRedisClient(jedis);
 		return idx;
 		
 		
@@ -323,15 +348,16 @@ public class GlobalData {
 		}
 		
 		Document doc=null;
-		Jedis jdis=getRedisClient();
+		Jedis jedis=getRedisClient();
 		
 		byte[] kbytes = key.getBytes();
 		byte[] hbytes = hash.getBytes();
-		byte[] retobject=jdis.hget(hbytes,kbytes);
+		byte[] retobject=jedis.hget(hbytes,kbytes);
 		if(retobject!=null){
 			doc=(Document) this.getDocSerializer().deserialize(retobject);
 		}
-		jdis.close();
+		//jdis.close();
+		retunRedisClient(jedis);
 		return doc;
 	}
 
@@ -456,7 +482,7 @@ public class GlobalData {
 				marktoremove.add(id);
 			}
 		}
-		
+		Jedis jedis=getRedisClient();
 		for (String id : marktoremove) {
 			this.id2cluster.remove(id);
 			
@@ -464,15 +490,16 @@ public class GlobalData {
 			if(id2document!=null)
 				this.id2document.remove(id);
 			else {
-				Jedis jdis=getRedisClient();
 				
-				jdis.hdel(ID2DOCUMENT, id);
-				jdis.close();
+				
+				jedis.hdel(ID2DOCUMENT, id);
+				
+				//jdis.close();
 			}
 			
 			countDocs++;
 		}
-		
+		retunRedisClient(jedis);
 		
 		if (counter>0)
 			Session.getInstance().message(Session.DEBUG, "cleanClusters", "released "+counter+" clusters (" + countDocs + " docs)" );
@@ -566,17 +593,17 @@ public class GlobalData {
 	public String memoryGlance() 
 	{
 		long len = redisSize(ID2DOCUMENT);
-		/*
+		long wordlen = redisSize(WORD2INDEX);
 		return String.format("\t[monitor] Processed %d documents. In memory: Documents=%d, Clusters=%d, Recent=%d, words=%d",
 				numberOfDocuments,
 				len,
 				this.clusters.size(),
 				this.recent==null ? 0 : this.recent.size(),
-			//	this.word2index.size()
+				wordlen
 			);
 			
-			*/
-		return  null;
+			
+		
 	}
 
 
