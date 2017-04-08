@@ -140,7 +140,7 @@ public class GlobalData {
 
 	private GlobalData()
 	{	
-		word2index  = new Hashtable<String , Integer>();
+//		word2index  = new Hashtable<String , Integer>();
 	//	id2document = new Hashtable<String , Document>();
 		numberOfDocsIncludeWord = new Hashtable<Integer, Integer>();
 		cleanClusterQueue = (Set<String>) Collections.synchronizedSet(new HashSet<String>()); //new LinkedList<Document>();
@@ -571,7 +571,7 @@ public class GlobalData {
 				len,
 				this.clusters.size(),
 				this.recent==null ? 0 : this.recent.size(),
-				this.word2index.size()
+			//	this.word2index.size()
 			);
 	}
 
