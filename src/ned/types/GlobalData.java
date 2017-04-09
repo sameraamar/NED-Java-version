@@ -35,7 +35,7 @@ public class GlobalData {
 	{
 		public int REDIS_MAX_CONNECTIONS = 200000;
 		public int DOUBLE_SCALE = 5; //precision scale for double
-		public int monitor_timer_seconds = 5; //seconds
+		public int monitor_timer_seconds = 20; //seconds
 		public int number_of_threads = 50000;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
@@ -90,7 +90,7 @@ public class GlobalData {
 		return docSerializer;
 	}
 	public void initRedisConnectionPool() {
-		
+		System.out.println("Preparing jedisPool....  ");
 		if(jedisPool==null){
 			synchronized(this) 
 			{
@@ -106,7 +106,7 @@ public class GlobalData {
 					config.setTestWhileIdle(false);
 					jedisPool = new JedisPool(config,"localhost", 6379, 100000);
 					//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
-
+					System.out.println("jedisPool is Ready "+jedisPool.getNumActive());
 				}
 			}
 		}
@@ -192,6 +192,9 @@ public class GlobalData {
 		if(id2document != null)
 			return;
 		*/
+		if(jedisPool==null){
+			this.initRedisConnectionPool();
+		}
 		Jedis jedis=getRedisClient();
 		jedis.del(ID2DOCUMENT);
 		jedis.del(WORD2INDEX);

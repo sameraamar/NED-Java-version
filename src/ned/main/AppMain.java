@@ -112,7 +112,7 @@ public class AppMain {
 
 	public static void doMain(PrintStream out, String inputFolder) throws IOException {
 		GlobalData gd = GlobalData.getInstance();
-		
+		gd.initRedisConnectionPool();
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
 	                    "petrovic_01000000.gz",
