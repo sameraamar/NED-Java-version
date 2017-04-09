@@ -33,7 +33,8 @@ import redis.clients.jedis.JedisPoolConfig;
 public class GlobalData {
 	public static final String ID2DOCUMENT = "id2document";
 	public static final String WORD2INDEX = "word2index";
-
+    public static LRUCache<String, Document> id2DocumentCache=new LRUCache(1000);
+    public static LRUCache word2IndexCache=new LRUCache(1000);
 
 	public class Parameters 
 	{
@@ -357,16 +358,16 @@ public class GlobalData {
 	}
 	
 	public Document getDocumentFromRedis(String hash,String key) {
-
+		Document doc=null;
 		if(key == null)
 			return null;
 		
-		if(id2document != null)
+		if(id2DocumentCache != null)
 		{
-			return id2document.get(key);
+			doc= id2DocumentCache.get(key);
+			if(doc!=null) return doc;
 		}
 		
-		Document doc=null;
 		Jedis jedis=getRedisClient();
 		
 		byte[] kbytes = key.getBytes();
@@ -450,9 +451,9 @@ public class GlobalData {
 			return;
 		}
 		
-		if(id2document != null)
+		if(id2DocumentCache != null)
 		{
-			id2document.put(key, doc);
+			id2DocumentCache.put(key, doc);
 			return;
 		}
 		Date start=new Date();
