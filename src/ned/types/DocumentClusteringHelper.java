@@ -23,7 +23,7 @@ public class DocumentClusteringHelper {
 		list.forEach(key->keys.append(","+key));
 		String keysStr=keys.toString();
 		keysStr=keysStr.substring(1,keysStr.length());
-		Hashtable <String,Document>docs=gd.getMultiDocumentFromRedis(GlobalData.ID2DOCUMENT,keysStr);
+		//Hashtable <String,Document>docs=gd.getMultiDocumentFromRedis(GlobalData.ID2DOCUMENT,keysStr);
 		ForkJoinPool forkJoinPool = new ForkJoinPool();
 		forkJoinPool.submit(() ->
 		list.parallelStream().filter( rightId-> {
@@ -34,7 +34,7 @@ public class DocumentClusteringHelper {
 			return ( doc.getId().compareTo(rightId) > 0 ) ;
 			} ).forEach(rightId-> {
 				
-				doc.updateNearest(docs.get( rightId));
+				doc.updateNearest(gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId));
 			}));
 		forkJoinPool.shutdown();
 		doc.setNearestDetermined(true);
