@@ -454,7 +454,7 @@ public class GlobalData {
 		if(id2DocumentCache != null)
 		{
 			id2DocumentCache.put(key, doc);
-			return;
+			
 		}
 		Date start=new Date();
 		Jedis jdis=getRedisClient();
