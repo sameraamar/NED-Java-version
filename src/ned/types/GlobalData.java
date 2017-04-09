@@ -89,9 +89,7 @@ public class GlobalData {
 		}
 		return docSerializer;
 	}
-
-
-	public Jedis getRedisClient() {
+	public void initRedisConnectionPool() {
 		
 		if(jedisPool==null){
 			synchronized(this) 
@@ -100,23 +98,28 @@ public class GlobalData {
 				{	
 					JedisPoolConfig config = new JedisPoolConfig();
 					config.setMaxTotal(this.parameters.REDIS_MAX_CONNECTIONS);
-					config.setMaxIdle(0);
-					config.setMinIdle(0);
+					config.setMaxIdle(100);
+					config.setMinIdle(50);
 					config.setMaxWaitMillis(10);
 					config.setTestOnBorrow(false);
 					config.setTestOnReturn(false);
 					config.setTestWhileIdle(false);
-					//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
 					jedisPool = new JedisPool(config,"localhost", 6379, 100000);
+					//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
 
 				}
 			}
 		}
+	}
+
+	public Jedis getRedisClient() {
+		
+		
 		Date start=new Date();
 		Jedis cn = null;
 		try {
 			if(jedisPool.getNumActive()<this.parameters.REDIS_MAX_CONNECTIONS){
-				return jedisPool.getResource();
+				cn= jedisPool.getResource();
 				
 			}else{
 				System.out.println("redisConnections=="+jedisPool.getNumActive());
@@ -154,9 +157,16 @@ public class GlobalData {
 	{
 		if(id2document != null)
 			return id2document.size();
-		
+		Date start=new Date();
 		Jedis jdis=getRedisClient();
 		long len = jdis.hlen(hash);
+		Date finish=new Date();
+		long rediscoontime=start.getTime()-finish.getTime();
+		if(rediscoontime>10)
+		{
+			System.out.println("rediscoontime==="+rediscoontime);
+		    System.out.println("redisConnections="+jedisPool.getNumActive());
+		}
 		jdis.close();
 		return len;
 	}

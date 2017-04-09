@@ -33,6 +33,7 @@ public class AppMain {
 	public static void main(String[] args) throws IOException
 	{
 		GlobalData gd = GlobalData.getInstance();
+		gd.initRedisConnectionPool();
 		try {			
 			Hashtable<String, String> arguments = new Hashtable<String, String>();
 			
