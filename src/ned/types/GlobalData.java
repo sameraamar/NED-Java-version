@@ -417,6 +417,33 @@ public class GlobalData {
 		
 		return result;
 	}
+	
+	public void delMultiDocumentFromRedis(String hash,String keys) {
+
+		if(keys == null)
+			return ;
+		try {
+			Jedis jedis=getRedisClient();
+			
+			String keysArray[] = keys.split(",");
+			byte[][]  kyesBytes = new byte[keysArray.length][] ;
+			int index=0;
+			for (String string : keysArray) {
+					if(string.isEmpty()) continue;
+					kyesBytes[index]=string.getBytes();
+					index++;
+			}
+			long res  = jedis.hdel(hash.getBytes(),kyesBytes);
+		
+			retunRedisClient(jedis);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return ;
+	}
+
 
 	public void setDocumentFromRedis(String hash,String key,Document doc){
 		if(doc==null){
@@ -521,7 +548,10 @@ public class GlobalData {
     		Session.getInstance().message(Session.DEBUG, "Reader", "doing some memory cleanup");
 
 		ArrayList<String> marktoremove = new ArrayList<String>();
+		StringBuilder marktoremoveStr = new StringBuilder();
+
 		int countDocs = 0;
+		
 		for (String leadId : todelete) 
 		{
 			DocumentCluster cluster = clusterByDoc(leadId);
@@ -544,9 +574,15 @@ public class GlobalData {
 			for (String id : cluster.getIdList()) 
 			{
 				marktoremove.add(id);
+				marktoremoveStr.append(","+id);
 			}
 		}
-		Jedis jedis=getRedisClient();
+		String s2bd=marktoremoveStr.toString();
+		if(!s2bd.isEmpty()){
+			s2bd=s2bd.substring(1,s2bd.length());
+			this.delMultiDocumentFromRedis(ID2DOCUMENT, s2bd);
+		}
+		
 		for (String id : marktoremove) {
 			this.id2cluster.remove(id);
 			
@@ -556,14 +592,11 @@ public class GlobalData {
 			else {
 				
 				
-				jedis.hdel(ID2DOCUMENT, id);
-				
-				//jdis.close();
 			}
 			
 			countDocs++;
 		}
-		retunRedisClient(jedis);
+		
 		
 		if (counter>0)
 			Session.getInstance().message(Session.DEBUG, "cleanClusters", "released "+counter+" clusters (" + countDocs + " docs)" );
