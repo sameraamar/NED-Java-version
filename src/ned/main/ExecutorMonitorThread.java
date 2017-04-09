@@ -26,20 +26,13 @@ public class ExecutorMonitorThread extends Thread {
 	{
 	    while(run)
 	    {
-	    				
-				String msg = this.executor.toString();
-				msg = msg.substring(msg.indexOf('[')+1, msg.indexOf(']'));
-				Session.getInstance().message(Session.INFO, "[monitor]", "\t" + msg);  		
-	
-	    		
-	    		printHook();
-	            
-	
-	            try {
-	                Thread.sleep(seconds*1000);
-	                //System.out.println("HELLO");
-	            	//Session.getInstance().message(Session.INFO, "[monitor] queue size: " , "" + gd.queue.size());
-	                //System.out.println("BYE");
+	    	 try {		
+					String msg = this.executor.toString();
+					msg = msg.substring(msg.indexOf('[')+1, msg.indexOf(']'));
+					Session.getInstance().message(Session.INFO, "[monitor]", "\t" + msg);  		
+					printHook();
+		            ExecutorMonitorThread.sleep(seconds*1000);
+	               
 	            } catch (Exception e) {
 	            	Session.getInstance().message(Session.INFO, "[monitor]", "Exception");
 	            	e.printStackTrace();

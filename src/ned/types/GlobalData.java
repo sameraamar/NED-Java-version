@@ -1,7 +1,10 @@
 package ned.types;
 
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
@@ -17,6 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.util.Base64Utils;
 
 import ned.main.DocumentProcessorExecutor;
 import ned.modules.Twokenize;
@@ -35,7 +39,7 @@ public class GlobalData {
 	{
 		public int REDIS_MAX_CONNECTIONS = 200000;
 		public int DOUBLE_SCALE = 5; //precision scale for double
-		public int monitor_timer_seconds = 20; //seconds
+		public int monitor_timer_seconds = 15; //seconds
 		public int number_of_threads = 50000;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
@@ -375,6 +379,44 @@ public class GlobalData {
 		retunRedisClient(jedis);
 		return doc;
 	}
+	
+	public Hashtable  <String,Document> getMultiDocumentFromRedis(String hash,String keys) {
+
+		if(keys == null)
+			return null;
+		Hashtable  <String,Document> result=new <String,Document> Hashtable()  ;
+		
+		Jedis jedis=getRedisClient();
+		
+		String keysArray[] = keys.split(",");
+		byte[][]  kyesBytes = new byte[keysArray.length][] ;
+		int index=0;
+		for (String string : keysArray) {
+				if(string.isEmpty()) continue;
+				kyesBytes[index]=string.getBytes();
+				index++;
+		}
+		
+		List<byte[]> hashValues;
+		try {
+			hashValues = jedis.hmget(hash.getBytes(),kyesBytes);
+			if(hashValues!=null){
+				hashValues.forEach(doc->{
+					if(doc!=null){
+						Document tDoc=(Document) this.getDocSerializer().deserialize(doc);
+						result.put(tDoc.getId(),tDoc );
+					}
+				});
+				
+			}
+			retunRedisClient(jedis);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
 
 	public void setDocumentFromRedis(String hash,String key,Document doc){
 		if(doc==null){
@@ -386,14 +428,21 @@ public class GlobalData {
 			id2document.put(key, doc);
 			return;
 		}
-		
+		Date start=new Date();
 		Jedis jdis=getRedisClient();
 		
 		
 		byte[] sobject=this.getDocSerializer().serialize(doc);
+		
 		jdis.hset(hash.getBytes(),key.getBytes(),sobject);
 		jdis.close();
-		
+		Date stop=new Date();
+		long rediscoontime=start.getTime()-stop.getTime();
+		if(rediscoontime>1)
+		{
+			System.out.println("setDocumentFromRedis Time ==="+rediscoontime);
+		    System.out.println("redisConnections="+jedisPool.getNumActive());
+		 }
 	}
 	
 	public void addToRecent(Document doc) {
