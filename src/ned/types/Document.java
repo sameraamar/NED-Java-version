@@ -246,13 +246,17 @@ public class Document implements Serializable{
 		
 		if(cacheWeights == null)
 		{
-			synchronized (this) {
+			
 				if(cacheWeights == null)
 				{
 					Hashtable<Integer, Double> tmp = new Hashtable<Integer, Double>();
 					calcWeights(tmp);
-					cacheWeights = tmp;
-				}
+					synchronized (cacheWeights) {
+						
+						cacheWeights = tmp;
+					}
+					
+				
 			}	
 		}
 		
