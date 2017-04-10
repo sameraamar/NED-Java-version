@@ -3,6 +3,85 @@ import pandas
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.mlab as mlab
+try:
+    import powerlaw
+except:
+    print("try to install using:\npip install powerlaw")
+    exit()
+
+import math, numpy as np
+
+
+# find the first bin for the given binsize
+def bin_find_k(binsize):
+    print
+    'calculate bin for binsize = ', binsize
+    k = 1
+    flag = True
+    while flag:
+        logk = math.log10(k)
+        logk1 = math.log10(k + 1)
+
+        print
+        k, '\t', logk, '\t', logk1, '\t', abs(logk1 - logk)
+        if abs(logk1 - logk) <= binsize:
+            flag = False
+
+        k += 1
+
+    return k
+
+
+def findBin(val, bins):
+    for j in range(len(bins) + 1):
+        # print i, j, logi >= bins[j] , logi < bins[j+1]
+        if val >= bins[j] and val < bins[j + 1]:
+            return j
+    return -1
+
+def log_hist(arr, maxBinSize):
+    K = bin_find_k(maxBinSize)
+
+    #logY = np.log10(arr)
+    size = len(arr)
+    logX = np.log10(range(size))
+
+    # calculate bin array
+    print
+    "Min and max:"
+    minV = logX[K]  # np.min(logX[k:])
+    maxV = logX[len(logX) - 1]  # np.max(logX[k:])
+
+    print
+    minV, maxV
+    # create log bins: (by specifying the multiplier)
+    bins = [minV]
+    cur_value = bins[0]
+    while cur_value <= maxV:
+        cur_value = cur_value + maxBinSize
+        bins.append(cur_value)
+
+    bin_indices = {}
+    for i in range(K, len(arr)):
+        j = findBin(np.log10(i), bins)
+        if j not in bin_indices:
+            bin_indices[j] = []
+        bin_indices[j].append(i)
+
+    # %%
+
+    newarr = arr[:]  # copy values to a new array
+    average = [0] * len(bins)
+    currbin = K
+    for b in bin_indices:
+        for ind in bin_indices[b]:
+            average[b] += newarr.iloc[ind]
+        average[b] = average[b] / len(bin_indices[b])  # average
+
+        for ind in bin_indices[b]:
+            newarr[ind] = average[b]
+
+    return bins, average
 
 def np_hist(actions, title, ax, color, log=False, bins=100, normalize=False):
     hist, edges = np.histogram(actions, bins=bins, density=normalize)
@@ -21,20 +100,40 @@ def np_hist(actions, title, ax, color, log=False, bins=100, normalize=False):
 
 def hist(feature, ax, title, bins=100, normed=0, log=False, color="blue"):
     #np_hist(feature, title, ax, color, log=log, bins=bins, normalize=(normed == 1))
-
-    h = ax.hist(feature, bins=bins, histtype='bar', normed=normed, color=color, log=log)
-    ax.set_title(title)
+    if log:
+        bins, average = log_hist(feature, 0.1)
+        ax.plot(bins, np.log10(average))
+        #plt.show()
+    else:
+        ax.hist(feature, bins=bins, histtype='bar', normed=normed, color=color)
+        ax.set_title(title)
 
 
 #sample histogram: http://matplotlib.org/examples/statistics/histogram_demo_multihist.html
 
 def retweets(events, no_events):
+
     feature_no_events = no_events['retweets']
     feature_events = events['retweets']
 
     feature_hist(feature_events, feature_no_events, 'retweets')
 
+    analyze(feature_no_events, feature_name='retweets-no events')
+    analyze(feature_events, feature_name='retweets-events')
 
+def analyze(data, feature_name):
+    print("Analyzing feature:", feature_name)
+    results = powerlaw.Fit(data)
+    print ("alpha=", results.power_law.alpha)
+    print("segma=", results.power_law.sigma)
+    print("xmin=", results.power_law.xmin)
+    R, p = results.distribution_compare('power_law', 'lognormal')
+
+    print("R=", R, "p=", p)
+    #fig2 = plt.figure()
+    #ax = fig2.add_axes()
+    #results.plot_cdf(ax=ax) #color = 'b', linewidth = 2)
+    #plt.show()
 
 def likes(events, no_events):
     feature_no_events = no_events['likes']
@@ -42,6 +141,8 @@ def likes(events, no_events):
 
     feature_hist(feature_events, feature_no_events, 'likes')
 
+    analyze(feature_no_events, feature_name='likes-no events')
+    analyze(feature_events, feature_name='retwelikesets-events')
 
 def calcGroups(events, no_events):
     group_no_event = no_events.groupby('group')
@@ -49,8 +150,15 @@ def calcGroups(events, no_events):
 
     agg_no_events = group_no_event.agg(['count'])
     agg_events    = group_event.agg(['count'])
-    feature_hist(agg_events['id']['count'], agg_no_events['id']['count'], 'groups')
 
+    feature_events = agg_events['id']['count']
+    feature_no_events = agg_no_events['id']['count']
+    feature_hist(feature_events, feature_no_events, 'groups')
+
+    analyze(feature_no_events, feature_name='group-no events')
+    analyze(feature_events, feature_name='group-events')
+
+    print("done 'calcGroups'")
 
     #fig, ax = plt.subplots(figsize=(8, 6))
     #for label, df in groups:
@@ -66,16 +174,18 @@ def feature_hist(feature_events, feature_no_events, feature_name):
     fig, axes = plt.subplots(nrows=3, ncols=2)
     ax0, ax1, ax2, ax3, ax4, ax5 = axes.flatten()
 
-    hist(feature_no_events, ax0, feature_name+' - no events', bins=100, color="red")
-    hist(feature_no_events, ax2, feature_name+' (normalized) - no events', normed=1, bins=100, color="red")
-    hist(feature_no_events, ax4, feature_name+' (log) - no events', log=True, bins=100, color="red")
+    bins = 1000
 
-    hist(feature_events, ax1, feature_name+' - events', bins=100, color="blue")
-    hist(feature_events, ax3, feature_name+' (normalized) - events', normed=1, bins=100, color="blue")
-    hist(feature_events, ax5, feature_name+' (log) - events', bins=100, log=True, color="blue")
+    hist(feature_no_events, ax0, feature_name+' - no events', bins=bins, color="red")
+    hist(feature_no_events, ax2, feature_name+' (normalized) - no events', normed=1, bins=bins, color="red")
+    hist(feature_no_events, ax4, feature_name+' (log) - no events', log=True, bins=bins, color="red")
+
+    hist(feature_events, ax1, feature_name+' - events', bins=bins, color="blue")
+    hist(feature_events, ax3, feature_name+' (normalized) - events', normed=1, bins=bins, color="blue")
+    hist(feature_events, ax5, feature_name+' (log) - events', bins=bins, log=True, color="blue")
 
     # weights = np.ones_like(feature_no_events) / len(feature_no_events)
-    # ax2.hist(feature_no_events, bins=100, weights=weights, histtype='bar', color="red")
+    # ax2.hist(feature_no_events, bins=bins, weights=weights, histtype='bar', color="red")
 
 
     fig.tight_layout()
@@ -86,8 +196,18 @@ def feature_hist(feature_events, feature_no_events, feature_name):
 
 
 if __name__ == "__main__":
-    dataset = pandas.read_csv('c:/temp/dataset.txt')
+    np.seterr(divide='ignore', invalid='ignore')
+
+    dataset = pandas.read_csv('c:/temp/dataset-winehouse.txt')
     dataset['jRtwt'] = dataset['jRtwt'].astype(str)
+
+    #dataset[dataset['retweets'] == 0] = 0.001
+
+    #print(len(dataset[dataset['retweets'] == 0]))
+    #exit()
+
+    #analyze(dataset['likes'], 'likes')
+    #exit()
 
     no_events = dataset[dataset['topic_id'] == -1]
     events = dataset[dataset['topic_id'] > -1]
@@ -107,15 +227,15 @@ if __name__ == "__main__":
 
 
     #likes0 = likes0[likes0 > 10]
-#likes1 = likes1[likes1 > 10]
+    #likes1 = likes1[likes1 > 10]
 
-#hist0 = np.histogram(likes0)
-#hist1 = np.histogram(likes1)
+    #hist0 = np.histogram(likes0)
+    #hist1 = np.histogram(likes1)
 
 
-##print (group)
-#plt.title("Gaussian Histogram")
-#plt.xlabel("Value")
-#plt.ylabel("Frequency")
+    ##print (group)
+    #plt.title("Gaussian Histogram")
+    #plt.xlabel("Value")
+    #plt.ylabel("Frequency")
 
 #plt.show()
