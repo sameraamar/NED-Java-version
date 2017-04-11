@@ -64,7 +64,7 @@ public class MyMonitorThread extends ExecutorMonitorThread
     		
     		gd.markOldClusters(gd.recent.get(0));
     		gd.flushClusters(out);
-    		System.gc();
+    		//System.gc();
         	flush = false;
         }
      

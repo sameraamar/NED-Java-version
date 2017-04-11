@@ -251,6 +251,7 @@ public class AppMain {
 	            if (processed % (gd.getParams().print_limit) == 0)
 	            {
 	            	//gd.flushClusters(out);
+	            	System.gc();
 	        		long tmp = System.nanoTime() - middletime;
 	            	double average2 = 1.0 * TimeUnit.NANOSECONDS.toMillis(tmp) / middle_processed;
 	            	average2 = Math.round(100.0 * average2) / 100.0;
