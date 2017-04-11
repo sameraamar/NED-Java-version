@@ -295,14 +295,15 @@ public class Document implements Serializable{
 			return;
 		
 		double tmp = Document.Distance(this, right);
-		synchronized (this) 
-		{
+		
 			if (nearest==null || tmp < nearestDist)
 			{
+				synchronized (this) 
+				{
 				nearestDist = tmp;
 				nearest = right.getId();
+				}
 			}
-		}
 	}
 
 	public boolean isNearestDetermined() {
