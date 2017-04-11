@@ -41,7 +41,7 @@ public class GlobalData {
 		public int REDIS_MAX_CONNECTIONS = 200000;
 		public int DOUBLE_SCALE = 5; //precision scale for double
 		public int monitor_timer_seconds = 15; //seconds
-		public int number_of_threads =100000;
+		public int number_of_threads =10000;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
@@ -262,17 +262,15 @@ public class GlobalData {
 	public int wordCounts(List<String> list, Hashtable<Integer, Integer> d)
 	{
 		int max_idx = addWords(list);
-		Jedis jedis=this.getRedisClient();
 		for (String w : list) 
 		{
-			String idx = jedis.hget(WORD2INDEX,w);
-			int intIdx=Integer.valueOf(idx);
+		
+			int intIdx=this.getWordId(w);
 			int val = d.getOrDefault(intIdx,  0);
 			val += 1;
 			d.put(intIdx, val);
 		}
-		//jedis.close();
-		retunRedisClient(jedis);
+		
 		/*
 		for (String w : list) 
 		{
@@ -400,7 +398,7 @@ public class GlobalData {
 		if(retobject!=null){
 			doc=(Document) this.getDocSerializer().deserialize(retobject);
 		}
-		//jdis.close();
+		
 		retunRedisClient(jedis);
 		return doc;
 	}

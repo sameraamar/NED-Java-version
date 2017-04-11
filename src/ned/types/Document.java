@@ -112,8 +112,32 @@ public class Document implements Serializable{
         
         return res;
     }
-
     public static double Distance(Document left, Document right)
+    {
+    double res = 0;
+    double norms = right.Norm() * left.Norm();
+    if (right.getWeights().size() > left.getWeights().size())
+    {
+    Document tmp = left;
+    left = right;
+    right = tmp;
+    }
+    double dot = 0.0;
+    //right.getWeights().keySet().retainAll(left.getWeights().keySet())
+    Enumeration<Integer> keys = right.getWeights().keys();
+    while( keys.hasMoreElements() )
+    {
+    Integer key = keys.nextElement();
+    if (left.getWeights().containsKey(key))
+    {
+    dot += right.getWeights().get(key) * left.getWeights().get(key);
+    }
+    }
+    res = dot / norms; 
+    return 1.0 - res;
+    }
+   
+    public static double DistanceBackup(Document left, Document right)
     {
     	double res = 0.0;
     	 
