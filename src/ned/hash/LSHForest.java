@@ -67,7 +67,7 @@ public class LSHForest extends LSHForestAbstract
         return res;
     }
 	
-	public List<String> addDocument(Document doc)
+	public List<String> addDocument_p(Document doc)
     {
 		final HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 		
@@ -119,7 +119,7 @@ public class LSHForest extends LSHForestAbstract
 		
         return output;
     }
-	public List<String> addDocument_backup(Document doc)
+	public List<String> addDocument(Document doc)
     {
 		final HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 		 ForkJoinPool forkJoinPool = new ForkJoinPool();
