@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Matcher;
@@ -40,9 +41,9 @@ public class GlobalData {
 	{
 		public int REDIS_MAX_CONNECTIONS = 200000;
 		public int DOUBLE_SCALE = 5; //precision scale for double
-		public int monitor_timer_seconds = 15; //seconds
-		public int number_of_threads =50000;
-		public int print_limit = 5000;
+		public int monitor_timer_seconds = 5; //seconds
+		public int number_of_threads =5000;
+		public int print_limit = 500;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
@@ -453,19 +454,24 @@ public class GlobalData {
 		if(keys == null)
 			return ;
 		try {
-			Jedis jedis=getRedisClient();
 			
-			String keysArray[] = keys.split(",");
-			byte[][]  kyesBytes = new byte[keysArray.length][] ;
-			int index=0;
-			for (String string : keysArray) {
-					if(string.isEmpty()) continue;
-					kyesBytes[index]=string.getBytes();
-					index++;
-			}
-			long res  = jedis.hdel(hash.getBytes(),kyesBytes);
-		
-			retunRedisClient(jedis);
+				Runnable runnable = () -> {
+				Jedis jedis=getRedisClient();
+				
+				String keysArray[] = keys.split(",");
+				byte[][]  kyesBytes = new byte[keysArray.length][] ;
+				int index=0;
+				for (String string : keysArray) {
+						if(string.isEmpty()) continue;
+						kyesBytes[index]=string.getBytes();
+						index++;
+				}
+				
+			    jedis.hdel(hash.getBytes(),kyesBytes);
+				retunRedisClient(jedis);
+			};
+			new Thread(runnable).start();
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -485,21 +491,14 @@ public class GlobalData {
 			id2DocumentCache.put(key, doc);
 			
 		}
-		Date start=new Date();
-		Jedis jdis=getRedisClient();
-		
-		
-		byte[] sobject=this.getDocSerializer().serialize(doc);
-		
-		jdis.hset(hash.getBytes(),key.getBytes(),sobject);
-		jdis.close();
-		Date stop=new Date();
-		long rediscoontime=start.getTime()-stop.getTime();
-		if(rediscoontime>1)
-		{
-			System.out.println("setDocumentFromRedis Time ==="+rediscoontime);
-		    System.out.println("redisConnections="+jedisPool.getNumActive());
-		 }
+		Runnable runnable = () -> {
+			
+			Jedis jdis=getRedisClient();
+			byte[] sobject=this.getDocSerializer().serialize(doc);
+			jdis.hset(hash.getBytes(),key.getBytes(),sobject);
+			jdis.close();
+		};
+		new Thread(runnable).start();
 	}
 	
 	public void addToRecent(Document doc) {
