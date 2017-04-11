@@ -98,12 +98,31 @@ def np_hist(actions, title, ax, color, log=False, bins=100, normalize=False):
     ax.set_title('bars with legend')
 
 
-def hist(feature, ax, title, xlabel, ylabel, bins=100, normed=0, log=False, color="blue"):
+def hist(feature, ax, title, xlabel, ylabel, bins=100, normed=0, log=False, color="blue", ignoreZeros=True):
     #np_hist(feature, title, ax, color, log=log, bins=bins, normalize=(normed == 1))
+
+    if ignoreZeros:
+        feature = feature[feature>0]
+
     if log:
         bins, average = log_hist(feature, 0.1)
         ax.plot(bins, average)
         #plt.show()
+    else:
+        ax.hist(feature, bins=bins, histtype='bar', normed=normed, log=log, color=color)
+        ax.set_title(title)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
+def hist1(feature, ax, title, xlabel, ylabel, bins=100, normed=0, log=False, color="blue"):
+    # np_hist(feature, title, ax, color, log=log, bins=bins, normalize=(normed == 1))
+
+    feature = feature[feature > 0]
+
+    if log:
+        bins, average = log_hist(feature, 0.1)
+        ax.plot(bins, average)
+        # plt.show()
     else:
         ax.hist(feature, bins=bins, histtype='bar', normed=normed, log=log, color=color)
         ax.set_title(title)
@@ -179,13 +198,13 @@ def feature_hist(feature_events, feature_no_events, feature_name):
     bins = 100
 
     hist(feature_no_events, ax0, feature_name+' - no events', feature_name, 'count', bins=bins, color="red")
-    xbins3 = [-4, -2.5, 0, 0.5, 1, 3]
-    hist(feature_no_events, ax1, feature_name+' - no events', feature_name, 'count', bins=xbins3, color="red")
-    hist(feature_no_events, ax4, feature_name+' (log) - no events', feature_name, 'log(count)', log=True, bins=bins, color="red")
+    hist(feature_no_events, ax2, feature_name+' - no events', feature_name, 'count2', bins=bins, color="red")
+    #hist(feature_no_events, ax4, feature_name+' (log) - no events', feature_name, 'log(count)', log=True, bins=bins, color="red")
 
     hist(feature_events, ax1, feature_name+' - events', feature_name, 'count', bins=bins, color="blue")
+    hist(feature_events, ax3, feature_name+' - events', feature_name, 'count2', bins=bins, color="blue")
     #hist(feature_events, ax3, feature_name+' (normalized) - events', normed=1, bins=bins, color="blue")
-    hist(feature_events, ax5, feature_name+' (log) - events', feature_name, 'log(count)', bins=bins, log=True, color="blue")
+    #hist(feature_events, ax5, feature_name+' (log) - events', feature_name, 'log(count)', bins=bins, log=True, color="blue")
 
     # weights = np.ones_like(feature_no_events) / len(feature_no_events)
     # ax2.hist(feature_no_events, bins=bins, weights=weights, histtype='bar', color="red")
