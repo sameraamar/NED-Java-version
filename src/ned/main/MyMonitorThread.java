@@ -22,7 +22,13 @@ public class MyMonitorThread extends ExecutorMonitorThread
     @Override
     protected void printHook() {
 		GlobalData gd = GlobalData.getInstance();
+		
 		Session.getInstance().message(Session.INFO, "[monitor]", gd.memoryGlance());
+		
+		StringBuffer msg = new StringBuffer();
+		msg.append("Cluster Queue: ").append(gd.queue.size()).append(". ID: ").append(gd.queue.peek());
+		Session.getInstance().message(Session.INFO, "[monitor]", msg.toString());
+		
 /*
 		StringBuffer msg = new StringBuffer();
 		msg.append("\tn('i')=").append(gd.numberOfDocsIncludeWord.get(gd.word2index.getOrDefault("i",-1)));

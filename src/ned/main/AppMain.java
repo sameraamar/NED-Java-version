@@ -289,7 +289,7 @@ public class AppMain {
     	if(gd.clusters.size() > 0)
     		System.out.println("!!!! not all clusters were saved. Still in memory: " + gd.clusters.size());
     	
-    	gd.flushClustersAll(out);
+    	//gd.flushClustersAll(out);
 
 		long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);
 		Session.getInstance().message(Session.INFO, "Summary", "Done in " + Utility.humanTime(seconds) );

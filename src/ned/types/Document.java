@@ -219,15 +219,16 @@ public class Document implements Serializable{
 			
 				if(cacheWeights == null)
 				{
-					Hashtable<Integer, Double> tmp = new Hashtable<Integer, Double>();
-					calcWeights(tmp);
-					synchronized (cacheWeights) {
-						
-						cacheWeights = tmp;
+					synchronized (cacheWeights) 
+					{
+						if(cacheWeights == null)
+						{
+							Hashtable<Integer, Double> tmp = new Hashtable<Integer, Double>();
+							calcWeights(tmp);
+							cacheWeights = tmp;
+						}
 					}
-					
-				
-			}	
+				}
 		}
 		
 		return cacheWeights;
@@ -298,10 +299,13 @@ public class Document implements Serializable{
 		
 			if (nearest==null || tmp < nearestDist)
 			{
-				synchronized (this) 
+				synchronized (nearest) 
 				{
-				nearestDist = tmp;
-				nearest = right.getId();
+					if (nearest==null || tmp < nearestDist)
+					{
+						nearestDist = tmp;
+						nearest = right.getId();
+					}
 				}
 			}
 	}
