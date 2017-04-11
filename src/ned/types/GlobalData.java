@@ -33,15 +33,15 @@ import redis.clients.jedis.JedisPoolConfig;
 public class GlobalData {
 	public static final String ID2DOCUMENT = "id2document";
 	public static final String WORD2INDEX = "word2index";
-    public static LRUCache<String, Document> id2DocumentCache=new LRUCache(1000);
-    public static LRUCache word2IndexCache=new LRUCache(1000);
+    public static LRUCache<String, Document> id2DocumentCache=new LRUCache<String, Document>(1000);
+    public static LRUCache<String, String> word2IndexCache=new LRUCache<String, String>(1000);
 
 	public class Parameters 
 	{
 		public int REDIS_MAX_CONNECTIONS = 200000;
 		public int DOUBLE_SCALE = 5; //precision scale for double
 		public int monitor_timer_seconds = 15; //seconds
-		public int number_of_threads = 50000;
+		public int number_of_threads =50000;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
@@ -53,8 +53,8 @@ public class GlobalData {
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 1.0;
-		public double min_cluster_size = 3;
-		public int inital_dimension = 50000;
+		public double min_cluster_size = 1;
+		public int inital_dimension =50000;
 		public int dimension_jumps = 50000;
 	}
 	
@@ -262,17 +262,15 @@ public class GlobalData {
 	public int wordCounts(List<String> list, Hashtable<Integer, Integer> d)
 	{
 		int max_idx = addWords(list);
-		Jedis jedis=this.getRedisClient();
 		for (String w : list) 
 		{
-			String idx = jedis.hget(WORD2INDEX,w);
-			int intIdx=Integer.valueOf(idx);
+		
+			int intIdx=this.getWordId(w);
 			int val = d.getOrDefault(intIdx,  0);
 			val += 1;
 			d.put(intIdx, val);
 		}
-		//jedis.close();
-		retunRedisClient(jedis);
+		
 		/*
 		for (String w : list) 
 		{
@@ -300,17 +298,11 @@ public class GlobalData {
 	}	
 	private int addWord(String word)
 	{
-		
-		int idx =-1;
-		Jedis jedis=this.getRedisClient();
-		String idxStr =jedis.hget(WORD2INDEX, word);
-		if(idxStr==null || idxStr.isEmpty()){
+		int idx =this.getWordId(word);
+		if(idx<0){
 			idx=(int) this.redisSize(WORD2INDEX);
-			jedis.hset(WORD2INDEX, word, String.valueOf(idx));
+			this.addWordId(word,idx);
 			
-			
-		}else{
-			idx=(int) this.redisSize(WORD2INDEX);
 		}
 		/*
 		int idx = word2index.getOrDefault(word, -1);
@@ -323,7 +315,7 @@ public class GlobalData {
 		}
 		*/
 		//jedis.close();
-		retunRedisClient(jedis);
+		
 		return idx;
 		
 		
@@ -357,6 +349,33 @@ public class GlobalData {
 		this.setDocumentFromRedis(ID2DOCUMENT, doc.getId(), doc);
 	}
 	
+	
+	public int getWordId(String word){
+		String id;
+		if(GlobalData.word2IndexCache!=null){
+			id=GlobalData.word2IndexCache.get(word);
+			if(id!=null && !id.isEmpty()){
+				return Integer.valueOf(id);
+			}
+		}else{
+			Jedis jedis=this.getRedisClient();
+			id=jedis.hget(WORD2INDEX, word);
+			retunRedisClient(jedis);
+			return Integer.valueOf(id);
+		}
+		return -1;
+	}
+	public void addWordId(String word,int idx){
+		
+		if(GlobalData.word2IndexCache!=null){
+			GlobalData.word2IndexCache.put(word, String.valueOf(idx));
+		}
+		Jedis jedis=this.getRedisClient();
+		jedis.hset(WORD2INDEX, word,String.valueOf(idx));
+		retunRedisClient(jedis);
+		
+
+	}
 	public Document getDocumentFromRedis(String hash,String key) {
 		Document doc=null;
 		if(key == null)
@@ -365,7 +384,10 @@ public class GlobalData {
 		if(id2DocumentCache != null)
 		{
 			doc= id2DocumentCache.get(key);
-			if(doc!=null) return doc;
+			if(doc!=null){
+				return doc;
+			
+			}
 		}
 		
 		Jedis jedis=getRedisClient();
@@ -376,7 +398,7 @@ public class GlobalData {
 		if(retobject!=null){
 			doc=(Document) this.getDocSerializer().deserialize(retobject);
 		}
-		//jdis.close();
+		
 		retunRedisClient(jedis);
 		return doc;
 	}
@@ -385,7 +407,7 @@ public class GlobalData {
 
 		if(keys == null)
 			return null;
-		Hashtable  <String,Document> result=new <String,Document> Hashtable()  ;
+		Hashtable  <String,Document> result=new <String,Document> Hashtable<String, Document>()  ;
 		
 		Jedis jedis=getRedisClient();
 		
