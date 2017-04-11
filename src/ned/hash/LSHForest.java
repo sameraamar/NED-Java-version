@@ -122,7 +122,7 @@ public class LSHForest extends LSHForestAbstract
 	public List<String> addDocument(Document doc)
     {
 		final HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
-		 ForkJoinPool forkJoinPool = new ForkJoinPool();
+		 ForkJoinPool forkJoinPool = new ForkJoinPool(200);
 		 CountDownLatch latch = new CountDownLatch(tables.length);
 
 		Stream<LSHTable> tablesSTream=Arrays.stream(tables);

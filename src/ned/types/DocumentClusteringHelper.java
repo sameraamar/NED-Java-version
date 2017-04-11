@@ -24,7 +24,7 @@ public class DocumentClusteringHelper {
 		//String keysStr=keys.toString();
 		//keysStr=keysStr.substring(1,keysStr.length());
 		//Hashtable <String,Document>docs=gd.getMultiDocumentFromRedis(GlobalData.ID2DOCUMENT,keysStr);
-		ForkJoinPool forkJoinPool = new ForkJoinPool();
+		ForkJoinPool forkJoinPool = new ForkJoinPool(200);
 		forkJoinPool.submit(() ->
 		list.parallelStream().filter( rightId-> {
 			
