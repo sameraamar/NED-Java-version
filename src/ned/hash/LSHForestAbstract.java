@@ -31,7 +31,6 @@ abstract public class LSHForestAbstract {
 	}
 
 	abstract public List<String> addDocument(Document doc);
-	abstract public List<String> addDocument5(Document doc);
 
 
 	public int getTablesNumber() {
