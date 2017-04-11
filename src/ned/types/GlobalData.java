@@ -33,8 +33,8 @@ import redis.clients.jedis.JedisPoolConfig;
 public class GlobalData {
 	public static final String ID2DOCUMENT = "id2document";
 	public static final String WORD2INDEX = "word2index";
-    public static LRUCache<String, Document> id2DocumentCache=new LRUCache<String, Document>(1000);
-    public static LRUCache<String, String> word2IndexCache=new LRUCache<String, String>(1000);
+    public static LRUCache<String, Document> id2DocumentCache;//=new LRUCache<String, Document>(2000);
+    public static LRUCache<String, String> word2IndexCache;//=new LRUCache<String, String>(2000);
 
 	public class Parameters 
 	{
@@ -56,6 +56,7 @@ public class GlobalData {
 		public double min_cluster_size = 1;
 		public int inital_dimension =50000;
 		public int dimension_jumps = 50000;
+		public int lru_cache_size = 50000;
 	}
 	
 	private static GlobalData globalData = null;
@@ -188,6 +189,12 @@ public class GlobalData {
 		word2idf = new Hashtable<Integer, Double>();
 		id2cluster = new Hashtable<String, String>();
 		clearRedisKeys();
+		if(id2DocumentCache==null){
+			id2DocumentCache=new LRUCache<String, Document>(this.parameters.lru_cache_size);
+		}
+		if(word2IndexCache==null){
+			word2IndexCache=new LRUCache<String, String>(this.parameters.lru_cache_size);
+		}
 	}
 
 	private void clearRedisKeys()
