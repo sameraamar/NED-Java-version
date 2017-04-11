@@ -41,9 +41,9 @@ public class GlobalData {
 	{
 		public int REDIS_MAX_CONNECTIONS = 200000;
 		public int DOUBLE_SCALE = 5; //precision scale for double
-		public int monitor_timer_seconds = 5; //seconds
-		public int number_of_threads =5000;
-		public int print_limit = 500;
+		public int monitor_timer_seconds = 25; //seconds
+		public int number_of_threads =3000;
+		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
