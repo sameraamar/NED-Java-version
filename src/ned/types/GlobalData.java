@@ -52,7 +52,7 @@ public class GlobalData {
 		public int skip_files = 0;//17;
 		public int search_recents = 2000;
 		public double threshold = 0.6;
-		public double min_cluster_entropy = 1.0;
+		public double min_cluster_entropy = 0.8;
 		public double min_cluster_size = 3;
 		public int inital_dimension = 50000;
 		public int dimension_jumps = 50000;

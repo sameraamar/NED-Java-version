@@ -6,6 +6,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class DocumentClusteringHelper {
@@ -37,6 +38,12 @@ public class DocumentClusteringHelper {
 				doc.updateNearest(gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId));
 			}));
 		forkJoinPool.shutdown();
+		try {
+			forkJoinPool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		doc.setNearestDetermined(true);
         gd.setDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getId(), doc);
 
@@ -158,7 +165,6 @@ public class DocumentClusteringHelper {
 		if (doc.getNearest() != null)
 		{
 			 nearest = GlobalData.getInstance().getDocumentFromRedis(GlobalData.ID2DOCUMENT,doc.getNearest());
-
 
 			//nearest =  data.id2document.get(doc.getNearest());
 			distance = doc.getNearestDist();
