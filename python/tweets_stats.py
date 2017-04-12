@@ -101,15 +101,25 @@ def np_hist(actions, title, ax, color, log=False, bins=100, normalize=False):
 def hist(feature, ax, title, xlabel, ylabel, bins=100, normed=0, log=False, color="blue", ignoreZeros=True):
     #np_hist(feature, title, ax, color, log=log, bins=bins, normalize=(normed == 1))
 
-    if ignoreZeros:
-        feature = feature[feature>0]
+    #feature = feature[feature > 0]
 
+    log = False
     if log:
-        bins, average = log_hist(feature, 0.1)
+        bins, average = log_hist(feature, 0.01)
         ax.plot(bins, average)
         #plt.show()
     else:
-        ax.hist(feature, bins=bins, histtype='bar', normed=normed, log=log, color=color)
+        hist, xbins = np.histogram(feature, bins=bins)
+        #xbins = np.linspace(0, )
+
+        tmp1 = [np.sum(xbins[0:9])]
+        center = (xbins[:-1] + xbins[1:]) / 2
+        width = np.diff(xbins)
+
+        ax.bar(center, hist, align='center', width=width, color=color)
+        #ax.set_xticks(xbins)
+
+        #ax.hist(bins, histtype='bar', normed=normed, log=log, color=color)
         ax.set_title(title)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -117,17 +127,17 @@ def hist(feature, ax, title, xlabel, ylabel, bins=100, normed=0, log=False, colo
 def hist1(feature, ax, title, xlabel, ylabel, bins=100, normed=0, log=False, color="blue"):
     # np_hist(feature, title, ax, color, log=log, bins=bins, normalize=(normed == 1))
 
-    feature = feature[feature > 0]
+    #feature = feature[feature > 0]
 
-    if log:
-        bins, average = log_hist(feature, 0.1)
-        ax.plot(bins, average)
-        # plt.show()
-    else:
-        ax.hist(feature, bins=bins, histtype='bar', normed=normed, log=log, color=color)
-        ax.set_title(title)
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
+    #if log:
+    #    bins, average = log_hist(feature, 0.1)
+    #    ax.plot(bins, average)
+    #    # plt.show()
+    #else:
+    ax.hist(feature, bins=bins, histtype='bar', normed=normed, log=log, color=color)
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
 
 
 #sample histogram: http://matplotlib.org/examples/statistics/histogram_demo_multihist.html
@@ -195,14 +205,17 @@ def feature_hist(feature_events, feature_no_events, feature_name):
     fig, axes = plt.subplots(nrows=3, ncols=2)
     ax0, ax1, ax2, ax3, ax4, ax5 = axes.flatten()
 
-    bins = 100
+    bins = 50
 
-    hist(feature_no_events, ax0, feature_name+' - no events', feature_name, 'count', bins=bins, color="red")
-    hist(feature_no_events, ax2, feature_name+' - no events', feature_name, 'count2', bins=bins, color="red")
+    hist (feature_no_events, ax0, feature_name+' - no events (hist)', feature_name, 'count', bins=bins, color="red")
+    hist1(feature_no_events, ax2, feature_name+' - no events (hist1)', feature_name, 'count', bins=bins, color="red")
+
+    #hist(feature_no_events, ax2, feature_name+' - no events', feature_name, 'count2', bins=bins, color="red")
     #hist(feature_no_events, ax4, feature_name+' (log) - no events', feature_name, 'log(count)', log=True, bins=bins, color="red")
 
-    hist(feature_events, ax1, feature_name+' - events', feature_name, 'count', bins=bins, color="blue")
-    hist(feature_events, ax3, feature_name+' - events', feature_name, 'count2', bins=bins, color="blue")
+    hist (feature_events, ax1, feature_name+' - events (hist)', feature_name, 'count', bins=bins, color="blue")
+    hist1(feature_events, ax3, feature_name+' - events (hist1)', feature_name, 'count', bins=bins, color="blue")
+    #hist(feature_events, ax3, feature_name+' - events', feature_name, 'count2', bins=bins, color="blue")
     #hist(feature_events, ax3, feature_name+' (normalized) - events', normed=1, bins=bins, color="blue")
     #hist(feature_events, ax5, feature_name+' (log) - events', feature_name, 'log(count)', bins=bins, log=True, color="blue")
 
