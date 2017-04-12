@@ -229,11 +229,10 @@ def feature_hist(feature_events, feature_no_events, feature_name):
     print("Plotted features for", feature_name)
 
 
-
-if __name__ == "__main__":
+def analyzeDataset(filename):
     np.seterr(divide='ignore', invalid='ignore')
 
-    dataset = pandas.read_csv('c:/temp/dataset-winehouse.txt')
+    dataset = pandas.read_csv(filename)
     dataset['jRtwt'] = dataset['jRtwt'].astype(str)
 
     #dataset[dataset['retweets'] == 0] = 0.001
@@ -273,4 +272,5 @@ if __name__ == "__main__":
     #plt.xlabel("Value")
     #plt.ylabel("Frequency")
 
-#plt.show()
+if __name__ == "__main__":
+    analyzeDataset('c:/temp/dataset-winehouse.txt')

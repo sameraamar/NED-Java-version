@@ -251,7 +251,6 @@ public class AppMain {
 	            if (processed % (gd.getParams().print_limit) == 0)
 	            {
 	            	//gd.flushClusters(out);
-	            	System.gc();
 	        		long tmp = System.nanoTime() - middletime;
 	            	double average2 = 1.0 * TimeUnit.NANOSECONDS.toMillis(tmp) / middle_processed;
 	            	average2 = Math.round(100.0 * average2) / 100.0;
@@ -290,7 +289,7 @@ public class AppMain {
     	if(gd.clusters.size() > 0)
     		System.out.println("!!!! not all clusters were saved. Still in memory: " + gd.clusters.size());
     	
-    	//gd.flushClustersAll(out);
+    	gd.flushClustersAll(out);
 
 		long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);
 		Session.getInstance().message(Session.INFO, "Summary", "Done in " + Utility.humanTime(seconds) );

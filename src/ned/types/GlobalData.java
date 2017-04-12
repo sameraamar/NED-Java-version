@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Matcher;
@@ -34,15 +33,15 @@ import redis.clients.jedis.JedisPoolConfig;
 public class GlobalData {
 	public static final String ID2DOCUMENT = "id2document";
 	public static final String WORD2INDEX = "word2index";
-    public static LRUCache<String, Document> id2DocumentCache;//=new LRUCache<String, Document>(2000);
-    public static LRUCache<String, String> word2IndexCache;//=new LRUCache<String, String>(2000);
+    public static LRUCache<String, Document> id2DocumentCache=new LRUCache(1000);
+    public static LRUCache word2IndexCache=new LRUCache(1000);
 
 	public class Parameters 
 	{
 		public int REDIS_MAX_CONNECTIONS = 200000;
 		public int DOUBLE_SCALE = 5; //precision scale for double
 		public int monitor_timer_seconds = 15; //seconds
-		public int number_of_threads =50000;
+		public int number_of_threads = 50000;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
@@ -54,10 +53,9 @@ public class GlobalData {
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 1.0;
-		public double min_cluster_size = 1;
-		public int inital_dimension =250000;
+		public double min_cluster_size = 3;
+		public int inital_dimension = 50000;
 		public int dimension_jumps = 50000;
-		public int lru_cache_size = 50000;
 	}
 	
 	private static GlobalData globalData = null;
@@ -190,12 +188,6 @@ public class GlobalData {
 		word2idf = new Hashtable<Integer, Double>();
 		id2cluster = new Hashtable<String, String>();
 		clearRedisKeys();
-		if(id2DocumentCache==null){
-			id2DocumentCache=new LRUCache<String, Document>(this.parameters.lru_cache_size);
-		}
-		if(word2IndexCache==null){
-			word2IndexCache=new LRUCache<String, String>(this.parameters.lru_cache_size);
-		}
 	}
 
 	private void clearRedisKeys()
@@ -270,15 +262,17 @@ public class GlobalData {
 	public int wordCounts(List<String> list, Hashtable<Integer, Integer> d)
 	{
 		int max_idx = addWords(list);
+		Jedis jedis=this.getRedisClient();
 		for (String w : list) 
 		{
-		
-			int intIdx=this.getWordId(w);
+			String idx = jedis.hget(WORD2INDEX,w);
+			int intIdx=Integer.valueOf(idx);
 			int val = d.getOrDefault(intIdx,  0);
 			val += 1;
 			d.put(intIdx, val);
 		}
-		
+		//jedis.close();
+		retunRedisClient(jedis);
 		/*
 		for (String w : list) 
 		{
@@ -306,11 +300,17 @@ public class GlobalData {
 	}	
 	private int addWord(String word)
 	{
-		int idx =this.getWordId(word);
-		if(idx<0){
+		
+		int idx =-1;
+		Jedis jedis=this.getRedisClient();
+		String idxStr =jedis.hget(WORD2INDEX, word);
+		if(idxStr==null || idxStr.isEmpty()){
 			idx=(int) this.redisSize(WORD2INDEX);
-			this.addWordId(word,idx);
+			jedis.hset(WORD2INDEX, word, String.valueOf(idx));
 			
+			
+		}else{
+			idx=(int) this.redisSize(WORD2INDEX);
 		}
 		/*
 		int idx = word2index.getOrDefault(word, -1);
@@ -323,7 +323,7 @@ public class GlobalData {
 		}
 		*/
 		//jedis.close();
-		
+		retunRedisClient(jedis);
 		return idx;
 		
 		
@@ -357,33 +357,6 @@ public class GlobalData {
 		this.setDocumentFromRedis(ID2DOCUMENT, doc.getId(), doc);
 	}
 	
-	
-	public int getWordId(String word){
-		String id;
-		if(GlobalData.word2IndexCache!=null){
-			id=GlobalData.word2IndexCache.get(word);
-			if(id!=null && !id.isEmpty()){
-				return Integer.valueOf(id);
-			}
-		}else{
-			Jedis jedis=this.getRedisClient();
-			id=jedis.hget(WORD2INDEX, word);
-			retunRedisClient(jedis);
-			return Integer.valueOf(id);
-		}
-		return -1;
-	}
-	public void addWordId(String word,int idx){
-		
-		if(GlobalData.word2IndexCache!=null){
-			GlobalData.word2IndexCache.put(word, String.valueOf(idx));
-		}
-		Jedis jedis=this.getRedisClient();
-		jedis.hset(WORD2INDEX, word,String.valueOf(idx));
-		retunRedisClient(jedis);
-		
-
-	}
 	public Document getDocumentFromRedis(String hash,String key) {
 		Document doc=null;
 		if(key == null)
@@ -392,10 +365,7 @@ public class GlobalData {
 		if(id2DocumentCache != null)
 		{
 			doc= id2DocumentCache.get(key);
-			if(doc!=null){
-				return doc;
-			
-			}
+			if(doc!=null) return doc;
 		}
 		
 		Jedis jedis=getRedisClient();
@@ -406,7 +376,7 @@ public class GlobalData {
 		if(retobject!=null){
 			doc=(Document) this.getDocSerializer().deserialize(retobject);
 		}
-		
+		//jdis.close();
 		retunRedisClient(jedis);
 		return doc;
 	}
@@ -415,7 +385,7 @@ public class GlobalData {
 
 		if(keys == null)
 			return null;
-		Hashtable  <String,Document> result=new <String,Document> Hashtable<String, Document>()  ;
+		Hashtable  <String,Document> result=new <String,Document> Hashtable()  ;
 		
 		Jedis jedis=getRedisClient();
 		
@@ -454,8 +424,7 @@ public class GlobalData {
 		if(keys == null)
 			return ;
 		try {
-			
-				Runnable runnable = () -> {
+			Runnable runnable = () -> {
 				Jedis jedis=getRedisClient();
 				
 				String keysArray[] = keys.split(",");
@@ -466,12 +435,11 @@ public class GlobalData {
 						kyesBytes[index]=string.getBytes();
 						index++;
 				}
-				
-			    jedis.hdel(hash.getBytes(),kyesBytes);
+				long res  = jedis.hdel(hash.getBytes(),kyesBytes);
+			
 				retunRedisClient(jedis);
 			};
 			new Thread(runnable).start();
-			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -492,11 +460,21 @@ public class GlobalData {
 			
 		}
 		Runnable runnable = () -> {
-			
+			Date start=new Date();
 			Jedis jdis=getRedisClient();
+			
+			
 			byte[] sobject=this.getDocSerializer().serialize(doc);
+			
 			jdis.hset(hash.getBytes(),key.getBytes(),sobject);
 			jdis.close();
+			Date stop=new Date();
+			long rediscoontime=start.getTime()-stop.getTime();
+			if(rediscoontime>1)
+			{
+				System.out.println("setDocumentFromRedis Time ==="+rediscoontime);
+			    System.out.println("redisConnections="+jedisPool.getNumActive());
+			}
 		};
 		new Thread(runnable).start();
 	}

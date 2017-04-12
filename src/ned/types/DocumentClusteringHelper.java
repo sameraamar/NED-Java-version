@@ -19,12 +19,12 @@ public class DocumentClusteringHelper {
 		
 		
 		GlobalData gd = GlobalData.getInstance();
-		//StringBuilder keys =new StringBuilder();
-		//list.forEach(key->keys.append(","+key));
-		//String keysStr=keys.toString();
-		//keysStr=keysStr.substring(1,keysStr.length());
+		StringBuilder keys =new StringBuilder();
+		list.forEach(key->keys.append(","+key));
+		String keysStr=keys.toString();
+		keysStr=keysStr.substring(1,keysStr.length());
 		//Hashtable <String,Document>docs=gd.getMultiDocumentFromRedis(GlobalData.ID2DOCUMENT,keysStr);
-		ForkJoinPool forkJoinPool = new ForkJoinPool(200);
+		ForkJoinPool forkJoinPool = new ForkJoinPool();
 		forkJoinPool.submit(() ->
 		list.parallelStream().filter( rightId-> {
 			

@@ -18,8 +18,8 @@
       <file leaf-file-name="tweets_stats.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/tweets_stats.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="113" column="0" lean-forward="true" selection-start-line="113" selection-start-column="0" selection-end-line="113" selection-end-column="0" />
+            <state relative-caret-position="193">
+              <caret line="117" column="0" lean-forward="true" selection-start-line="117" selection-start-column="0" selection-end-line="117" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -452,6 +452,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="242">
           <caret line="3993" column="11" lean-forward="true" selection-start-line="3993" selection-start-column="11" selection-end-line="3993" selection-end-column="11" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -557,8 +558,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/tweets_stats.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="113" column="0" lean-forward="true" selection-start-line="113" selection-start-column="0" selection-end-line="113" selection-end-column="0" />
+        <state relative-caret-position="193">
+          <caret line="117" column="0" lean-forward="true" selection-start-line="117" selection-start-column="0" selection-end-line="117" selection-end-column="0" />
           <folding />
         </state>
       </provider>

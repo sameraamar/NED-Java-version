@@ -63,7 +63,7 @@ public class MyMonitorThread extends ExecutorMonitorThread
     		Session.getInstance().message(Session.INFO, "[monitor]", "doing some cleanup...");
     		
     		gd.markOldClusters(gd.recent.get(0));
-    		gd.flushClusters(out);
+    		//gd.flushClusters(out);
     		//System.gc();
         	flush = false;
         }

@@ -112,36 +112,66 @@ public class Document implements Serializable{
         
         return res;
     }
+
     public static double Distance(Document left, Document right)
     {
-    	List<String> commonWords = DocumentClusteringHelper.intersection(left.getWords(), right.getWords());
-     	if(commonWords.isEmpty()){
-     		//System.out.println("No intersection --> distance is 1);
-     		return 1;
-     	}
-	    double res = 0;
-	    double norms = right.Norm() * left.Norm();
-	    if (right.getWeights().size() > left.getWeights().size())
-	    {
-		    Document tmp = left;
-		    left = right;
-		    right = tmp;
-	    }
-	    double dot = 0.0;
-	    Enumeration<Integer> keys = right.getWeights().keys();
-	    while( keys.hasMoreElements() )
-	    {
-		    Integer key = keys.nextElement();
-		    if (left.getWeights().containsKey(key))
-		    {
-		    	dot += right.getWeights().get(key) * left.getWeights().get(key);
-		    }
-		}
-	    res = dot / norms; 
-	    return 1.0 - res;
-	    }
-   
+    	double res = 0.0;
+    	 
+    	 List<String> commonWords = DocumentClusteringHelper.intersection(left.getWords(), right.getWords());
+    	if(commonWords.isEmpty()){
+    		//System.out.println("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
+    		return 1;
+    	}
+        Hashtable<Integer, Double> leftWeights = left.getWeights();
+		Hashtable<Integer, Double> rightWeights = right.getWeights();
+		if (rightWeights.size() > leftWeights.size())
+        {
+			Hashtable<Integer, Double> tmp = leftWeights;
+            leftWeights = rightWeights;
+            rightWeights = tmp;
+        }
+		
+    	
+    	
+        double dot = 0.0;
+        double norm1 = right.Norm();
+        double norm2 = left.Norm();
+        double norms = norm1 * norm2;
+        
+        //right.getWeights().keySet().retainAll(left.getWeights().keySet())
+        
+        Enumeration<Integer> keys = rightWeights.keys();
+        while( keys.hasMoreElements() )
+        {
+        	Integer key = keys.nextElement();
+			if (leftWeights.containsKey(key))
+            {
+                dot += rightWeights.get(key) * leftWeights.get(key);
+            }
 
+        }
+
+        res = dot / norms; 
+        
+        if(norms < 0)
+        	norms = norms;
+        
+        res = 1.0 - res;
+       
+		int doubleScale = GlobalData.getInstance().getParams().DOUBLE_SCALE;
+
+		try {
+		if(doubleScale>0)
+			res = BigDecimal.valueOf(res).setScale(doubleScale, RoundingMode.HALF_UP).doubleValue();
+		} catch (java.lang.NumberFormatException e)
+		{
+			e.printStackTrace();
+		}
+		if(res < 0.0)
+			res = res * 1;
+		
+		return res;
+    }
     
     public static double Distance(Document left2, double norm, Hashtable<Integer, Double> weights, Document right)
     {
@@ -216,19 +246,14 @@ public class Document implements Serializable{
 		
 		if(cacheWeights == null)
 		{
-			
+			synchronized (this) {
 				if(cacheWeights == null)
 				{
-					synchronized (cacheWeights) 
-					{
-						if(cacheWeights == null)
-						{
-							Hashtable<Integer, Double> tmp = new Hashtable<Integer, Double>();
-							calcWeights(tmp);
-							cacheWeights = tmp;
-						}
-					}
+					Hashtable<Integer, Double> tmp = new Hashtable<Integer, Double>();
+					calcWeights(tmp);
+					cacheWeights = tmp;
 				}
+			}	
 		}
 		
 		return cacheWeights;
@@ -296,18 +321,14 @@ public class Document implements Serializable{
 			return;
 		
 		double tmp = Document.Distance(this, right);
-		
+		synchronized (this) 
+		{
 			if (nearest==null || tmp < nearestDist)
 			{
-				synchronized (nearest) 
-				{
-					if (nearest==null || tmp < nearestDist)
-					{
-						nearestDist = tmp;
-						nearest = right.getId();
-					}
-				}
+				nearestDist = tmp;
+				nearest = right.getId();
 			}
+		}
 	}
 
 	public boolean isNearestDetermined() {
