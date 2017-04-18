@@ -1,34 +1,34 @@
 package ned.hash;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import ned.types.Document;
 
 public class Bucket
 {
-	private ArrayList<String> documents;
+	private Hashtable<String, Document> documents;
+	private ConcurrentLinkedQueue<String> queue;
     private int maxBucketSize ;
 
     public Bucket(int maxBucketSize)
     {
         this.maxBucketSize = maxBucketSize;
-        documents = new ArrayList<String>() ; //Collections.synchronizedList(new ArrayList<String>());
+        documents = new Hashtable<String, Document>();
+        queue = new ConcurrentLinkedQueue<String>();
     }
 
     synchronized public void Append(Document doc)
     {
     	String id = doc.getId();
-        documents.add(id);
+        documents.put(id, doc);
+        queue.add(id);
         
-        if (documents.size() > maxBucketSize)
+        if (queue.size() > maxBucketSize)
         {
+        	id = queue.poll();
             documents.remove(id);
         }
     }
@@ -37,27 +37,9 @@ public class Bucket
     {
     	return documents.toString();
     }
-    
-    public List<String> getDocIDsList(String excludeId) 
-    {
-    	@SuppressWarnings("unchecked")
-		List<String> bucketList = Collections.synchronizedList((ArrayList<String>)documents.clone());
-    	
-    	List<String> list = bucketList.parallelStream()
-		.filter( id -> {
-					//Document right = gb.id2document.get(rightId);
-					//if(id == null)
-					//	return false;
-					
-					return ( id.compareTo(excludeId)<0 ) ;
-					} )
-		.collect(Collectors.toList());
-    	
-    	return list;
-    }
 	
-	public List<String> getDocIDsList1(String excludeId) {
-		Object[] ids = documents.toArray();
+	public List<String> getDocIDsList(String excludeId) {
+		Object[] ids = queue.toArray();
 		
 		List<String> list = new LinkedList<String>();
 		for (Object id : ids) {

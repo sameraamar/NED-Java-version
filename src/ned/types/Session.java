@@ -11,11 +11,6 @@ public class Session {
 	//singleton
 	private static Session instance;
 	
-	public boolean isDebugMode()
-	{
-		return this.logLevel >= DEBUG;
-	}
-	
 	public static Session getInstance() { 
 		if (instance == null)
 		{

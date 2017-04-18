@@ -1,45 +1,30 @@
 package ned.main;
 
 import java.util.List;
+import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import ned.hash.LSHForestAbstract;
-import ned.hash.LSHTable;
-import ned.hash.WorkerLSHTable;
-import ned.hash.WorkerPostLSH;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import ned.hash.LSHForest;
 import ned.types.Document;
 
 public class DocumentProcessorExecutor {
 	private ExecutorService executor;
-	LSHForestAbstract forest;
+	LSHForest forest;
 	
-	public DocumentProcessorExecutor(LSHForestAbstract forest, int number_of_threads)
+	public DocumentProcessorExecutor(LSHForest forest, int number_of_threads)
 	{
 		this.forest = forest;
-		executor = Executors.newFixedThreadPool(number_of_threads);
+		executor = Executors.newFixedThreadPool(number_of_threads);		
 	}
 	
 	public void submit(Document doc)
 	{
 		WorkerThread worker = new WorkerThread(forest, doc);
 		worker.preRun();
-		worker.run();
-		//executor.execute(worker);
-	}
-	
-	public Future<List<String>> addToLSH(LSHTable lshTable, Document doc) 
-	{
-		WorkerLSHTable worker = new WorkerLSHTable(lshTable, doc);
-		Future<List<String>> neighbors = executor.submit(worker);
-		return neighbors;
-	}
-	
-	public void postLSH(Document doc, List<String> neighbors)
-	{
-		Runnable worker = new WorkerPostLSH(doc, neighbors);
 		executor.execute(worker);
 	}
 	
@@ -54,18 +39,37 @@ public class DocumentProcessorExecutor {
 	
 	public void shutdown()
 	{
-        System.out.println("Executer.shutdown(): stopping processing");
-
 		executor.shutdown();
         while (!executor.isTerminated()) 
         {
+        	try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
         }
-        System.out.println("Executer.shutdown(): Finished all threads");
+        System.out.println("Finished all threads");
 	}
 
 	public ExecutorService getExecutor() 
 	{
 		return executor;
 	}
+
+	
+	/*GlobalData gd = GlobalData.getInstance();
+	gd.getParams().number_of_threads
+	public static void main(String[] args) {
+        ExecutorService executor = Executors.newFixedThreadPool(5);
+        for (int i = 0; i < 10; i++) {
+            Runnable worker = new WorkerThread("" + i);
+            executor.execute(worker);
+          }
+        executor.shutdown();
+        while (!executor.isTerminated()) {
+        }
+        System.out.println("Finished all threads");
+        
+    }*/
 
 }

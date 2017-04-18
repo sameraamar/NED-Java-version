@@ -1,15 +1,9 @@
 package ned.hash;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
-import java.util.stream.IntStream;
 
 import ned.types.Document;
 import ned.types.GlobalData;
@@ -21,19 +15,24 @@ public class LSHTable
     private int maxBucketSize ;
     private int hyperPlanesNumber;
     private int dimension;
+    public  Boolean fixingDim=false;
     
     private ArrayList<Double>[] hyperPlanes = null;
-    private java.util.Dictionary<Long, Bucket> buckets = null;
+    private java.util.Dictionary<String, Bucket> buckets = null;
     
     public LSHTable(int hyperPlanesNumber, int dimension, int maxBucketSize)
     {
     	this.hyperPlanesNumber = hyperPlanesNumber;
-        buckets = new Hashtable<Long, Bucket>();
+        buckets = new Hashtable<String, Bucket>();
         this.maxBucketSize = maxBucketSize;
         this.dimension = dimension;
-        GenerateHyperPlanes();
     }
 
+    public void init()
+    {
+        GenerateHyperPlanes();
+    }
+    
     private void GenerateHyperPlanes() 
     {
     	if (getHyperPlanes() == null) {
@@ -51,98 +50,81 @@ public class LSHTable
     	}
     }
 
-    synchronized private void FixDimension(int newDimension) 
+     private void FixDimension(int newDimension) 
     {
-    	if (dimension > newDimension)
-    		return;
-    	
-    	newDimension = dimension + GlobalData.getInstance().getParams().dimension_jumps;
-    	
-		Session.getInstance().message(Session.DEBUG, "FixDimension", "Fixing to a new dimension: " + newDimension);
-    	
-    	int delta = newDimension - dimension;
-    	for (int i = 0 ; i<hyperPlanesNumber; i++)
-    	{
-    		for (int j = 0 ; j<delta; j++)
-    		{
-        		getHyperPlane(i).add( Utility.randomFill() );
-    		}
+    	 Runnable task = () -> {
+     		
+    	    	int nDimension = dimension + GlobalData.getInstance().getParams().dimension_jumps;
+    	    	System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"+nDimension);
+    	    	System.out.println("Start FixDimension new ="+nDimension);
+    			Session.getInstance().message(Session.DEBUG, "FixDimension", "Fixing to a new dimension: " + newDimension);
+    	    	
+    	    	int delta = nDimension - dimension;
+    	    	for (int i = 0 ; i<hyperPlanesNumber; i++)
+    	    	{
+    	    		for (int j = 0 ; j<delta; j++)
+    	    		{
+    	        		getHyperPlane(i).add( Utility.randomFill() );
+    	    		}
+    	    	}
+    	    	
+    	    	dimension = nDimension;
+    	    	synchronized(fixingDim){
+    	    		fixingDim=false;
+    	   	 	}
+    	    	};
+    	    	
+    	synchronized(this){	 
+    	if(fixingDim) {
+    		System.out.println("fixingDim..........");
+    		return ;
+    	}else{
+    		fixingDim=true;
+    		new Thread(task).start();
     	}
     	
-    	dimension = newDimension;
-    }
-    
-    private long GenerateHashCode(Document doc)
-    {
+   	 	}
     	
-    	boolean[] st = new boolean [hyperPlanesNumber];
-    	Session session = Session.getInstance();
     	
-    	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
-    	Hashtable<Integer, Double> weights = doc.getWeights();
-		if (doc.getMaxWordIndex() >= this.dimension) 
-		{
-			this.FixDimension(doc.getMaxWordIndex());
-		}
-		
-		IntStream.range(0, hyperPlanesNumber).forEach(i->{
-			
-			ArrayList<Double> hyperPlan = this.hyperPlanes[i];
-			double tmp=weights.keySet().parallelStream().mapToDouble(j->weights.get(j) * hyperPlan.get(j)).sum();
-			st[i]=( tmp>=0 ? true : false );
-		});
-		long res=convertBooleanArrayToLong(st);
-        return res;
-    }
-    
-    private long convertBooleanArrayToLong(boolean[] st){
-    	long res=0;
-    	for (int i = 0 ; i<hyperPlanesNumber; i++){
-    		if(st[i]){
-    			res+=Math.pow(10,i);
-    		}
-    		
-    	}
-		return res;
     	
     }
     
-    
-    private String GenerateHashCode0(Document doc)
+   
+
+	private String GenerateHashCode(Document doc)
     {
     	StringBuffer st = new StringBuffer();
     	Session session = Session.getInstance();
     	
     	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
     	Hashtable<Integer, Double> weights = doc.getWeights();
-		if (doc.getMaxWordIndex() >= this.dimension) 
+		if (!this.fixingDim && doc.getDimension() >= this.dimension-3*GlobalData.getInstance().getParams().dimension_jumps) 
 		{
-			this.FixDimension(doc.getMaxWordIndex());
+			this.FixDimension(doc.getDimension());
 		}
 		
-		int doubleScale = GlobalData.getInstance().getParams().DOUBLE_SCALE;
     	for (int i = 0 ; i<hyperPlanesNumber; i++)
     	{
     		double tmp = 0;
+    		//Samer: remove syncronized
+    		//synchronized (weights) {
+				for (Integer j : weights.keySet()) 
+	    		{
+	    			tmp += weights.get(j) * getHyperPlane(i).get(j);
+	    		}
+    		//}
+			session.message(Session.DEBUG, "GenerateHashCode", ""+ tmp);
 
-			for (Integer j : weights.keySet()) 
-    		{
-    			tmp += weights.get(j) * getHyperPlane(i).get(j);
-    		}
-
-			if(doubleScale>0)
-				tmp = BigDecimal.valueOf(tmp).setScale(doubleScale, RoundingMode.HALF_UP).doubleValue();
-			
     		st.append( tmp>=0 ? "1" : "0" );
+    		session.message(Session.DEBUG, "GenerateHashCode", "\nLOG");
     	}
     	
         return st.toString();
     }
 
-
     public List<String> AddDocument(Document doc)
     {
-        long code = GenerateHashCode(doc);
+        String code = GenerateHashCode(doc);
         if (buckets.get(code) == null)
             buckets.put(code, new Bucket(maxBucketSize));
 

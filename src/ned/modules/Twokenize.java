@@ -78,7 +78,6 @@ public class Twokenize {
     static String decorations = "(?:[♫♪]+|[★☆]+|[♥❤♡]+|[\\u2639-\\u263b]+|[\\ue001-\\uebbb]+)";
     static String thingsThatSplitWords = "[^\\s\\.,?\"]";
     static String embeddedApostrophe = thingsThatSplitWords+"+['’′]" + thingsThatSplitWords + "*";
-    static String moreStuff = "\\+|@";
     
     public static String NOT(String part) {
     	StringBuilder sb = new StringBuilder();
@@ -207,8 +206,7 @@ public class Twokenize {
                     separators,
                     decorations,
                     AtMention,
-                    edgePunct,
-                    moreStuff
+                    edgePunct
             ));
     
     public static String splitEdgePunct (String input) {
@@ -377,10 +375,7 @@ public class Twokenize {
         String lines[]  = {"this \nis	samer@email.com			@samer				!	 a   #hashtag    &lt; testy",
         		"*busy* do home work ㅠㅠ",
         		"rt july better than june ) #julywish",
-        		"rt #wowfakta logizomechanophobia / cyberphobia \\ * : - orang yang takut komputer",
-        		"ly sunshine	rt you + god sunshine",
-        		"86383750291800064	86383687406592000	1.0000000	????rt meeting vivie  @  nne westwood	NA",
-        		"@peopletree: Meeting Vivienne Westwood http://goo.gl/fb/22aO4\""};
+        		"rt #wowfakta logizomechanophobia / cyberphobia \\ * : - orang yang takut komputer"};
         
     
     	for(String line : lines)

@@ -22,7 +22,18 @@ public class DocumentClusteringThread extends Thread {
 		while(!stop) 
 		{
 			mapToCluster();
+			
+    		Session.getInstance().message(Session.DEBUG, "Reader", "doing some cleanup...");
     		gd.flushClusters(out);
+    		
+			try 
+			{
+				sleep(4000);
+			} 
+			catch (InterruptedException e) 
+			{
+				e.printStackTrace();
+			}
 		}
 		
 		//last time
@@ -44,39 +55,36 @@ public class DocumentClusteringThread extends Thread {
 	        DocumentClusteringHelper.mapToClusterHelper(doc);
 	        last = doc;
 			doc = next();
-			
-			if(doc != null && gd.queue.size()<5)
-				gd.markOldClusters(doc.getId());
 		}
 		
 		if(last != null)
-			gd.markOldClusters(last.getId());
+			gd.markOldClusters(last);
 
 		return gd.queue.isEmpty();
 	}
 	
 	private Document next()
 	{
-		//synchronized (gd.queue) 
-		{
-			GlobalData gd = GlobalData.getInstance();
-			ConcurrentLinkedQueue<String> queue = gd.queue;
-			
-			if(queue.isEmpty())
-				return null;
-			
-			String id = queue.peek();
-			if (id == null)
-				return null;
-			
-			Document doc = gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
-			if(doc == null || !doc.isNearestDetermined())
-				return null;
+		GlobalData gd = GlobalData.getInstance();
+		ConcurrentLinkedQueue<String> queue = gd.queue;
 		
-			id = queue.poll();
-			
+		
+		
+		String id = queue.peek();
+		if (id == null)
+			return null;
+					
+		Document doc = gd.id2document.get(id);
+		if (doc==null)
+			return null;
+				
+		if(doc.nearestDetermined)
+		{
+			queue.poll();
 			return doc;
 		}
+		
+		return null;
 	}
 
 	public void shutdown() 

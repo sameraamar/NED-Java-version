@@ -104,30 +104,22 @@ public class DocumentCluster {
 		sb.append(" Entropy: ").append(ent);
 		sb.append(" Age: ").append(this.age()).append(" (s)\n");;
 		
-		sb.append("id\tcreated\tnearest\tdistance\ttext\tnearest_text\n");
+		sb.append("id\tnearest\tdistance\ttext\tnearest_text\n");
 		for (int i =0; i<this.idList.size(); i++)
 		{
 			String docId = idList.get(i);
-			Document doc = gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT,docId);
+			Document doc = gd.id2document.get(docId);
 			
 			Document nDoc = null;
 			if(i>0) { //this is placeholder for the lead - skip
-				nDoc =gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT,doc.getNearest()); //gd.id2document.get(doc.getNearest());
+				nDoc = gd.id2document.get(doc.nearest);
 			}
 			
-			sb.append(docId).append("\t");
-			sb.append(doc.getCreatedAt()).append("\t");
-			//sb.append(doc.getNearest()).append(String.format("\t%.7f", doc.getNearestDist()));
-			sb.append(doc.getNearest()).append("\t").append( doc.getNearestDist() );
+			sb.append(docId).append("\t").append(doc.nearest).append(String.format("\t%.7f", doc.nearestDist));
 			sb.append("\t").append( doc.getCleanText() );
 
 			String text = nDoc == null ? "NA" : nDoc.getCleanText();
 			sb.append("\t").append(text);
-			
-			if(doc.getNearest()!=null && doc.getNearest().compareTo(doc.getId()) >= 0)
-			{
-				sb.append("\t!!!!! bad nearest choice...");
-			}
 			sb.append("\n");
 		}
 		return sb.toString();
@@ -147,9 +139,7 @@ public class DocumentCluster {
 		
 		for(String id : tmpList)
 		{
-			Document doc = gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
-
-			//Document doc = gd.id2document.get(id);
+			Document doc = gd.id2document.get(id);
 
 			Hashtable<Integer, Integer> tmp = doc.getWordCount();
 			for (Integer i : tmp.keySet())
@@ -182,9 +172,7 @@ public class DocumentCluster {
 			return 0;
 		
 		String id = this.idList.get(s-1);
-		Document doc = GlobalData.getInstance().getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
-
-		//Document doc = GlobalData.getInstance().id2document.get(id);
+		Document doc = GlobalData.getInstance().id2document.get(id);
 		long lasttime = doc.getTimestamp();
 		
 		return (lasttime-starttime); //check if we need to divide by 1000?
