@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 
+import ned.tools.ExecutionHelper;
 import ned.types.Document;
 import ned.types.GlobalData;
 import ned.types.Session;
@@ -55,8 +56,8 @@ public class LSHTable
     	 Runnable task = () -> {
      		
     	    	int nDimension = dimension + GlobalData.getInstance().getParams().dimension_jumps;
-    	    	System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"+nDimension);
-    	    	System.out.println("Start FixDimension new ="+nDimension);
+    	    //	System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"+nDimension);
+    	    //	System.out.println("Start FixDimension new ="+nDimension);
     			Session.getInstance().message(Session.DEBUG, "FixDimension", "Fixing to a new dimension: " + newDimension);
     	    	
     	    	int delta = nDimension - dimension;
@@ -80,7 +81,8 @@ public class LSHTable
     		return ;
     	}else{
     		fixingDim=true;
-    		new Thread(task).start();
+    		ExecutionHelper.asyncAwaitRun(task);
+    		//new Thread(task).start();
     	}
     	
    	 	}

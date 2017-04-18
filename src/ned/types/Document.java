@@ -5,6 +5,11 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+
+import ned.tools.ExecutionHelper;
 
 public class Document {
     private String id;
@@ -86,7 +91,7 @@ public class Document {
      		//System.out.println("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
      		return 1;
      	}
-
+     	;
         if (left.getWords().size() > right.getWords().size())
         {
             Document tmp = right;
@@ -94,7 +99,6 @@ public class Document {
             left = tmp;
         }
     	
-        double res = 0;
         
         HashSet<Integer> intersection = new HashSet<Integer>();
         Enumeration<Integer> lkeys = left.getWordCount().keys();
@@ -107,9 +111,12 @@ public class Document {
 				intersection.add(key);
             }
         }
-
         Hashtable<Integer, Double> rWeights = right.getWeights();
         Hashtable<Integer, Double> lWeights = left.getWeights();
+        Callable<Double> callable = ()->{
+            double res = 0;
+
+       
         double norms = Norm(rWeights) * Norm(lWeights);
 
 
@@ -123,6 +130,18 @@ public class Document {
         
         res = dot / norms; 
         return 1.0 - res;
+     	 };
+ 		
+ 		 Future<?> f=ExecutionHelper.asyncAwaitRun(callable);
+ 		 try {
+			double res= (double) f.get();
+			//System.out.println("res="+res);
+			return res;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+ 		 return 0;
     }
 
 	public String toString() {

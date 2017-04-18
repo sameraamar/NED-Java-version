@@ -14,6 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ned.modules.Twokenize;
+import ned.tools.ExecutionHelper;
 
 public class GlobalData {
 	public class Parameters 
@@ -32,15 +33,9 @@ public class GlobalData {
 		public double min_cluster_size = 3;
 		public int inital_dimension = 50000;
 		public int dimension_jumps = 5000;
-		public   boolean fixingDim=false;
 	}
 	
-	public static boolean getFixingDim(){
-		return getInstance().parameters.fixingDim;
-	}
-	public static void setFixingDim(boolean b){
-		 getInstance().parameters.fixingDim=b;
-	}
+	
 	private static GlobalData globalData = null;
 	public static GlobalData getInstance() 
 	{
@@ -135,22 +130,26 @@ public class GlobalData {
 	
 	public void calcWeights(Document doc, Hashtable<Integer, Double> weights) 
 	{
-		Hashtable<Integer, Integer> wordCount = doc.getWordCount();
-		Enumeration<Integer> tmp = wordCount.keys();
 		
-		while(tmp.hasMoreElements())
-		{
-			int k = tmp.nextElement();
-			Integer a = wordCount.get(k);
-			if (word2idf.get(k)==null)
+			 Hashtable<Integer, Integer> wordCount = doc.getWordCount();
+				Enumeration<Integer> tmp = wordCount.keys();
+				
+				while(tmp.hasMoreElements())
 				{
-					double val = getIDF(k);
-					word2idf.put(k, val);
+					int k = tmp.nextElement();
+					Integer a = wordCount.get(k);
+					if (word2idf.get(k)==null)
+						{
+							double val = getIDF(k);
+							word2idf.put(k, val);
+						}
+					Double b = word2idf.get(k);
+					
+					weights.put(k, a*b);
 				}
-			Double b = word2idf.get(k);
-			
-			weights.put(k, a*b);
-		}
+				
+		
+		
 	}
 	
 	public void calcWeights1(Document doc, Hashtable<Integer, Double> weights) 
