@@ -55,9 +55,13 @@ public class MyMonitorThread extends Thread
         				
             	long delta =  System.nanoTime()-starttime;
             	delta = TimeUnit.NANOSECONDS.toSeconds(delta);
+            	double waht= WorkerThread.avegTime();
+            	if(waht>100){
+            		System.gc();
+            	}
                 StringBuffer msg = new StringBuffer();
             	msg.append("Elapsed time: ").append(Utility.humanTime(delta));
-            	msg.append(" Worker AHT: ").append(String.format("\t%.2f", WorkerThread.avegTime())).append(".\n\t");
+            	msg.append(" Worker AHT: ").append(String.format("\t%.2f",waht)).append(".\n\t");
             	WorkerThread.resetCounter();
             	if (executor != null)
         		{
