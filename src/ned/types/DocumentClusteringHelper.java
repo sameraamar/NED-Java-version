@@ -70,10 +70,10 @@ public class DocumentClusteringHelper {
 		
 		Document nearest = null;
 		Double distance = null;
-		if (doc.nearest != null)
+		if (doc.getNearest() != null)
 		{
-			nearest =  data.id2document.get(doc.nearest);
-			distance = doc.nearestDist;
+			nearest =  data.id2document.get(doc.getNearest());
+			distance = doc.getNearestDist();
 		}
 		
 		boolean createNewThread = false;

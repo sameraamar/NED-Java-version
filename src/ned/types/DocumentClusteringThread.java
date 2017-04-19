@@ -78,7 +78,7 @@ public class DocumentClusteringThread extends Thread {
 		if (doc==null)
 			return null;
 				
-		if(doc.nearestDetermined)
+		if(doc.isNearestDetermined())
 		{
 			queue.poll();
 			return doc;

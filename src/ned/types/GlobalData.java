@@ -27,6 +27,7 @@ public class GlobalData {
 		public int max_bucket_size = 2000;
 		public int max_documents = 50000000;
 		public int max_thread_delta_time = 3600; //seconds
+		public int skip_files = 0;
 		public int offset = 0 ; //8800000;
 		public int search_recents = 2000;
 		public double threshold = 0.6;
