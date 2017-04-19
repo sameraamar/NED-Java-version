@@ -45,7 +45,7 @@ public class AppMain {
 	    	clustering = new DocumentClusteringThread(out);
 
 	    	Session.getInstance().message(Session.ERROR, "Reader", "Starting Monitor...");
-			int delay = 5; //seconds
+			int delay = gd.getParams().monitor_timer_seconds; //seconds
 			threadMonitor  = new MyMonitorThread(executer.getExecutor(), delay);
 
 			doMain(out);
@@ -76,7 +76,7 @@ public class AppMain {
 		GlobalData gd = GlobalData.getInstance();
 		
 		
-		String folder = "C:\\private\\samer\\data\\";
+		String folder = "c:\\data\\events_db\\petrovic\\";
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
 	                    "petrovic_01000000.gz",

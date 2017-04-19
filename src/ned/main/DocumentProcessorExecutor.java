@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ned.hash.LSHForest;
+import ned.tools.ExecutionHelper;
 import ned.types.Document;
 
 public class DocumentProcessorExecutor {
@@ -25,6 +26,9 @@ public class DocumentProcessorExecutor {
 	{
 		WorkerThread worker = new WorkerThread(forest, doc);
 		worker.preRun();
+		
+		//ExecutionHelper.asyncRun( worker );
+		
 		executor.execute(worker);
 	}
 	

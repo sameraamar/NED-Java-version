@@ -1,11 +1,7 @@
 package ned.main;
 
-import java.io.PrintStream;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import ned.types.Document;
 import ned.types.GlobalData;
 import ned.types.Session;
 import ned.types.Utility;
@@ -61,7 +57,8 @@ public class MyMonitorThread extends Thread
             	delta = TimeUnit.NANOSECONDS.toSeconds(delta);
                 StringBuffer msg = new StringBuffer();
             	msg.append("Elapsed time: ").append(Utility.humanTime(delta));
-            	
+            	msg.append(" Worker AHT: ").append(String.format("\t%.2f", WorkerThread.avegTime())).append(".\n\t");
+            	WorkerThread.resetCounter();
             	if (executor != null)
         		{
         			String str = this.executor.toString();
