@@ -134,7 +134,7 @@ public class Document {
  		
  		 Future<?> f=ExecutionHelper.asyncAwaitRun(callable);
  		 try {
-			double res= (double) f.get();
+			double res= (Double) f.get();
 			//System.out.println("res="+res);
 			return res;
 		} catch (Exception e) {

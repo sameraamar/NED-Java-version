@@ -27,9 +27,9 @@ public class ExecutionHelper {
 		
 	}
 public static Future<?> asyncAwaitRun(Runnable task) {
-	ForkJoinPool fj = getCommonForkPool ();
+	ForkJoinPool fj = getNewForkPool ();
 		ForkJoinTask<?> f=fj.submit(task);
-		//fj.shutdown();
+		fj.shutdown();
 		return f;
 		
 	}
