@@ -17,15 +17,14 @@ public class ExecutionHelper {
 	public static void asyncRun(Runnable task) {
 			executor.execute(task);
 	}
-	public static Future asyncAwaitRun(Callable task) {
-		
-		ForkJoinTask<?> f=getCommonForkPool().submit(task);
-		
-		
+	public static Future<?> asyncAwaitRun(Callable<?> task) {
+		ForkJoinPool fj = getNewForkPool();
+		ForkJoinTask<?> f=fj.submit(task);
+		fj.shutdown();
 		return f;
 		
 	}
-public static Future asyncAwaitRun(Runnable task) {
+public static Future<?> asyncAwaitRun(Runnable task) {
 	ForkJoinPool fj = getNewForkPool();
 		ForkJoinTask<?> f=fj.submit(task);
 		fj.shutdown();
@@ -50,7 +49,7 @@ public static Future asyncAwaitRun(Runnable task) {
 		
 	}
 	public synchronized static ForkJoinPool getCommonForkPool() {
-	 		System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "2000000");
+	 		System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "2000");
 	 		return ForkJoinPool.commonPool();
 		}
 	synchronized private static ForkJoinPool getNewForkPool() {
