@@ -20,16 +20,23 @@ public class ExecutionHelper {
 			executor.execute(task);
 	}
 	public static Future<?> asyncAwaitRun(Callable<?> task) {
-		ForkJoinPool fj = getCommonForkPool();
+		ForkJoinPool fj = getNewForkPool ();
 		ForkJoinTask<?> f=fj.submit(task);
-		//fj.shutdown();
+		fj.shutdown();
 		return f;
 		
 	}
 public static Future<?> asyncAwaitRun(Runnable task) {
 	ForkJoinPool fj = getNewForkPool ();
 		ForkJoinTask<?> f=fj.submit(task);
-		fj.shutdown();
+		try {
+			f.get();
+			fj.shutdownNow();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return f;
 		
 	}
@@ -59,6 +66,7 @@ public static Future<?> asyncAwaitRun(Runnable task) {
 		long stop=System.currentTimeMillis();
 		long duration=stop-start;
 		if(duration>1){
+			System.gc();
 			System.out.println("getNewForkPool duration is "+duration);
 		}
 	 		return fj;
