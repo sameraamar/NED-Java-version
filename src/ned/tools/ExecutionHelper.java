@@ -25,6 +25,14 @@ public class ExecutionHelper {
 		return f;
 		
 	}
+public static Future asyncAwaitRun(Runnable task) {
+	ForkJoinPool fj = getNewForkPool();
+		ForkJoinTask<?> f=fj.submit(task);
+		fj.shutdown();
+		
+		return f;
+		
+	}
 	
 	
 	public static boolean canCreateNewThread(){
