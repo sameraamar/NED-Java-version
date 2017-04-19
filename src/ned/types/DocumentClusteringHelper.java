@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import ned.tools.ExecutionHelper;
+
 public class DocumentClusteringHelper {
 	
 	
@@ -104,6 +106,7 @@ public class DocumentClusteringHelper {
 	
 	public static void pprint(PrintStream out)
 	{
+		Runnable task=()->{
 		GlobalData gd = GlobalData.getInstance();
 		
 		for (String leadId : gd.getId2Cluster().keySet())
@@ -114,6 +117,8 @@ public class DocumentClusteringHelper {
 				out.println(c.toString());
 			}
 		}
+		};
+		ExecutionHelper.asyncRun(task);
 	}
 	 public static <T> List<T> intersection(List<T> list1, List<T> list2) {
 	        List<T> list = new ArrayList<T>();

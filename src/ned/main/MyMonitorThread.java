@@ -56,7 +56,7 @@ public class MyMonitorThread extends Thread
             	long delta =  System.nanoTime()-starttime;
             	delta = TimeUnit.NANOSECONDS.toSeconds(delta);
             	double waht= WorkerThread.avegTime();
-            	if(waht>100){
+            	if(waht>200){
             		System.gc();
             	}
                 StringBuffer msg = new StringBuffer();

@@ -113,7 +113,8 @@ public class Document {
         }
         Hashtable<Integer, Double> rWeights = right.getWeights();
         Hashtable<Integer, Double> lWeights = left.getWeights();
-        Callable<Double> callable = ()->{
+        
+        //Callable<Double> callable = ()->{
             double res = 0;
 
        
@@ -130,6 +131,7 @@ public class Document {
         
         res = dot / norms; 
         return 1.0 - res;
+        /*
      	 };
  		
  		 Future<?> f=ExecutionHelper.asyncAwaitRun(callable);
@@ -142,6 +144,7 @@ public class Document {
 			e.printStackTrace();
 		}
  		 return 0;
+ 		 */
     }
 
 	public String toString() {
