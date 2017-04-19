@@ -19,7 +19,7 @@ import ned.tools.ExecutionHelper;
 public class GlobalData {
 	public class Parameters 
 	{
-		public int number_of_threads =50;
+		public int number_of_threads =500;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
