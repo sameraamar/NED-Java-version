@@ -60,7 +60,7 @@ public static Future<?> asyncAwaitRun(Runnable task) {
 	 		//
 	 		return ForkJoinPool.commonPool();
 		}
-	synchronized private static ForkJoinPool getNewForkPool() {
+	 private static ForkJoinPool getNewForkPool() {
 		long start=System.currentTimeMillis();
 		ForkJoinPool fj = new ForkJoinPool(1);
 		long stop=System.currentTimeMillis();
