@@ -8,6 +8,8 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
 
+import javax.annotation.Generated;
+
 import ned.types.GlobalData;
 
 public class ExecutionHelper {
@@ -18,17 +20,16 @@ public class ExecutionHelper {
 			executor.execute(task);
 	}
 	public static Future<?> asyncAwaitRun(Callable<?> task) {
-		ForkJoinPool fj = getNewForkPool();
+		ForkJoinPool fj = getCommonForkPool();
 		ForkJoinTask<?> f=fj.submit(task);
-		fj.shutdown();
+		//fj.shutdown();
 		return f;
 		
 	}
 public static Future<?> asyncAwaitRun(Runnable task) {
-	ForkJoinPool fj = getNewForkPool();
+	ForkJoinPool fj = getCommonForkPool ();
 		ForkJoinTask<?> f=fj.submit(task);
-		fj.shutdown();
-		
+		//fj.shutdown();
 		return f;
 		
 	}
@@ -49,11 +50,18 @@ public static Future<?> asyncAwaitRun(Runnable task) {
 		
 	}
 	public synchronized static ForkJoinPool getCommonForkPool() {
-	 		System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "2000");
+	 		//
 	 		return ForkJoinPool.commonPool();
 		}
 	synchronized private static ForkJoinPool getNewForkPool() {
-	 		return new ForkJoinPool(1);
+		long start=System.currentTimeMillis();
+		ForkJoinPool fj = new ForkJoinPool(1);
+		long stop=System.currentTimeMillis();
+		long duration=stop-start;
+		if(duration>1){
+			System.out.println("getNewForkPool duration is "+duration);
+		}
+	 		return fj;
 		 }
 	
 	

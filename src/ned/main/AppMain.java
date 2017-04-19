@@ -32,7 +32,7 @@ public class AppMain {
 	{
 		try {
 			GlobalData gd = GlobalData.getInstance();
-			
+			System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "50");
 			String threadsFileName = "c:/temp/threads.txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
@@ -76,7 +76,7 @@ public class AppMain {
 		GlobalData gd = GlobalData.getInstance();
 		
 		
-		String folder = "c:\\data\\events_db\\petrovic\\";
+		String folder = "C:\\private\\samer\\data\\";
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
 	                    "petrovic_01000000.gz",
