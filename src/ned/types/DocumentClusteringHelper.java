@@ -2,8 +2,12 @@ package ned.types;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import ned.tools.ExecutionHelper;
 
@@ -120,16 +124,38 @@ public class DocumentClusteringHelper {
 		};
 		ExecutionHelper.asyncRun(task);
 	}
-	 public static <T> List<T> intersection(List<T> list1, List<T> list2) {
-	        List<T> list = new ArrayList<T>();
-
-	        for (T t : list1) {
-	            if(list2.contains(t)) {
-	                list.add(t);
+	
+//	 public static <T> List<T> intersection(List<T> list1, List<T> list2) {
+//	        List<T> list = new ArrayList<T>();
+//	        for (T t : list1) {
+//	            if(list2.contains(t)) {
+//	                list.add(t);
+//	            }
+//	        }
+//
+//	        return list;
+//	}
+	
+	 public static <K, V> Set<K> intersection(Hashtable<K, V> left, Hashtable<K, V> right) {
+		 if (left.size() > right.size())
+	        {
+				Hashtable<K, V> tmp = right;
+				right = left;
+				left = tmp;
+	        }
+	        
+	        HashSet<K> intersection = new HashSet<K>();
+	        Enumeration<K> lkeys = left.keys();
+	        while( lkeys.hasMoreElements() )
+	        {
+	        	K key = lkeys.nextElement();
+				if (right.containsKey(key))
+	            {
+					intersection.add(key);
 	            }
 	        }
 
-	        return list;
+	        return intersection;
 	    }
 	
 }

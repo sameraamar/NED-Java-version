@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -86,65 +87,32 @@ public class Document {
 
     public static double Distance(Document left, Document right)
     {
-    	 List<String> commonWords = DocumentClusteringHelper.intersection(left.getWords(), right.getWords());
+    	Set<Integer> commonWords = DocumentClusteringHelper.intersection(left.getWordCount(), right.getWordCount());
      	if(commonWords.isEmpty()){
-     		//System.out.println("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
      		return 1;
      	}
-     	;
+
         if (left.getWords().size() > right.getWords().size())
         {
             Document tmp = right;
             right = left;
             left = tmp;
         }
-    	
         
-        HashSet<Integer> intersection = new HashSet<Integer>();
-        Enumeration<Integer> lkeys = left.getWordCount().keys();
-        Hashtable<Integer, Integer> rWords = right.getWordCount();
-        while( lkeys.hasMoreElements() )
-        {
-        	Integer key = lkeys.nextElement();
-			if (rWords.containsKey(key))
-            {
-				intersection.add(key);
-            }
-        }
         Hashtable<Integer, Double> rWeights = right.getWeights();
         Hashtable<Integer, Double> lWeights = left.getWeights();
         
-        //Callable<Double> callable = ()->{
-            double res = 0;
-
-       
+        double res = 0;
         double norms = Norm(rWeights) * Norm(lWeights);
-
-
         double dot = 0.0;
-        
-        //right.getWeights().keySet().retainAll(left.getWeights().keySet())
-        
-        for (Integer k : intersection) {
+
+        for (Integer k : commonWords) {
             dot += rWeights.get(k) * lWeights.get(k);
 		}
         
         res = dot / norms; 
         return 1.0 - res;
-        /*
-     	 };
- 		
- 		 Future<?> f=ExecutionHelper.asyncAwaitRun(callable);
- 		 try {
-			double res= (Double) f.get();
-			//System.out.println("res="+res);
-			return res;
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
- 		 return 0;
- 		 */
+     	 
     }
 
 	public String toString() {
