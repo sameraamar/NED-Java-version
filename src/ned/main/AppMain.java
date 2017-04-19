@@ -75,9 +75,9 @@ public class AppMain {
 	public static void doMain(PrintStream out) throws IOException {
 		GlobalData gd = GlobalData.getInstance();
 		
-		//String folder = "/tmp/";
+	String folder = "/tmp/";
 
-		String folder = "C:\\private\\samer\\data\\";
+	//	String folder = "C:\\private\\samer\\data\\";
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
 	                    "petrovic_01000000.gz",
