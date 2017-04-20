@@ -61,15 +61,15 @@ public class WorkerThread implements Runnable
     {
 		if (doc.getWords().size() == 0)
 		{
-	        this.doc.nearestDetermined = true;
+	        this.doc.setNearestDetermined( true);
 			return;
 		}
     	//Hashtable<Integer, Double> weights = doc.getWeights();
 		
     	List<String> set = forest.addDocument(this.doc);
+    	DocumentClusteringHelper.postLSHMapping(this.doc, set);
+    	this.doc.setNearestDetermined( true);
 
-       // DocumentClusteringHelper.postLSHMapping(this.doc, set);
-        this.doc.nearestDetermined = true;
         //DocumentClusteringHelper.mapToClusterHelper(doc);
     }
 

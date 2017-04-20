@@ -112,10 +112,10 @@ public class DocumentCluster {
 			
 			Document nDoc = null;
 			if(i>0) { //this is placeholder for the lead - skip
-				nDoc = gd.id2document.get(doc.nearest);
+				nDoc = gd.id2document.get(doc.getNearest());
 			}
 			
-			sb.append(docId).append("\t").append(doc.nearest).append(String.format("\t%.7f", doc.nearestDist));
+			sb.append(docId).append("\t").append(doc.getNearest()).append(String.format("\t%.7f", doc.getNearestDist()));
 			sb.append("\t").append( doc.getCleanText() );
 
 			String text = nDoc == null ? "NA" : nDoc.getCleanText();
