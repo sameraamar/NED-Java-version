@@ -1,5 +1,6 @@
 package ned.types;
 
+import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -17,7 +18,7 @@ import com.google.gson.JsonParser;
 
 import ned.tools.ExecutionHelper;
 
-public class Document {
+public class Document  implements Serializable{
     private String id;
     private String text ;
     private List<String> words;

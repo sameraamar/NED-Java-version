@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 
+import ned.tools.RedisHelper;
+
 public class DocumentClusteringThread extends Thread {
 	private boolean stop = false;
 	private GlobalData gd;
@@ -74,7 +76,7 @@ public class DocumentClusteringThread extends Thread {
 		if (id == null)
 			return null;
 					
-		Document doc = gd.id2document.get(id);
+		Document doc =RedisHelper.getDocumentFromRedis(gd.ID2DOCUMENT,id);
 		if (doc==null)
 			return null;
 				

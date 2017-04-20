@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import ned.tools.ExecutionHelper;
+import ned.tools.RedisHelper;
 
 public class DocumentClusteringHelper {
 	
@@ -29,13 +30,14 @@ public class DocumentClusteringHelper {
 		    }
 		}*/
 		
+	
 		Object[] tmp = list.toArray();
 		for (int i=0; i<tmp.length; i++)
 		{
 			String rightId = (String)tmp[i];
 			if(rightId.compareTo(id) < 0)
 		    {
-		    	Document right = GlobalData.getInstance().id2document.get(rightId);
+		    	Document right = 		RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
 				doc.updateNearest(right);
 		    }
 		}
@@ -44,8 +46,8 @@ public class DocumentClusteringHelper {
 	
 	public static void postLSHMapping(Document doc, List<String> set)
 	{
+		set.addAll(GlobalData.getInstance().recent);
 		DocumentClusteringHelper.determineClosest(doc, set);
-		DocumentClusteringHelper.determineClosest(doc, GlobalData.getInstance().recent);
 		
 		//handle recent documents
 		//searchInRecentDocuments(doc);
@@ -73,7 +75,7 @@ public class DocumentClusteringHelper {
 		Double distance = null;
 		if (doc.getNearest() != null)
 		{
-			nearest =  data.id2document.get(doc.getNearest());
+			nearest =RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getNearest()); // data.id2document.get(doc.getNearest());
 			distance = doc.getNearestDist();
 		}
 		

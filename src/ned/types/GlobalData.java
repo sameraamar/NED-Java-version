@@ -11,13 +11,19 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ned.modules.Twokenize;
 import ned.tools.ExecutionHelper;
+import ned.tools.RedisHelper;
 
 public class GlobalData {
+	public static final String ID2DOCUMENT = "id2document";
+	public static final String WORD2INDEX = "word2index";
+	public static final String WORD2IDF = "word2idf";
+	
 	public class Parameters 
 	{
 		public int monitor_timer_seconds = 5; //seconds
@@ -50,7 +56,7 @@ public class GlobalData {
 	
 	public ConcurrentLinkedQueue<String> queue; 
 	public Hashtable<String, Integer>    word2index;
-	public Hashtable<String, Document>   id2document;
+	//public Hashtable<String, Document>   id2document;
 	
 	//for calculating IDF
 	int numberOfDocuments;
@@ -68,7 +74,7 @@ public class GlobalData {
 	{	
 		word2index  = new Hashtable<String , Integer>();
 		//index2word  = new Hashtable<Integer, String>();
-		id2document = new Hashtable<String , Document>();
+		//id2document = new Hashtable<String , Document>();
 		numberOfDocsIncludeWord = new ConcurrentHashMap<Integer, Integer>();
 		//cleanClusterQueue = new LinkedList<String>();
 		cleanClusterQueue = (List<String>) Collections.synchronizedList(new LinkedList<String>()); //new LinkedList<Document>();
@@ -78,6 +84,8 @@ public class GlobalData {
 		word2idf = new ConcurrentHashMap<Integer, Double>();
 		id2cluster = new ConcurrentHashMap<String, String>();
 		recent = (List<String>) Collections.synchronizedList(new ArrayList<String>());
+		
+		
 	}
 	
 	public DocumentCluster clusterByDoc(String id)
@@ -230,7 +238,9 @@ public class GlobalData {
 		}
 		
 		doc.setDimension ( d );
-		id2document.put(doc.getId(), doc);
+		//id2document.put(doc.getId(), doc);
+		RedisHelper.setDocumentFromRedis(ID2DOCUMENT, doc.getId(), doc);
+
 		numberOfDocuments++;
 		
 		addToRecent(doc);
@@ -326,7 +336,7 @@ public class GlobalData {
 		
 		for (String id : marktoremove) {
 			this.id2cluster.remove(id);
-			this.id2document.remove(id);
+			//this.id2document.remove(id);
 			countDocs++;
 		}
 		
@@ -421,7 +431,7 @@ public class GlobalData {
 		System.out.println("Total Active threads="+Thread.activeCount()+" StealCount= "+ExecutionHelper.getCommonForkPool().getStealCount());
 		return String.format("\t[monitor] Words: %d, Documents: %d, Clusters %d, Recent: %d",
 				this.word2index.size(),
-				this.id2document.size(),
+				RedisHelper.redisSize(ID2DOCUMENT),//this.id2document.size(),
 				this.clusters.size(),
 				this.recent==null ? 0 : this.recent.size()
 			);

@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ned.hash.DocumentHandler;
 import ned.hash.LSHForest;
+import ned.tools.RedisHelper;
 import ned.types.Document;
 import ned.types.DocumentClusteringThread;
 import ned.types.GlobalData;
@@ -32,6 +33,11 @@ public class AppMain {
 	{
 		try {
 			GlobalData gd = GlobalData.getInstance();
+			RedisHelper.initRedisConnectionPool();
+			while(!RedisHelper.ready){
+				System.out.print('.');
+				Thread.sleep(100);
+			}
 			System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "50");
 			String threadsFileName = "c:/temp/threads.txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
@@ -77,7 +83,7 @@ public class AppMain {
 		
 	String folder = "/tmp/";
 
-	folder = "c:/data/events_db/petrovic";
+	//folder = "c:/data/events_db/petrovic";
 	//folder = "C:\\private\\samer\\data";
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
