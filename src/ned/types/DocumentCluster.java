@@ -105,7 +105,7 @@ public class DocumentCluster {
 		sb.append(" Entropy: ").append(ent);
 		sb.append(" Age: ").append(this.age()).append(" (s)\n");;
 		
-		sb.append("id\tnearest\tdistance\ttext\tnearest_text\n");
+		sb.append("id\tcreated\tnearest\tdistance\ttext\tnearest_text\n");
 		for (int i =0; i<this.idList.size(); i++)
 		{
 			String docId = idList.get(i);
@@ -116,11 +116,19 @@ public class DocumentCluster {
 				nDoc = gd.id2document.get(doc.getNearest());
 			}
 			
-			sb.append(docId).append("\t").append(doc.getNearest()).append(String.format("\t%.7f", doc.getNearestDist()));
+			sb.append(docId).append("\t");
+			sb.append(doc.getCreatedAt()).append("\t");
+			//sb.append(doc.getNearest()).append(String.format("\t%.7f", doc.getNearestDist()));
+			sb.append(doc.getNearest()).append("\t").append( doc.getNearestDist() );
 			sb.append("\t").append( doc.getCleanText() );
 
 			String text = nDoc == null ? "NA" : nDoc.getCleanText();
 			sb.append("\t").append(text);
+			
+			if(doc.getNearest()!=null && doc.getNearest().compareTo(doc.getId()) >= 0)
+			{
+				sb.append("\t!!!!! bad nearest choice...");
+			}
 			sb.append("\n");
 		}
 		return sb.toString();
@@ -136,7 +144,7 @@ public class DocumentCluster {
 		
 		HashMap<Integer, Integer> wordcount = new HashMap<Integer, Integer>();
 		int N = 0;
-		List<String> tmpList = (List<String>) Collections.synchronizedList(idList);
+		List<String> tmpList = idList;
 		
 		for(String id : tmpList)
 		{

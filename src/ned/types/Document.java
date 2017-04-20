@@ -96,7 +96,7 @@ public class Document {
         return res;
 	}
     
-    synchronized public double Norm()
+    public double Norm()
     {        
     	double res = Norm(getWeights());
         return res;

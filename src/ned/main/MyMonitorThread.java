@@ -73,10 +73,12 @@ Session.getInstance().message(Session.INFO, "[monitor]", "request to shutdown");
         
                 try {            
 
+            /*
             msg.append("\tidf('i')=").append(gd.getOrDefault(gd.word2index.getOrDefault("i",-1)));
             msg.append(", idf('the')=").append(gd.getOrDefault(gd.word2index.getOrDefault("the",-1)));
             msg.append(", idf('rt')=").append(gd.getOrDefault(gd.word2index.getOrDefault("rt",-1)));
             msg.append(", idf('ramadan')=").append(gd.getOrDefault(gd.word2index.getOrDefault("ramadan",-1)));
+            */
             msg.append(". Queue: ").append(gd.queue.size()).append(", ID=").append(gd.queue.peek());
             
 
