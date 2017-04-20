@@ -6,10 +6,16 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.stream.Stream;
 
+import ned.tools.ExecutionHelper;
+import ned.tools.GeneralHelper;
 import ned.types.Document;
 
 public class LSHForest {
@@ -47,7 +53,7 @@ public class LSHForest {
 	
 	public List<String> AddDocument(Document doc)
     {
-		HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
+		ConcurrentHashMap<String, Integer> hitCounts = new ConcurrentHashMap<String, Integer>();
 
 		for (int i = 0; i<numberOfTables; i++)
 		{
@@ -83,71 +89,52 @@ public class LSHForest {
     }
 	public List<String> addDocument32(Document doc)
     {
-		ConcurrentHashMap<String, Integer> hitCounts = new ConcurrentHashMap<String, Integer>();
-		 CountDownLatch latch = new CountDownLatch(tables.length);
+		
+		HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 
-		Stream<LSHTable> tablesStream = Arrays.stream(tables);
-		 tablesStream.parallel()
-				.forEach(table->{
-					List<String> tmpList = table.AddDocument(doc);
-					
-					for (String tmp : tmpList) {
-						if (tmp == doc.getId())
-							continue;
-						
-						Integer c = hitCounts.getOrDefault(tmp, 0);
-						hitCounts.put(tmp, c+1);
-					}
-					
-					latch.countDown();
-				});
-		 try {
-				latch.await();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		
-		
-		
-		 ArrayList<String> output = new ArrayList<String>();
-	        output.addAll(hitCounts.keySet());
-	        
-	        output.sort( new Comparator<String> () 
-						        {  
-						            @Override  
-						            public int compare(String left, String right){  
-						                 return hitCounts.get(right) - hitCounts.get(left) ;  //Descending  
-						            }  
-						            
-						        }
-	        ); 
-	        
-	        int compare_with = 3*numberOfTables;
-	        int toIndex = Math.min(compare_with, output.size());
-	        List<String> res = output.subList(0, toIndex);
-	        return res;
-    }
-	
-	/*
-	public HashSet<String> AddDocument2(Document doc)
-	{
-		HashSet<String> res = new HashSet<String>();
-		
-		for (int i = 0; i<numberOfTables; i++)
+
+        for (int i = 0; i<numberOfTables; i++)
 		{
-			LinkedList<Document> tmpList = tables[i].AddDocument(doc);
+			List<String> tmpList = tables[i].AddDocument(doc);
 			
-			//add to the set
-			for (Document entry : tmpList) {
-				res.add(entry.getId());
+			for (String tmp : tmpList) {
+				if (tmp == doc.getId())
+					continue;
+				
+				Integer c = hitCounts.getOrDefault(tmp, 0);
+				hitCounts.put(tmp, c+1);
 			}
 			
 		}
 		
-		return res;
+		
+        TreeMap<String, Integer> sorted = GeneralHelper.sortMapByValue(hitCounts);
+		 ArrayList<String> output = new ArrayList<String>();
+	       output.addAll(sorted.keySet());
+	     
+	        int compare_with = 3*numberOfTables;
+	        int toIndex = Math.min(compare_with, output.size());
+	        List<String> res =output.subList(0, toIndex);
+	        return res;
     }
-    */
+	
+	
+	public List<String> addDocument(Document doc)
+    {
+		Callable <List<String>> task = () -> {
+		
+			return this.addDocument32(doc);
+		};
+	
+		try {
+			//Future f=ExecutionHelper.asyncAwaitRun(task);
+			return task.call();
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+		}
+		return null;
+    }
 	
 	public String toString()
 	{

@@ -66,9 +66,9 @@ public class WorkerThread implements Runnable
 		}
     	//Hashtable<Integer, Double> weights = doc.getWeights();
 		
-    	List<String> set = forest.addDocument32(this.doc);
+    	List<String> set = forest.addDocument(this.doc);
 
-        DocumentClusteringHelper.postLSHMapping(this.doc, set);
+       // DocumentClusteringHelper.postLSHMapping(this.doc, set);
         this.doc.nearestDetermined = true;
         //DocumentClusteringHelper.mapToClusterHelper(doc);
     }
