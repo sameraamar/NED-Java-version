@@ -39,7 +39,7 @@ public class AppMain {
 				Thread.sleep(100);
 			}
 			System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "50");
-			String threadsFileName = "c:/temp/threads.txt";
+			String threadsFileName = "../temp/threads.txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
 			forest = new LSHForest(gd.getParams().number_of_tables, 
