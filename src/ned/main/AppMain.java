@@ -33,7 +33,7 @@ public class AppMain {
 		try {
 			GlobalData gd = GlobalData.getInstance();
 			System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "50");
-			String threadsFileName = "c:/temp/threads.txt";
+			String threadsFileName = "../temp/threads.txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
 			forest = new LSHForest(gd.getParams().number_of_tables, 
@@ -78,7 +78,7 @@ public class AppMain {
 	String folder = "/tmp/";
 
 	//folder = "c:/data/events_db/petrovic";
-	//folder = "C:\\private\\samer\\data";
+	folder = "C:\\private\\samer\\data";
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
 	                    "petrovic_01000000.gz",

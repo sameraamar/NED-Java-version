@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
 
 import ned.tools.ExecutionHelper;
 import ned.types.Document;
@@ -20,12 +21,12 @@ public class LSHTable
     public  Boolean fixingDim=false;
     
     private ArrayList<Double>[] hyperPlanes = null;
-    private java.util.Dictionary<String, Bucket> buckets = null;
+    private java.util.Dictionary<Long, Bucket> buckets = null;
     
     public LSHTable(int hyperPlanesNumber, int dimension, int maxBucketSize)
     {
     	this.hyperPlanesNumber = hyperPlanesNumber;
-        buckets = new Hashtable<String, Bucket>();
+        buckets = new Hashtable<Long, Bucket>();
         this.maxBucketSize = maxBucketSize;
         this.dimension = dimension;
     }
@@ -92,9 +93,52 @@ public class LSHTable
     	
     }
     
-   
+     private long GenerateHashCode(Document doc)
+     {
+     	
+     	boolean[] st = new boolean [hyperPlanesNumber];
+     	Session session = Session.getInstance();
+     	
+     	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
+     	ConcurrentHashMap<Integer, Double> weights = doc.getWeights();
+ 		if (!this.fixingDim && doc.getDimension() >= this.dimension-3*GlobalData.getInstance().getParams().dimension_jumps) 
+        {
+            this.FixDimension(doc.getDimension());
+        }
+ 		
+ 		
+ 		for (int i = 0 ; i<hyperPlanesNumber; i++)
+    	{
+    		double tmp = 0;
+    		//Samer: remove syncronized
+    		//synchronized (weights) {
+				for (Integer j : weights.keySet()) 
+	    		{
+	    			tmp += weights.get(j) * getHyperPlane(i).get(j);
+	    		}
+    		//}
+			session.message(Session.DEBUG, "GenerateHashCode", ""+ tmp);
 
-	private String GenerateHashCode(Document doc)
+			st[i]=( tmp>=0 ? true : false );
+    		session.message(Session.DEBUG, "GenerateHashCode", "\nLOG");
+    	}
+ 		long res=convertBooleanArrayToLong(st);
+         return res;
+     }
+     
+     private long convertBooleanArrayToLong(boolean[] st){
+     	long res=0;
+     	for (int i = 0 ; i<hyperPlanesNumber; i++){
+     		if(st[i]){
+     			res+=Math.pow(2,i);
+     		}
+     		
+     	}
+ 		return res;
+     	
+     }
+
+	private String GenerateHashCode_orig(Document doc)
     {
     	StringBuffer st = new StringBuffer();
     	Session session = Session.getInstance();
@@ -127,7 +171,7 @@ public class LSHTable
 
     public List<String> AddDocument(Document doc)
     {
-        String code = GenerateHashCode(doc);
+        long code = GenerateHashCode(doc);
         if (buckets.get(code) == null)
             buckets.put(code, new Bucket(maxBucketSize));
 
