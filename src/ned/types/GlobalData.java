@@ -131,10 +131,10 @@ public class GlobalData {
 		return word2idf.getOrDefault(k, -1.0);
 	}
 	
-	public void calcWeights(Document doc, Hashtable<Integer, Double> weights) 
+	public void calcWeights(Document doc, ConcurrentHashMap<Integer, Double> tmp2) 
 	{
 		
-			 Hashtable<Integer, Integer> wordCount = doc.getWordCount();
+			 ConcurrentHashMap<Integer, Integer> wordCount = doc.getWordCount();
 				Enumeration<Integer> tmp = wordCount.keys();
 				
 				while(tmp.hasMoreElements())
@@ -148,7 +148,7 @@ public class GlobalData {
 						}
 					Double b = word2idf.get(k);
 					
-					weights.put(k, a*b);
+					tmp2.put(k, a*b);
 				}
 				
 		
@@ -158,7 +158,7 @@ public class GlobalData {
 	public void calcWeights1(Document doc, Hashtable<Integer, Double> weights) 
 	{		
 		
-		Hashtable<Integer, Integer> wordCount = doc.getWordCount();
+		ConcurrentHashMap<Integer, Integer> wordCount = doc.getWordCount();
 		
 		int Dt_size = numberOfDocuments; //id2document.size();
 		
@@ -176,16 +176,16 @@ public class GlobalData {
 		
 	}
 	
-	private int wordCounts(List<String> list, Hashtable<Integer, Integer> d)
+	private int wordCounts(List<String> list, ConcurrentHashMap<Integer, Integer> concurrentHashMap)
 	{
 		int max_idx = addWords(list);
 		
 		for (String w : list) 
 		{
 			int idx = word2index.get(w);
-			int val = d.getOrDefault(idx,  0);
+			int val = concurrentHashMap.getOrDefault(idx,  0);
 			val += 1;
-			d.put(idx, val);
+			concurrentHashMap.put(idx, val);
 		}
 		
 		return max_idx;

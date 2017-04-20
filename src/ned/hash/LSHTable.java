@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import ned.tools.ExecutionHelper;
 import ned.types.Document;
@@ -99,7 +100,7 @@ public class LSHTable
     	Session session = Session.getInstance();
     	
     	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
-    	Hashtable<Integer, Double> weights = doc.getWeights();
+    	ConcurrentHashMap<Integer, Double> weights = doc.getWeights();
 		if (!this.fixingDim && doc.getDimension() >= this.dimension-3*GlobalData.getInstance().getParams().dimension_jumps) 
 		{
 			this.FixDimension(doc.getDimension());

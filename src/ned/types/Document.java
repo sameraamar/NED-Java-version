@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -21,7 +22,7 @@ public class Document {
     private String text ;
     private List<String> words;
     //private java.util.Hashtable<Integer, Double> weights ;
-    private java.util.Hashtable<Integer, Integer> wordCount ;
+    private ConcurrentHashMap<Integer, Integer> wordCount ;
     private int dimension;
     
     public int max_idx;
@@ -81,7 +82,7 @@ public class Document {
 		super.finalize();
 	}
 	
-    private static double Norm(Hashtable<Integer, Double> weights) {
+    private static double Norm(ConcurrentHashMap<Integer, Double> weights) {
     	double res = 0;
         Enumeration<Double> values = weights.elements();
         
@@ -115,8 +116,8 @@ public class Document {
             left = tmp;
         }
         
-        Hashtable<Integer, Double> rWeights = right.getWeights();
-        Hashtable<Integer, Double> lWeights = left.getWeights();
+        ConcurrentHashMap<Integer, Double> rWeights = right.getWeights();
+        ConcurrentHashMap<Integer, Double> lWeights = left.getWeights();
         
         double res = 0;
         double norms = Norm(rWeights) * Norm(lWeights);
@@ -143,14 +144,14 @@ public class Document {
 		return text;
 	}
 
-	public java.util.Hashtable<Integer, Double> getWeights() {
+	public ConcurrentHashMap<Integer, Double> getWeights() {
 		//if (weights == null) 
 		//{
 			//synchronized(this) {
 				//if (weights!=null) //some other process already handlde
 				//	return weights;
 				
-				Hashtable<Integer, Double> tmp = new java.util.Hashtable<Integer, Double>();
+		ConcurrentHashMap<Integer, Double> tmp = new ConcurrentHashMap<Integer, Double>();
 				
 				GlobalData gd = GlobalData.getInstance();
 				//gd.addDocument(this);
@@ -172,14 +173,14 @@ public class Document {
 		return dimension;
 	}
 
-	java.util.Hashtable<Integer, Integer> getWordCount() {
+	ConcurrentHashMap<Integer, Integer> getWordCount() {
 		if (wordCount == null)
-			wordCount = new java.util.Hashtable<Integer, Integer>();
+			wordCount = new ConcurrentHashMap<Integer, Integer>();
 		
 		return wordCount;
 	}
 
-	void setWordCount(java.util.Hashtable<Integer, Integer> wordCount) {
+	void setWordCount(ConcurrentHashMap<Integer, Integer> wordCount) {
 		this.wordCount = wordCount;
 	}
 

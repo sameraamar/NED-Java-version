@@ -8,6 +8,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import ned.tools.ExecutionHelper;
 
@@ -136,10 +137,10 @@ public class DocumentClusteringHelper {
 //	        return list;
 //	}
 	
-	 public static <K, V> Set<K> intersection(Hashtable<K, V> left, Hashtable<K, V> right) {
+	 public static <K, V> Set<K> intersection(ConcurrentHashMap<K, V> left, ConcurrentHashMap<K, V> right) {
 		 if (left.size() > right.size())
 	        {
-				Hashtable<K, V> tmp = right;
+			 ConcurrentHashMap<K, V> tmp = right;
 				right = left;
 				left = tmp;
 	        }

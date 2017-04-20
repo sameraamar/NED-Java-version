@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DocumentCluster {
 	private List<String> idList;
@@ -141,7 +142,7 @@ public class DocumentCluster {
 		{
 			Document doc = gd.id2document.get(id);
 
-			Hashtable<Integer, Integer> tmp = doc.getWordCount();
+			ConcurrentHashMap<Integer, Integer> tmp = doc.getWordCount();
 			for (Integer i : tmp.keySet())
 			{
 				int count = wordcount.getOrDefault(i, 0); 
