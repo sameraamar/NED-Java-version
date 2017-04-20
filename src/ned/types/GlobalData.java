@@ -9,6 +9,7 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,11 +54,11 @@ public class GlobalData {
 	
 	//for calculating IDF
 	int numberOfDocuments;
-	private Hashtable<Integer, Double> word2idf;
+	private ConcurrentHashMap<Integer, Double> word2idf;
 
-	public Hashtable<Integer, Integer>   numberOfDocsIncludeWord;
-	public Hashtable<String, DocumentCluster>  clusters;
-	public Hashtable<String, String> id2cluster;
+	public ConcurrentHashMap<Integer, Integer>   numberOfDocsIncludeWord;
+	public ConcurrentHashMap<String, DocumentCluster>  clusters;
+	public ConcurrentHashMap<String, String> id2cluster;
 	public List<String> recent;
 	public Parameters parameters = new Parameters();
 	public List<String> cleanClusterQueue = null;
@@ -68,14 +69,14 @@ public class GlobalData {
 		word2index  = new Hashtable<String , Integer>();
 		//index2word  = new Hashtable<Integer, String>();
 		id2document = new Hashtable<String , Document>();
-		numberOfDocsIncludeWord = new Hashtable<Integer, Integer>();
+		numberOfDocsIncludeWord = new ConcurrentHashMap<Integer, Integer>();
 		//cleanClusterQueue = new LinkedList<String>();
 		cleanClusterQueue = (List<String>) Collections.synchronizedList(new LinkedList<String>()); //new LinkedList<Document>();
-		clusters = new Hashtable<String, DocumentCluster>();
+		clusters = new ConcurrentHashMap<String, DocumentCluster>();
 		numberOfDocuments = 0;
 		queue = new ConcurrentLinkedQueue<String>();
-		word2idf = new Hashtable<Integer, Double>();
-		id2cluster = new Hashtable<String, String>();
+		word2idf = new ConcurrentHashMap<Integer, Double>();
+		id2cluster = new ConcurrentHashMap<String, String>();
 		recent = (List<String>) Collections.synchronizedList(new ArrayList<String>());
 	}
 	
@@ -355,7 +356,7 @@ public class GlobalData {
 		return words;
 	}
 
-	public Hashtable<String, String> getId2Cluster() {
+	public ConcurrentHashMap<String, String> getId2Cluster() {
 		return id2cluster;
 	}
 
