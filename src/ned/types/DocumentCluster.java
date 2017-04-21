@@ -1,7 +1,12 @@
 package ned.types;
 
+import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
@@ -101,13 +106,13 @@ public class DocumentCluster {
 		if(ent > 3.5)
 			sb.append("**3**");
 		else if (ent > 2.5)
-			sb.append("**2**");
+			sb.append("**2**\n");
 
 		sb.append("LEAD: ").append(leadId).append(" SIZE: ").append(this.idList.size());
 		sb.append(" Entropy: ").append(ent);
 		sb.append(" Age: ").append(this.age()).append(" (s)\n");;
 		
-		sb.append("id\tcreated\tnearest\tdistance\ttext\tnearest_text\n");
+		sb.append("id\tcreated\ttimestamp\tnearest\tdistance\ttext\tnearest_text\n");
 		for (int i =0; i<this.idList.size(); i++)
 		{
 			String docId = idList.get(i);
@@ -119,10 +124,19 @@ public class DocumentCluster {
 			}
 			
 			sb.append(docId).append("\t");
-			sb.append(doc.getCreatedAt()).append("\t");
+			Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
+			sb.append(time.toString()).append("\t");
+			
+			//sb.append(doc.getCreatedAt()).append("\t");
+			//DateTimeFormatter df = DateTimeFormatter.ofPattern("DDD MMM dd HH:mm:ss X yyyy");
+			//LocalDateTime dateTime = LocalDateTime.parse(doc.getCreatedAt(), df);
+			//sb.append(time.toString()).append("\t");
+			
+			sb.append(doc.getTimestamp()).append("\t");
 			//sb.append(doc.getNearest()).append(String.format("\t%.7f", doc.getNearestDist()));
-			sb.append(doc.getNearest()).append("\t").append( doc.getNearestDist() );
-			sb.append("\t").append( doc.getCleanText() );
+			sb.append(doc.getNearest()).append("\t");
+			sb.append( String.format("%.7f", doc.getNearestDist() )).append("\t");
+			sb.append( doc.getCleanText() );
 
 			String text = nDoc == null ? "NA" : nDoc.getCleanText();
 			sb.append("\t").append(text);
@@ -197,4 +211,12 @@ public class DocumentCluster {
 	{
 		return idList;
 	}
+	
+//	public static void main(String[] args) throws IOException
+//	{
+//		DateTimeFormatter df = DateTimeFormatter.ofPattern("E MMM dd HH:mm:ss X yyyy");
+//		LocalDateTime dateTime = LocalDateTime.parse("Thu Jun 30 10:45:00 +0000 2011", df);
+//		
+//		System.out.println(dateTime.toString());
+//	}
 }

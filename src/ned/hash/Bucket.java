@@ -1,26 +1,26 @@
 package ned.hash;
 
-import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import ned.types.Document;
 
 public class Bucket
 {
-	private Hashtable<String, Document> documents;
+	private ConcurrentHashMap<String, Document> documents;
 	private ConcurrentLinkedQueue<String> queue;
     private int maxBucketSize ;
 
     public Bucket(int maxBucketSize)
     {
         this.maxBucketSize = maxBucketSize;
-        documents = new Hashtable<String, Document>();
+        documents = new ConcurrentHashMap<String, Document>();
         queue = new ConcurrentLinkedQueue<String>();
     }
 
-    synchronized public void Append(Document doc)
+    public void Append(Document doc)
     {
     	String id = doc.getId();
         documents.put(id, doc);
@@ -28,8 +28,8 @@ public class Bucket
         
         if (queue.size() > maxBucketSize)
         {
-        	id = queue.poll();
-            documents.remove(id);
+			id = queue.poll();
+			documents.remove(id);
         }
     }
 
@@ -43,7 +43,7 @@ public class Bucket
 		
 		List<String> list = new LinkedList<String>();
 		for (Object id : ids) {
-			if (excludeId.equals(id))
+			if (excludeId.compareTo((String)id) <= 0)
 				continue;
 		
 			list.add((String)id);
