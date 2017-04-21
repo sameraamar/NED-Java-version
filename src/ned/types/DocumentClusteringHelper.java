@@ -48,11 +48,11 @@ public class DocumentClusteringHelper {
 	
 	public static void postLSHMapping(Document doc, List<String> set)
 	{
-		/*
+		
 		synchronized(GlobalData.getInstance().recent) {
 			set.addAll(GlobalData.getInstance().recent.keySet());
 		}
-		*/
+		
 		DocumentClusteringHelper.determineClosest(doc, set);
 		//handle recent documents
 		//searchInRecentDocuments(doc);

@@ -135,7 +135,7 @@ public class RedisHelper {
 				return doc;
 			}
 		}
-		System.out.println("Cache Miss :("+key);
+	//	System.out.println("Cache Miss :("+key);
 		Jedis jedis=getRedisClient();
 		
 		byte[] kbytes = key.getBytes();
