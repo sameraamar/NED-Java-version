@@ -71,7 +71,7 @@ public class RedisHelper {
 		Date start=new Date();
 		Jedis cn = null;
 		try {
-			if(jedisPool.getNumActive()<REDIS_MAX_CONNECTIONS){
+			if(jedisPool.getNumActive()<=REDIS_MAX_CONNECTIONS){
 				cn= jedisPool.getResource();
 				
 			}else{
