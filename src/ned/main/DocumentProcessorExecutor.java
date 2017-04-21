@@ -28,8 +28,8 @@ public class DocumentProcessorExecutor {
 		worker.preRun();
 		
 		//ExecutionHelper.asyncRun( worker );
-		
-		executor.execute(worker);
+		worker.run();
+		//executor.execute(worker);
 	}
 	
 	public void await()

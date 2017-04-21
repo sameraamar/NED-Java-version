@@ -66,7 +66,7 @@ public static Future<?> asyncAwaitRun(Runnable task) {
 		long stop=System.currentTimeMillis();
 		long duration=stop-start;
 		if(duration>1){
-			System.gc();
+			//System.gc();
 			System.out.println("getNewForkPool duration is "+duration);
 		}
 	 		return fj;

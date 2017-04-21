@@ -7,8 +7,10 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import ned.tools.ExecutionHelper;
 import ned.tools.RedisHelper;
@@ -25,7 +27,7 @@ public class DocumentClusteringHelper {
 			String rightId = iter.next();
 		    if(rightId.compareTo(id) < 0)
 		    {
-		    	Document right = 		RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
+		    	Document right = RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
 				doc.updateNearest(right);
 		    }
 		}
@@ -46,9 +48,12 @@ public class DocumentClusteringHelper {
 	
 	public static void postLSHMapping(Document doc, List<String> set)
 	{
-		set.addAll(GlobalData.getInstance().recent);
+		/*
+		synchronized(GlobalData.getInstance().recent) {
+			set.addAll(GlobalData.getInstance().recent.keySet());
+		}
+		*/
 		DocumentClusteringHelper.determineClosest(doc, set);
-		
 		//handle recent documents
 		//searchInRecentDocuments(doc);
 	}
@@ -58,13 +63,19 @@ public class DocumentClusteringHelper {
 		GlobalData gd = GlobalData.getInstance();
 		
 		//java.util.concurrent.ConcurrentLinkedDeque<Document> list = new java.util.concurrent.ConcurrentLinkedDeque<Document>();
-		Object[] tmp = gd.recent.toArray();  //TODO : This is not effecient
+		  Set<Entry<String, Document>> tmp = gd.recent.entrySet();
+		 
+		 
+		  for(Entry<String, Document> entry:tmp){
+			  doc.updateNearest(entry.getValue());
+		  }
+		  /*
 		for (int i=0; i<tmp.length; i++)
 		//for (Document r : gd.recent)
 		{
 			Document r = (Document)tmp[i];
-			doc.updateNearest(r);
 		}
+		*/
 	}
 	
 	public static void mapToClusterHelper(Document doc)

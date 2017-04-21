@@ -65,7 +65,7 @@ public class GlobalData {
 	public ConcurrentHashMap<Integer, Integer>   numberOfDocsIncludeWord;
 	public ConcurrentHashMap<String, DocumentCluster>  clusters;
 	public ConcurrentHashMap<String, String> id2cluster;
-	public List<String> recent;
+	public LRUCache<String,Document> recent;
 	public Parameters parameters = new Parameters();
 	public List<String> cleanClusterQueue = null;
 	
@@ -83,7 +83,7 @@ public class GlobalData {
 		queue = new ConcurrentLinkedQueue<String>();
 		word2idf = new ConcurrentHashMap<Integer, Double>();
 		id2cluster = new ConcurrentHashMap<String, String>();
-		recent = (List<String>) Collections.synchronizedList(new ArrayList<String>());
+		recent = new LRUCache<String, Document>(2000);
 		
 		
 	}
@@ -243,16 +243,15 @@ public class GlobalData {
 
 		numberOfDocuments++;
 		
-		addToRecent(doc.getId());
+		addToRecent(doc);
 		
 		for (int i : doc.getWordCount().keySet()) 
 			word2idf.put(i, calcIDF(i));
 	}
 	
-	private void addToRecent(String docId) {
-		this.recent.add(docId);
-		if (this.recent.size() > this.parameters.search_recents)
-			this.recent.remove(0);
+	private void addToRecent(Document doc) {
+		this.recent.put(doc.getId(),doc);
+		
 	}
 
 	public String tweetWithoutURL(String text)
