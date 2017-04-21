@@ -243,14 +243,14 @@ public class GlobalData {
 
 		numberOfDocuments++;
 		
-		addToRecent(doc);
+		addToRecent(doc.getId());
 		
 		for (int i : doc.getWordCount().keySet()) 
 			word2idf.put(i, calcIDF(i));
 	}
 	
-	private void addToRecent(Document doc) {
-		this.recent.add(doc.getId());
+	private void addToRecent(String docId) {
+		this.recent.add(docId);
 		if (this.recent.size() > this.parameters.search_recents)
 			this.recent.remove(0);
 	}

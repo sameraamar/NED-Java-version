@@ -131,9 +131,9 @@ public class RedisHelper {
 		if(id2DocumentCache != null)
 		{
 			doc= id2DocumentCache.get(key);
-			//if(doc!=null) {
+			if(doc!=null || id2DocumentCache.size()<lru_cache_size) {
 				return doc;
-			//}
+			}
 		}
 		System.out.println("Cache Miss :("+key);
 		Jedis jedis=getRedisClient();

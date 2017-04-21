@@ -20,17 +20,17 @@ public class DocumentClusteringHelper {
 	{
 		String id = doc.getId();
 		
-		/*Iterator<String> iter = list.iterator();
+		Iterator<String> iter = list.iterator();
 		while(iter.hasNext()){
 			String rightId = iter.next();
 		    if(rightId.compareTo(id) < 0)
 		    {
-		    	Document right = GlobalData.getInstance().id2document.get(rightId);
+		    	Document right = 		RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
 				doc.updateNearest(right);
 		    }
-		}*/
+		}
 		
-	
+	/*
 		Object[] tmp = list.toArray();
 		for (int i=0; i<tmp.length; i++)
 		{
@@ -41,7 +41,7 @@ public class DocumentClusteringHelper {
 				doc.updateNearest(right);
 		    }
 		}
-		
+		*/
 	}
 	
 	public static void postLSHMapping(Document doc, List<String> set)
