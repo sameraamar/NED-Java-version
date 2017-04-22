@@ -41,7 +41,9 @@ public class Document  implements Serializable{
 	private boolean nearestDetermined;
 	private int favouritesCount;
 	private String user_id;
-
+	private String retweeted_user_id;
+	private String reply_to_user_id;
+	
     public Document(String id, String text, long timestamp)
     {
     	this.id = id;
@@ -268,6 +270,11 @@ public class Document  implements Serializable{
         	JsonElement element = jsonObj.get("in_reply_to_status_id_str");
 			if(!element.isJsonNull())
 				doc.reply_to = element.getAsString();
+			
+        	element = jsonObj.get("in_reply_to_user_id");
+			if(!element.isJsonNull())
+				doc.reply_to_user_id = element.getAsString();
+			
 				        
 			doc.retweet_count = jsonObj.get("retweet_count").getAsInt();
 			doc.favouritesCount = jsonObj.get("favorite_count").getAsInt();
@@ -277,6 +284,9 @@ public class Document  implements Serializable{
 			{
 				JsonObject retweetObj = element.getAsJsonObject();
 				doc.retweeted_id = retweetObj.get("id_str").getAsString();
+				
+				userObj = retweetObj.get("user").getAsJsonObject();
+	        	doc.retweeted_user_id = userObj.get("id_str").getAsString();
 			}
 		}        
         return doc;
@@ -306,4 +316,11 @@ public class Document  implements Serializable{
 		return favouritesCount;
 	}
 
+	public String getRetweetedUserId() {
+		return retweeted_user_id;
+	}
+
+	public String getReplyToUserId() {
+		return reply_to_user_id;
+	}
 }

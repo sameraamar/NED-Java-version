@@ -37,8 +37,8 @@ public class GlobalData {
 		public int max_bucket_size = 2000;
 		public int max_documents = 50000000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int skip_files = 0;
-		public int offset = 0 ; //8800000;
+		public int skip_files = 0;//17;
+		public int offset = 0;//8800000-skip_files*500000;
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.95;
@@ -364,7 +364,7 @@ public class GlobalData {
 		
 		
 		if (counter>0)
-			Session.getInstance().message(Session.INFO, "cleanClusters", "released "+counter+" clusters (" + countDocs + " docs)" );
+			Session.getInstance().message(Session.DEBUG, "cleanClusters", "released "+counter+" clusters (" + countDocs + " docs)" );
 	}
 
 	public Set<String> prepareListBeforeRelease() {
@@ -446,7 +446,7 @@ public class GlobalData {
 			wait = 0;
 		
 		if (old>0)
-			Session.getInstance().message(Session.INFO, "markOldClusters", "marked " + old + " old clusters for cleanup");
+			Session.getInstance().message(Session.DEBUG, "markOldClusters", "marked " + old + " old clusters for cleanup");
 	}
 
 	public String memoryGlance() {

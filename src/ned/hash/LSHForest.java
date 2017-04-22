@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.PriorityQueue;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
@@ -107,8 +108,34 @@ public class LSHForest {
 			
 		}
 		
+        return findTopX(hitCounts);
+    }
+
+	protected List<String> findTopX(HashMap<String, Integer> hitCounts) {
+		PriorityQueue<String> pqueue = new PriorityQueue<String>(new Comparator<String> () 
+        {  
+            public int compare(String left, String right){  
+            	return hitCounts.get(right)-hitCounts.get(left); //descending order
+            }  
+            
+        });
 		
-        TreeMap<String, Integer> sorted = GeneralHelper.sortMapByValue(hitCounts);
+		for (String k : hitCounts.keySet()) {
+			pqueue.add(k);
+		}
+		
+		ArrayList<String> output = new ArrayList<String>();
+
+		int compare_with = 3*numberOfTables;
+        int toIndex = Math.min(compare_with, output.size());
+		for(int i=0; i<toIndex; i++)
+			output.add( pqueue.poll() );
+		
+		return output;
+ 	}
+	
+	protected List<String> findTopX1(HashMap<String, Integer> hitCounts) {
+		TreeMap<String, Integer> sorted = GeneralHelper.sortMapByValue(hitCounts);
 		 ArrayList<String> output = new ArrayList<String>();
 	       output.addAll(sorted.keySet());
 	     
@@ -116,7 +143,7 @@ public class LSHForest {
 	        int toIndex = Math.min(compare_with, output.size());
 	        List<String> res =output.subList(0, toIndex);
 	        return res;
-    }
+	}
 	
 	
 	public List<String> addDocument(Document doc)
