@@ -246,10 +246,10 @@ public class RedisHelper {
 		};
 		ExecutionHelper.asyncRun (runnable);	
 	}
-	public static RedisSerializer<Object> getDocSerializer() {
+	 public static RedisSerializer<Object> getDocSerializer() {
 		if(docSerializer==null){
-			docSerializer= new JdkSerializationRedisSerializer();
-
+				if(docSerializer==null)
+				docSerializer= new JdkSerializationRedisSerializer();
 		}
 		return docSerializer;
 	}

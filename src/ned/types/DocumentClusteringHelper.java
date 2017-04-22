@@ -48,11 +48,7 @@ public class DocumentClusteringHelper {
 	
 	public static void postLSHMapping(Document doc, List<String> set)
 	{
-		
-		synchronized(GlobalData.getInstance().recent) {
-			set.addAll(GlobalData.getInstance().recent.keySet());
-		}
-		
+		set.addAll(GlobalData.getInstance().getRecent());
 		DocumentClusteringHelper.determineClosest(doc, set);
 		//handle recent documents
 		//searchInRecentDocuments(doc);
@@ -63,11 +59,11 @@ public class DocumentClusteringHelper {
 		GlobalData gd = GlobalData.getInstance();
 		
 		//java.util.concurrent.ConcurrentLinkedDeque<Document> list = new java.util.concurrent.ConcurrentLinkedDeque<Document>();
-		  Set<Entry<String, Document>> tmp = gd.recent.entrySet();
+		  List<String> tmp = gd.getRecent();
 		 
 		 
-		  for(Entry<String, Document> entry:tmp){
-			  doc.updateNearest(entry.getValue());
+		  for(String str:tmp){
+			  doc.updateNearest(str);
 		  }
 		  /*
 		for (int i=0; i<tmp.length; i++)

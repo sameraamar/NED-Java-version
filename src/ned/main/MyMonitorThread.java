@@ -56,7 +56,7 @@ Session.getInstance().message(Session.INFO, "[monitor]", "request to shutdown");
         	long delta =  System.nanoTime()-starttime;
         	delta = TimeUnit.NANOSECONDS.toSeconds(delta);
         	double waht= WorkerThread.avegTime();
-        	if(waht>200){
+        	if(waht>100){
         	//	System.gc();
         	}
 

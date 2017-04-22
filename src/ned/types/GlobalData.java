@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 
 import ned.modules.Twokenize;
 import ned.tools.ExecutionHelper;
+import ned.tools.RecentManager;
 import ned.tools.RedisHelper;
 
 public class GlobalData {
@@ -65,7 +66,9 @@ public class GlobalData {
 	public ConcurrentHashMap<Integer, Integer>   numberOfDocsIncludeWord;
 	public ConcurrentHashMap<String, DocumentCluster>  clusters;
 	public ConcurrentHashMap<String, String> id2cluster;
-	public LRUCache<String,Document> recent;
+	//public LRUCache<String,Document> recent;
+	
+	private RecentManager recentManager;
 	public Parameters parameters = new Parameters();
 	public List<String> cleanClusterQueue = null;
 	
@@ -83,7 +86,7 @@ public class GlobalData {
 		queue = new ConcurrentLinkedQueue<String>();
 		word2idf = new ConcurrentHashMap<Integer, Double>();
 		id2cluster = new ConcurrentHashMap<String, String>();
-		recent = new LRUCache<String, Document>(2000);
+		recentManager = new RecentManager(2000);
 		
 		
 	}
@@ -243,15 +246,19 @@ public class GlobalData {
 
 		numberOfDocuments++;
 		
-		addToRecent(doc);
+		addToRecent(doc.getId());
 		
 		for (int i : doc.getWordCount().keySet()) 
 			word2idf.put(i, calcIDF(i));
 	}
 	
-	private void addToRecent(Document doc) {
-		this.recent.put(doc.getId(),doc);
+	private void addToRecent(String docId) {
 		
+		this.recentManager.AddToRecent(docId);
+	}
+	public List<String> getRecent() {
+		
+		return this.recentManager.getRecent();
 	}
 
 	public String tweetWithoutURL(String text)
@@ -432,7 +439,7 @@ public class GlobalData {
 				this.word2index.size(),
 				RedisHelper.redisSize(ID2DOCUMENT),//this.id2document.size(),
 				this.clusters.size(),
-				this.recent==null ? 0 : this.recent.size()
+				this.recentManager.getRecentsize()
 			);
 	}
 

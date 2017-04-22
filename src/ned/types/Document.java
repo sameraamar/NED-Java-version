@@ -17,6 +17,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import ned.tools.ExecutionHelper;
+import ned.tools.RedisHelper;
 
 public class Document  implements Serializable{
     private String id;
@@ -214,6 +215,14 @@ public class Document  implements Serializable{
 			nearestDist = tmp;
 			nearest = right.getId();
 		}
+	}
+	public void updateNearest(String rightId) 
+	{
+		if(rightId == null)
+			return;
+		
+		Document right =RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
+		updateNearest(right);
 	}
 
 	public boolean isNearestDetermined() {
