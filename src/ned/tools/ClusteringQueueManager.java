@@ -11,17 +11,15 @@ public class ClusteringQueueManager {
 	
  	private Queue<String> queue; 
     private String next;
-	private Queue <String> queueBuffer;
 	public ClusteringQueueManager( ){
 		
-		queueBuffer=new  LinkedList<String>();
 		queue=new LinkedList<String>();
 
 	}
-	public String  poll(){
-		String tmp=next;
-		next=queue.poll();
-		return tmp;
+	synchronized public String  poll(){
+		queue.poll();
+		this.next=this.queue.poll();
+		return next;
 		
 	}
 	synchronized public void  add(String str){
@@ -32,7 +30,7 @@ public class ClusteringQueueManager {
 	}
 
 	public String peek() {
-		return queue.peek();
+		return next;
 	}
 	public boolean isEmpty() {
 		return (next==null);

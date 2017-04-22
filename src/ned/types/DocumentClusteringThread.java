@@ -29,7 +29,7 @@ public class DocumentClusteringThread extends Thread {
 			
     		Session.getInstance().message(Session.DEBUG, "Reader", "doing some cleanup...");
     		gd.flushClusters(out);
-    		
+    		/*
 			try 
 			{
 				sleep(4000);
@@ -38,6 +38,7 @@ public class DocumentClusteringThread extends Thread {
 			{
 				e.printStackTrace();
 			}
+			*/
 		}
 		
 		//last time
@@ -77,11 +78,11 @@ public class DocumentClusteringThread extends Thread {
 		String id = queue.peek();
 		if (id == null)
 			return null;
-					
-		Document doc =RedisHelper.getDocumentFromRedis(gd.ID2DOCUMENT,id);
+		Document doc =RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
 		if (doc==null)
 			return null;
-				
+		
+
 		if(doc.isNearestDetermined())
 		{
 			queue.poll();

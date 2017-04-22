@@ -26,14 +26,14 @@ public class RecentManager {
 	}
 	
 	public List<String> getRecentCopy(){
-		if(recentCopy!=null && !copyRecent){
+		if(recentCopy!=null && !recentCopy.isEmpty() && !copyRecent){
 			return recentCopy;
 		}
 		recentCopy=new ArrayList<String>();
 		waitOnRecent();
 		locked=true;
 		for(String str:recent){
-			if(str!=null) continue;
+			if(str!=null) 
 			recentCopy.add(str);	
 		}
 		
