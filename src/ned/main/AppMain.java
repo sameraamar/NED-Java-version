@@ -195,7 +195,7 @@ public class AppMain {
 				}
 				
 				Document doc = DocumentHandler.preprocessor(line);
-				GlobalData.getInstance().queue.add(doc.getId());
+				GlobalData.getInstance().getQueue().add(doc.getId());
 				
 				executer.submit(doc);
 								

@@ -56,8 +56,9 @@ Session.getInstance().message(Session.INFO, "[monitor]", "request to shutdown");
         	long delta =  System.nanoTime()-starttime;
         	delta = TimeUnit.NANOSECONDS.toSeconds(delta);
         	double waht= WorkerThread.avegTime();
-        	if(waht>100){
-        	//	System.gc();
+        	if(waht>500){
+        		System.out.println("GC Run");
+        		System.gc();
         	}
 
             StringBuffer msg = new StringBuffer();
@@ -79,7 +80,7 @@ Session.getInstance().message(Session.INFO, "[monitor]", "request to shutdown");
             msg.append(", idf('rt')=").append(gd.getOrDefault(gd.word2index.getOrDefault("rt",-1)));
             msg.append(", idf('ramadan')=").append(gd.getOrDefault(gd.word2index.getOrDefault("ramadan",-1)));
             */
-            msg.append("\tQueue: ").append(gd.queue.size()).append(", ID=").append(gd.queue.peek());
+            msg.append("\tQueue: ").append(gd.getQueue().size()).append(", ID=").append(gd.getQueue().peek());
             
 
             

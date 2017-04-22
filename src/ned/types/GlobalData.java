@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -16,6 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ned.modules.Twokenize;
+import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
 import ned.tools.RecentManager;
 import ned.tools.RedisHelper;
@@ -55,7 +57,7 @@ public class GlobalData {
 		return globalData;
 	}
 	
-	public ConcurrentLinkedQueue<String> queue; 
+	//public Queue<String> queue; 
 	public Hashtable<String, Integer>    word2index;
 	//public Hashtable<String, Document>   id2document;
 	
@@ -68,7 +70,13 @@ public class GlobalData {
 	public ConcurrentHashMap<String, String> id2cluster;
 	//public LRUCache<String,Document> recent;
 	
+	private ClusteringQueueManager queue;
 	private RecentManager recentManager;
+
+	public RecentManager getRecentManager() {
+		return recentManager;
+	}
+
 	public Parameters parameters = new Parameters();
 	public List<String> cleanClusterQueue = null;
 	
@@ -83,7 +91,7 @@ public class GlobalData {
 		cleanClusterQueue = (List<String>) Collections.synchronizedList(new LinkedList<String>()); //new LinkedList<Document>();
 		clusters = new ConcurrentHashMap<String, DocumentCluster>();
 		numberOfDocuments = 0;
-		queue = new ConcurrentLinkedQueue<String>();
+		queue = new ClusteringQueueManager();
 		word2idf = new ConcurrentHashMap<Integer, Double>();
 		id2cluster = new ConcurrentHashMap<String, String>();
 		recentManager = new RecentManager(2000);
@@ -91,6 +99,14 @@ public class GlobalData {
 		
 	}
 	
+	public ClusteringQueueManager getQueue() {
+		return queue;
+	}
+
+	public void setQueue(ClusteringQueueManager queue) {
+		this.queue = queue;
+	}
+
 	public DocumentCluster clusterByDoc(String id)
 	{
 		String leadId = id2cluster.get(id);

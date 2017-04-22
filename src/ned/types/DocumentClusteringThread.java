@@ -2,9 +2,11 @@ package ned.types;
 
 import java.io.PrintStream;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 
+import ned.tools.ClusteringQueueManager;
 import ned.tools.RedisHelper;
 
 public class DocumentClusteringThread extends Thread {
@@ -62,13 +64,13 @@ public class DocumentClusteringThread extends Thread {
 		if(last != null)
 			gd.markOldClusters(last);
 
-		return gd.queue.isEmpty();
+		return gd.getQueue().isEmpty();
 	}
 	
 	private Document next()
 	{
 		GlobalData gd = GlobalData.getInstance();
-		ConcurrentLinkedQueue<String> queue = gd.queue;
+		ClusteringQueueManager queue = gd.getQueue();
 		
 		
 		
@@ -91,7 +93,7 @@ public class DocumentClusteringThread extends Thread {
 
 	public void shutdown() 
 	{
-		while (!gd.queue.isEmpty())
+		while (!gd.getQueue().isEmpty())
 		{
 		}
 		stop = true;

@@ -32,6 +32,7 @@ public class DocumentClusteringHelper {
 		    }
 		}
 		
+		
 	/*
 		Object[] tmp = list.toArray();
 		for (int i=0; i<tmp.length; i++)
@@ -48,8 +49,9 @@ public class DocumentClusteringHelper {
 	
 	public static void postLSHMapping(Document doc, List<String> set)
 	{
-		set.addAll(GlobalData.getInstance().getRecent());
+		set.addAll(GlobalData.getInstance().getRecentManager().getRecentCopy());
 		DocumentClusteringHelper.determineClosest(doc, set);
+		//DocumentClusteringHelper.determineClosest(doc, GlobalData.getInstance().getRecent());
 		//handle recent documents
 		//searchInRecentDocuments(doc);
 	}
