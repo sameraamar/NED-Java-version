@@ -15,7 +15,7 @@ import redis.clients.jedis.JedisPoolConfig;
 
 public class RedisHelper {
 
-	public static final int REDIS_MAX_CONNECTIONS = 200;
+	public static final int REDIS_MAX_CONNECTIONS = 200000;
 	public static final String ID2DOCUMENT = "id2document";
 	public static final String WORD2INDEX = "word2index";
 	public static final String WORD2IDF = "word2idf";
@@ -84,6 +84,7 @@ public class RedisHelper {
 			
 		} catch (Exception e) {
 			System.out.println("e="+e.getMessage());
+			System.out.println("redisConnections=="+jedisPool.getNumActive());
 
 			if(cn!=null)
 				cn.close();
@@ -103,7 +104,7 @@ public class RedisHelper {
 	}
 	public static void retunRedisClient(Jedis jedis) {
 		jedis.close();
-		return ;
+		
 	}
 
 	public static long redisSize(String hash) 
