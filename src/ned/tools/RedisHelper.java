@@ -45,8 +45,8 @@ public class RedisHelper {
 					config.setTestOnBorrow(false);
 					config.setTestOnReturn(false);
 					config.setTestWhileIdle(false);
-					//jedisPool = new JedisPool(config,"localhost", 6379, 100000);
-					jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
+					jedisPool = new JedisPool(config,"localhost", 6379, 100000);
+					//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
 					System.out.println("jedisPool is Ready "+jedisPool.getNumActive());
 				}
 			}

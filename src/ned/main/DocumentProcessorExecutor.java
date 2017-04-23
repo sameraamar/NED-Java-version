@@ -26,8 +26,9 @@ public class DocumentProcessorExecutor {
 	{
 		WorkerThread worker = new WorkerThread(forest, doc);
 		worker.preRun();
+		ExecutionHelper.asyncRun(worker);
 		//worker.run();
-;		executor.execute(worker);
+//;		executor.execute(worker);
 	}
 	
 	public void await()
