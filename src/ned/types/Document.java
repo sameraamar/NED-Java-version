@@ -42,7 +42,9 @@ public class Document  implements Serializable{
 	private int favouritesCount;
 	private String user_id;
 	private String retweeted_user_id;
+	private String quoted_status_id;
 	private String reply_to_user_id;
+	private String quoted_user_id;
 	
     public Document(String id, String text, long timestamp)
     {
@@ -254,11 +256,22 @@ public class Document  implements Serializable{
 		
 		String text = jsonObj.get("text").getAsString();
 		String id = jsonObj.get("id_str").getAsString();
-		long timestamp = jsonObj.get("timestamp").getAsLong();
 		
-        Document doc = new Document(id, text, timestamp); //id == "94816822100099073" is for Amy Winhouse event
+		String created_at = jsonObj.get("created_at").getAsString();
+		JsonElement element = jsonObj.get("timestamp");
+		long timestamp;
+		if(element != null)
+			timestamp = element.getAsLong();
+		else {
+			//convert from created_at to timestamp
+			timestamp = 0;
+		}
+			
 
-        doc.created_at = jsonObj.get("created_at").getAsString();
+		Document doc = new Document(id, text, timestamp); //id == "94816822100099073" is for Amy Winhouse event
+
+		
+        doc.created_at = created_at;
 
         if(!isBasicOnly)
 		{
@@ -267,7 +280,7 @@ public class Document  implements Serializable{
 			
 			//String retweeted_status = jsonObj.get("retweeted_status").getAsString();
 			
-        	JsonElement element = jsonObj.get("in_reply_to_status_id_str");
+        	element = jsonObj.get("in_reply_to_status_id_str");
 			if(!element.isJsonNull())
 				doc.reply_to = element.getAsString();
 			
@@ -275,7 +288,18 @@ public class Document  implements Serializable{
 			if(!element.isJsonNull())
 				doc.reply_to_user_id = element.getAsString();
 			
-				        
+        	element = jsonObj.get("quoted_status_id");
+			if(element != null && !element.isJsonNull())
+				doc.quoted_status_id = element.getAsString();
+	        
+			element = jsonObj.get("quoted_status");
+			if(element!=null && !element.isJsonNull())
+			{				
+				JsonObject obj = element.getAsJsonObject();
+				userObj = obj.get("user").getAsJsonObject();
+	        	doc.quoted_user_id = userObj.get("id_str").getAsString();
+			}
+			
 			doc.retweet_count = jsonObj.get("retweet_count").getAsInt();
 			doc.favouritesCount = jsonObj.get("favorite_count").getAsInt();
 	        
@@ -288,6 +312,8 @@ public class Document  implements Serializable{
 				userObj = retweetObj.get("user").getAsJsonObject();
 	        	doc.retweeted_user_id = userObj.get("id_str").getAsString();
 			}
+			
+			
 		}        
         return doc;
 	}
@@ -320,6 +346,14 @@ public class Document  implements Serializable{
 		return retweeted_user_id;
 	}
 
+	public String getQuotedStatusId() {
+		return quoted_status_id;
+	}
+
+	public String getQuotedUserId() {
+		return quoted_user_id;
+	}
+	
 	public String getReplyToUserId() {
 		return reply_to_user_id;
 	}
