@@ -65,8 +65,8 @@ public static Future<?> asyncAwaitRun(Runnable task) {
 		ForkJoinPool fj = new ForkJoinPool(1);
 		long stop=System.currentTimeMillis();
 		long duration=stop-start;
-		if(duration>1){
-			//System.gc();
+		if(duration>10){
+			System.gc();
 			System.out.println("getNewForkPool duration is "+duration);
 		}
 	 		return fj;
