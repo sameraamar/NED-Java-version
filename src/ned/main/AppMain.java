@@ -86,6 +86,7 @@ public class AppMain {
 	//folder = "c:/data/events_db/petrovic";
 	//folder = "C:\\private\\samer\\data";
 	folder="/Users/ramidabbah/private/mandoma/samer_a/data";
+	//folder = "C:\\private\\samer\\data";
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
 	                    "petrovic_01000000.gz",
@@ -233,6 +234,10 @@ public class AppMain {
 
             		middletime = System.nanoTime();
             		middle_processed = 0;
+	            }
+	            if (processed % (gd.getParams().print_limit* 10) == 0){
+	            	System.out.println("GC submited");
+	            	System.gc();
 	            }
 	            
 	            if (processed == gd.getParams().max_documents)
