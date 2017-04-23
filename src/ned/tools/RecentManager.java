@@ -27,23 +27,8 @@ public class RecentManager {
 	}
 	
 	public List<String> getRecentCopy(){
-		if(recentCopy!=null && !recentCopy.isEmpty() && !copyRecent){
-			return recentCopy;
-		}
-		synchronized (recentCopy){
-			recentCopy=new ArrayList<String>();
-			waitOnRecent();
-			locked=true;
-			for(String str:recent){
-				if(str!=null) 
-				recentCopy.add(str);	
-			}
-			
-			locked=false;
-			copyRecent=false;
-			return recentCopy;
-		}
 		
+			return recentCopy;
 		
 	}
 	public int  getRecentsize(){
@@ -73,13 +58,27 @@ public class RecentManager {
 			
 			recentBuffer=new ArrayList<String>();
 		locked=false;
-		copyRecent=true;
+		prepareCopy();
 	}
 
 	public List<String> getRecent() {
 		
 		return recent;
 	}
+	private void prepareCopy(){
+		
+			ArrayList<String> temp = new ArrayList<String>();
+			waitOnRecent();
+			locked=true;
+			for(String str:recent){
+				if(str!=null) 
+					temp.add(str);	
+			}
+			
+			locked=false;
+			copyRecent=false;
+			 recentCopy=temp;
+		}
 	
 	private void  waitOnRecent(){
 		while(locked){

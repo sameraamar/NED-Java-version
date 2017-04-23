@@ -30,10 +30,10 @@ public class GlobalData {
 	public class Parameters 
 	{
 		public int monitor_timer_seconds = 5; //seconds
-		public int number_of_threads =30;
+		public int number_of_threads =300;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
-		public int hyperplanes = 4;
+		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
 		public int max_documents = 50000000;
 		public int max_thread_delta_time = 3600; //seconds
@@ -87,8 +87,8 @@ public class GlobalData {
 		//index2word  = new Hashtable<Integer, String>();
 		//id2document = new Hashtable<String , Document>();
 		numberOfDocsIncludeWord = new ConcurrentHashMap<Integer, Integer>();
-		//cleanClusterQueue = new LinkedList<String>();
-		cleanClusterQueue = (List<String>) Collections.synchronizedList(new LinkedList<String>()); //new LinkedList<Document>();
+		cleanClusterQueue = new LinkedList<String>();
+		//cleanClusterQueue = (List<String>) Collections.synchronizedList(new LinkedList<String>()); //new LinkedList<Document>();
 		clusters = new ConcurrentHashMap<String, DocumentCluster>();
 		numberOfDocuments = 0;
 		queue = new ClusteringQueueManager();
