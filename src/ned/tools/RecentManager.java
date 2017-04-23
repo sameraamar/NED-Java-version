@@ -22,6 +22,7 @@ public class RecentManager {
 		this.recentBufferSize=recentSize/10;
 		recentBuffer=new ArrayList<String>();
 		recent=new ArrayList<String>();
+		recentCopy=new ArrayList<String>();
 
 	}
 	
@@ -29,17 +30,20 @@ public class RecentManager {
 		if(recentCopy!=null && !recentCopy.isEmpty() && !copyRecent){
 			return recentCopy;
 		}
-		recentCopy=new ArrayList<String>();
-		waitOnRecent();
-		locked=true;
-		for(String str:recent){
-			if(str!=null) 
-			recentCopy.add(str);	
+		synchronized (recentCopy){
+			recentCopy=new ArrayList<String>();
+			waitOnRecent();
+			locked=true;
+			for(String str:recent){
+				if(str!=null) 
+				recentCopy.add(str);	
+			}
+			
+			locked=false;
+			copyRecent=false;
+			return recentCopy;
 		}
 		
-		locked=false;
-		copyRecent=false;
-		return recentCopy;
 		
 	}
 	public int  getRecentsize(){

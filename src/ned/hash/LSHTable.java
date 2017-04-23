@@ -201,10 +201,6 @@ public class LSHTable
 		return maxBucketSize;
 	}
 
-	private void setMaxBucketSize(int maxBucketSize) {
-		this.maxBucketSize = maxBucketSize;
-	}
-
 	public ArrayList<Double> getHyperPlane(int i)
 	{
 		return this.hyperPlanes[i];
