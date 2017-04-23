@@ -56,10 +56,10 @@ Session.getInstance().message(Session.INFO, "[monitor]", "request to shutdown");
         	long delta =  System.nanoTime()-starttime;
         	delta = TimeUnit.NANOSECONDS.toSeconds(delta);
         	double waht= WorkerThread.avegTime();
-        	if(waht>500){
-        		System.out.println("GC Run");
-        		System.gc();
-        	}
+        	//if(waht>500){
+        	//	System.out.println("GC Run");
+        	//	System.gc();
+        	//}
 
             StringBuffer msg = new StringBuffer();
             msg.append("Elapsed time: ").append(Utility.humanTime(delta));
