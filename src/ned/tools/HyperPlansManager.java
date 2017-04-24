@@ -8,20 +8,20 @@ public class HyperPlansManager {
 	private int hyperplanes;
 	private int dimension;
 	private int dimension_jumps;
-	float[] data ;
+	double[] data ;
 
 	public HyperPlansManager(int hyperplanes, int dimension, int dimension_jumps)
 	{
 		this.dimension = dimension;
 		this.dimension_jumps = dimension_jumps;
 		this.hyperplanes = hyperplanes;
-		data = null;
+		int n = hyperplanes * dimension;
+		data = new double[n];
 	}
 	
 	public void init()
 	{
 		int n = hyperplanes * dimension;
-		data = new float[n];
 		for(int i=0; i<n; i++)
 			data[i] = Utility.randomFill();
 	}
@@ -46,7 +46,7 @@ public class HyperPlansManager {
 
 	}
 	
-	public float get(int i, int j)
+	public double get(int i, int j)
 	{
 		if (i>=this.hyperplanes || i<0)
 			throw new ArrayIndexOutOfBoundsException("Bad i in :(" + i + ", " + j + ")");

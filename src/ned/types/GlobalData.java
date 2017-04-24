@@ -42,7 +42,7 @@ public class GlobalData {
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.95;
-		public double min_cluster_size = 3;
+		public double min_cluster_size = 1;
 		public int inital_dimension = 50000;
 		public int dimension_jumps = 5000;
 	}
@@ -94,9 +94,7 @@ public class GlobalData {
 		queue = new ClusteringQueueManager();
 		word2idf = new ConcurrentHashMap<Integer, Double>();
 		id2cluster = new ConcurrentHashMap<String, String>();
-		recentManager = new RecentManager(2000);
-		
-		
+		recentManager = new RecentManager(parameters.search_recents);
 	}
 	
 	public ClusteringQueueManager getQueue() {
@@ -170,16 +168,13 @@ public class GlobalData {
 					Integer a = wordCount.get(k);
 					if (word2idf.get(k)==null)
 						{
-							double val = getIDF(k);
+							double val = calcIDF(k);
 							word2idf.put(k, val);
 						}
 					Double b = word2idf.get(k);
 					
 					tmp2.put(k, a*b);
 				}
-				
-		
-		
 	}
 	
 	public void calcWeights1(Document doc, Hashtable<Integer, Double> weights) 
@@ -263,9 +258,8 @@ public class GlobalData {
 		numberOfDocuments++;
 		
 		addToRecent(doc.getId());
-		
-		for (int i : doc.getWordCount().keySet()) 
-			word2idf.put(i, calcIDF(i));
+		//for (int i : doc.getWordCount().keySet()) 
+		//	word2idf.put(i, calcIDF(i));
 	}
 	
 	private void addToRecent(String docId) {
