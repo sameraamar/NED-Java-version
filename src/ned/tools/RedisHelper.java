@@ -38,15 +38,15 @@ public class RedisHelper {
 				if(jedisPool==null)
 				{	
 					JedisPoolConfig config = new JedisPoolConfig();
-					config.setMaxTotal(REDIS_MAX_CONNECTIONS);
+					//config.setMaxTotal(REDIS_MAX_CONNECTIONS);
 					config.setMaxIdle(100);
 					config.setMinIdle(50);
-					config.setMaxWaitMillis(10);
+					//config.setMaxWaitMillis(10);
 					config.setTestOnBorrow(false);
 					config.setTestOnReturn(false);
 					config.setTestWhileIdle(false);
 					//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
-					jedisPool = new JedisPool("localhost");
+					jedisPool = new JedisPool(config,"localhost", 6379, 18000);
 
 					System.out.println("jedisPool is Ready "+jedisPool.getNumActive());
 				}
