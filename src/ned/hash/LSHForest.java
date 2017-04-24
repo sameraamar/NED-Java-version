@@ -127,7 +127,7 @@ public class LSHForest {
 		ArrayList<String> output = new ArrayList<String>();
 
 		int compare_with = 3*numberOfTables;
-        int toIndex = Math.min(compare_with, output.size());
+        int toIndex = Math.min(compare_with, pqueue.size());
 		for(int i=0; i<toIndex; i++)
 			output.add( pqueue.poll() );
 		
