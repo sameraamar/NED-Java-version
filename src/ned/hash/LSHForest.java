@@ -32,7 +32,7 @@ public class LSHForest {
 		
 		for (int i = 0; i<tablesNumer; i++)
 		{
-			LSHTable table = new LSHTable(hyperPlanesNumber, dimension, maxBucketSize);
+			LSHTable table = new LSHTable(i,hyperPlanesNumber, dimension, maxBucketSize);
 			tables[i] = table;
 		}
 		/*

@@ -29,7 +29,7 @@ public class DocumentClusteringThread extends Thread {
 			
     		Session.getInstance().message(Session.DEBUG, "Reader", "doing some cleanup...");
     		gd.flushClusters(out);
-    		/*
+    		
 			try 
 			{
 				sleep(4000);
@@ -38,7 +38,7 @@ public class DocumentClusteringThread extends Thread {
 			{
 				e.printStackTrace();
 			}
-			*/
+			
 		}
 		
 		//last time

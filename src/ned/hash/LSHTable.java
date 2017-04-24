@@ -18,13 +18,15 @@ public class LSHTable
     private int maxBucketSize ;
     private int hyperPlanesNumber;
     private int dimension;
+    private int tableId;
     public  Boolean fixingDim=false;
     
     private ArrayList<Double>[] hyperPlanes = null;
     private java.util.Dictionary<Long, Bucket> buckets = null;
     
-    public LSHTable(int hyperPlanesNumber, int dimension, int maxBucketSize)
+    public LSHTable(int tableId,int hyperPlanesNumber, int dimension, int maxBucketSize)
     {
+    	this.tableId=tableId;
     	this.hyperPlanesNumber = hyperPlanesNumber;
         buckets = new Hashtable<Long, Bucket>();
         this.maxBucketSize = maxBucketSize;

@@ -12,9 +12,9 @@ public class LSHTableThread extends Thread
 	
 	LSHTable lsh;
 	
-	public LSHTableThread(int hyperPlanesNumber, int dimension, int maxBucketSize)
+	public LSHTableThread(int id,int hyperPlanesNumber, int dimension, int maxBucketSize)
 	{
-		this.lsh = new LSHTable(hyperPlanesNumber, dimension, maxBucketSize);
+		this.lsh = new LSHTable(id,hyperPlanesNumber, dimension, maxBucketSize);
 		this.stop = false;
 		this.queueIn = new ConcurrentLinkedQueue<Document>(); 
 		this.queueOut= new ConcurrentLinkedQueue<List<String>>();

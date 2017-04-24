@@ -13,7 +13,7 @@ import javax.annotation.Generated;
 import ned.types.GlobalData;
 
 public class ExecutionHelper {
-	private  static Executor executor = Executors.newFixedThreadPool(10);
+	private  static Executor executor = Executors.newFixedThreadPool(500);
 	
 	
 	public static void asyncRun(Runnable task) {
