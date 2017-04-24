@@ -14,7 +14,7 @@ import ned.types.GlobalData;
 
 public class ExecutionHelper {
 	private  static Executor executor = Executors.newFixedThreadPool(500);
-	private  static ForkJoinPool myForkJoinPool = new ForkJoinPool(100);
+	private  static ForkJoinPool myForkJoinPool = new ForkJoinPool(1000);
 
 	
 	
