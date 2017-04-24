@@ -52,7 +52,7 @@ public class LSHForest {
 		System.out.println("LSHForest.init: " + (System.currentTimeMillis()-base));
 	}
 	
-	public List<String> AddDocument(Document doc)
+	public List<String> addDocument00(Document doc)
     {
 		ConcurrentHashMap<String, Integer> hitCounts = new ConcurrentHashMap<String, Integer>();
 
@@ -61,7 +61,7 @@ public class LSHForest {
 			List<String> tmpList = tables[i].AddDocument(doc);
 			
 			for (String tmp : tmpList) {
-				if (tmp == doc.getId())
+				if ( tmp.compareTo(doc.getId()) >=0 )
 					continue;
 				
 				Integer c = hitCounts.getOrDefault(tmp, 0);
@@ -99,7 +99,7 @@ public class LSHForest {
 			List<String> tmpList = tables[i].AddDocument(doc);
 			
 			for (String tmp : tmpList) {
-				if (tmp == doc.getId())
+				if ( tmp.compareTo(doc.getId()) >=0 )
 					continue;
 				
 				Integer c = hitCounts.getOrDefault(tmp, 0);
