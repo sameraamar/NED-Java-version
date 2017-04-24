@@ -154,8 +154,8 @@ public class LSHForest {
 		};
 	
 		try {
-			//Future f=ExecutionHelper.asyncAwaitRun(task);
-			return task.call();
+			Future<?> f=ExecutionHelper.asyncAwaitRun(task);
+			return (List<String>) f.get();
 		} catch (Exception e) {
 			
 			e.printStackTrace();
