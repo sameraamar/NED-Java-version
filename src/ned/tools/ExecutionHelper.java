@@ -14,6 +14,8 @@ import ned.types.GlobalData;
 
 public class ExecutionHelper {
 	private  static Executor executor = Executors.newFixedThreadPool(500);
+	private  static ForkJoinPool myForkJoinPool = new ForkJoinPool(100);
+
 	
 	
 	public static void asyncRun(Runnable task) {
@@ -22,7 +24,7 @@ public class ExecutionHelper {
 	public static Future<?> asyncAwaitRun(Callable<?> task) {
 		ForkJoinPool fj = getNewForkPool ();
 		ForkJoinTask<?> f=fj.submit(task);
-		fj.shutdown();
+		//fj.shutdown();
 		return f;
 		
 	}
@@ -31,7 +33,7 @@ public static Future<?> asyncAwaitRun(Runnable task) {
 		ForkJoinTask<?> f=fj.submit(task);
 		try {
 			f.get();
-			fj.shutdownNow();
+			//fj.shutdownNow();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -61,6 +63,8 @@ public static Future<?> asyncAwaitRun(Runnable task) {
 	 		return ForkJoinPool.commonPool();
 		}
 	 private static ForkJoinPool getNewForkPool() {
+	 	return myForkJoinPool;
+	 	/*
 		long start=System.currentTimeMillis();
 		ForkJoinPool fj = new ForkJoinPool(1);
 		long stop=System.currentTimeMillis();
@@ -70,7 +74,11 @@ public static Future<?> asyncAwaitRun(Runnable task) {
 			System.out.println("getNewForkPool duration is "+duration);
 		}
 	 		return fj;
-		 }
+	 		*/
+	}
+public static long activeCount(){
+	return myForkJoinPool.getStealCount();
+}
 	
 	
 

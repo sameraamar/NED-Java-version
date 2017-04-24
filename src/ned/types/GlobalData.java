@@ -444,7 +444,7 @@ public class GlobalData {
 	}
 
 	public String memoryGlance() {
-		System.out.println("Total Active threads="+Thread.activeCount()+" StealCount= "+ExecutionHelper.getCommonForkPool().getStealCount());
+		System.out.println("Total Active threads="+Thread.activeCount()+" ActiveTasks= "+ExecutionHelper.activeCount());
 		return String.format("\t[monitor] Words: %d, Documents: %d, Clusters %d, Recent: %d",
 				this.word2index.size(),
 				RedisHelper.redisSize(ID2DOCUMENT),//this.id2document.size(),
