@@ -2,13 +2,13 @@ package ned.tools;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import ned.types.Document;
+import ned.types.GlobalData;
 import ned.types.LRUCache;
 
 public class RecentManager {
 	
-	private int recentSize=2000;
+	private int recentSize;
 	
 	private boolean copyRecent=true;
 	private int recentBufferSize=20;

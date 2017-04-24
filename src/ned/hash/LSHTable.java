@@ -1,17 +1,14 @@
 package ned.hash;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.IntStream;
-
 import ned.tools.ExecutionHelper;
+import ned.tools.HyperPlansManager;
 import ned.types.Document;
 import ned.types.GlobalData;
 import ned.types.Session;
-import ned.types.Utility;
 
 public class LSHTable
 {
@@ -21,7 +18,7 @@ public class LSHTable
     private int tableId;
     public  Boolean fixingDim=false;
     
-    private ArrayList<Double>[] hyperPlanes = null;
+    private HyperPlansManager hyperPlanes;
     private java.util.Dictionary<Long, Bucket> buckets = null;
     
     public LSHTable(int tableId,int hyperPlanesNumber, int dimension, int maxBucketSize)
@@ -31,53 +28,28 @@ public class LSHTable
         buckets = new Hashtable<Long, Bucket>();
         this.maxBucketSize = maxBucketSize;
         this.dimension = dimension;
+		hyperPlanes = new HyperPlansManager(hyperPlanesNumber, dimension, GlobalData.getInstance().getParams().dimension_jumps);
     }
 
     public void init()
     {
-        GenerateHyperPlanes();
-    }
-    
-    private void GenerateHyperPlanes() 
-    {
-    	if (getHyperPlanes() == null) {
-			ArrayList[] arrayLists = new ArrayList[hyperPlanesNumber];
-			hyperPlanes = arrayLists;
-		}
-    	
-    	for (int i = 0 ; i<hyperPlanesNumber; i++)
-    	{
-    		getHyperPlanes()[i] = new ArrayList<Double>();
-    		for (int j = 0 ; j<dimension; j++)
-    		{
-        		getHyperPlanes()[i].add( Utility.randomFill() );
-    		}
-    	}
+    	hyperPlanes.init();
     }
 
      private void FixDimension(int newDimension) 
     {
     	 Runnable task = () -> {
-     		
     	    	int nDimension = dimension + GlobalData.getInstance().getParams().dimension_jumps;
-    	    //	System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"+nDimension);
-    	    //	System.out.println("Start FixDimension new ="+nDimension);
+    	    
     			Session.getInstance().message(Session.DEBUG, "FixDimension", "Fixing to a new dimension: " + newDimension);
     	    	
-    	    	int delta = nDimension - dimension;
-    	    	for (int i = 0 ; i<hyperPlanesNumber; i++)
-    	    	{
-    	    		for (int j = 0 ; j<delta; j++)
-    	    		{
-    	        		getHyperPlane(i).add( Utility.randomFill() );
-    	    		}
-    	    	}
+    	    	hyperPlanes.fixDim(nDimension);
     	    	
-    	    	dimension = nDimension;
+    	    	dimension = hyperPlanes.getDimension();
     	    	synchronized(fixingDim){
     	    		fixingDim=false;
     	   	 	}
-    	    	};
+    	};
     	    	
     	synchronized(this){	 
     	if(fixingDim) {
@@ -89,7 +61,7 @@ public class LSHTable
     		//new Thread(task).start();
     	}
     	
-   	 	}
+   	 }
     	
     	
     	
@@ -116,7 +88,7 @@ public class LSHTable
     		//synchronized (weights) {
 				for (Integer j : weights.keySet()) 
 	    		{
-	    			tmp += weights.get(j) * getHyperPlane(i).get(j);
+	    			tmp += weights.get(j) * hyperPlanes.get(i, j);
 	    		}
     		//}
 			session.message(Session.DEBUG, "GenerateHashCode", ""+ tmp);
@@ -159,7 +131,7 @@ public class LSHTable
     		//synchronized (weights) {
 				for (Integer j : weights.keySet()) 
 	    		{
-	    			tmp += weights.get(j) * getHyperPlane(i).get(j);
+	    			tmp += weights.get(j) * hyperPlanes.get(i, j);
 	    		}
     		//}
 			session.message(Session.DEBUG, "GenerateHashCode", ""+ tmp);
@@ -203,17 +175,8 @@ public class LSHTable
 		return maxBucketSize;
 	}
 
-	public ArrayList<Double> getHyperPlane(int i)
-	{
-		return this.hyperPlanes[i];
-	}
-	
 	public int getHyperPlanesNumber() {
 		return hyperPlanesNumber;
-	}
-
-	private ArrayList<Double>[] getHyperPlanes() {
-		return hyperPlanes;
 	}
 
 	public int getDimension() {
