@@ -91,24 +91,41 @@ public class LSHForest {
 	public List<String> addDocument32(Document doc)
     {
 		
-		HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
-
-
-        for (int i = 0; i<numberOfTables; i++)
-		{
-			List<String> tmpList = tables[i].AddDocument(doc);
-			
-			for (String tmp : tmpList) {
-				if ( tmp.compareTo(doc.getId()) >=0 )
-					continue;
-				
-				Integer c = hitCounts.getOrDefault(tmp, 0);
-				hitCounts.put(tmp, c+1);
+HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
+		
+		Stream<LSHTable> tablesStream = Arrays.stream(tables);
+		List<String> tmpList = tablesStream.parallel()
+				.map(table->{
+					List<String> neighbors = table.AddDocument(doc);
+					return neighbors;
+					})
+				.reduce((a, b) -> {
+						ArrayList<String> output = new ArrayList<String>();
+				        output.addAll(a);
+				        output.addAll(b);
+				        return output;
+					})
+				.get();
+		
+		for (String id : tmpList) {
+			if(doc.getId().compareTo(id) > 0)
+			{
+				int c = hitCounts.getOrDefault(id,  0);
+				hitCounts.put(id,  c+1);
 			}
-			
 		}
 		
-        return findTopX(hitCounts);
+		tmpList.sort( new Comparator<String> () 
+        {  
+            @Override  
+            public int compare(String left, String right){  
+                 return hitCounts.get(right) - hitCounts.get(left) ;  //Descending  
+            }  
+            
+        });
+		
+		List<String> res = tmpList.subList(0, Math.min( tmpList.size(), 3*numberOfTables) );
+        return res;
     }
 
 	protected List<String> findTopX(HashMap<String, Integer> hitCounts) {
@@ -148,9 +165,7 @@ public class LSHForest {
 	
 	public List<String> addDocument(Document doc)
     {
-		
-			return this.addDocument32(doc);
-		
+		return this.addDocument32(doc);		
     }
 	
 	public String toString()
