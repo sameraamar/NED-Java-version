@@ -1,8 +1,11 @@
 package ned.hash;
 
 
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import ned.tools.ExecutionHelper;
 import ned.tools.HyperPlansManager;
@@ -20,13 +23,13 @@ public class LSHTable
     public  Boolean fixingDim=false;
     
     private HyperPlansManager hyperPlanes;
-    private LRUCache<Long, Bucket> buckets = null;
+    private HashMap<Long, LRUCache<String,Document>> buckets = null;
     
     public LSHTable(int tableId,int hyperPlanesNumber, int dimension, int maxBucketSize)
     {
     	this.tableId=tableId;
     	this.hyperPlanesNumber = hyperPlanesNumber;
-        buckets = new LRUCache<Long, Bucket>(maxBucketSize);
+        buckets = new HashMap<Long, LRUCache<String,Document>>(maxBucketSize);
         this.maxBucketSize = maxBucketSize;
         this.dimension = dimension;
 		hyperPlanes = new HyperPlansManager(hyperPlanesNumber, dimension, GlobalData.getInstance().getParams().dimension_jumps);
@@ -148,13 +151,28 @@ public class LSHTable
     {
         long code = GenerateHashCode(doc);
         if (buckets.get(code) == null)
-            buckets.put(code, new Bucket(maxBucketSize));
+            buckets.put(code, new LRUCache<String,Document>(maxBucketSize));
+        LRUCache<String, Document> bucket = buckets.get(code);
+        Set<String> ids ;
+        List<String> list;
+        String excludeId = doc.getId();
+        synchronized(bucket){
+        	bucket.put(doc.getId(),doc);
+        }
+        list = new LinkedList<String>();
+		ids = buckets.get(code).keySet();
+        for (String id : ids) {
+			if (excludeId.compareTo(id) <= 0)
+				continue;    		
+			list.add((String)id);
+		} 
+		return list;
+      
 
-        buckets.get(code).Append(doc);
+        
 
-        return buckets.get(code).getDocIDsList(doc.getId());
-    }
-    
+		
+	}
     public String toString() 
     {
     	StringBuffer sb = new StringBuffer();
