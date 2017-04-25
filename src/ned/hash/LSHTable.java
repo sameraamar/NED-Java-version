@@ -8,6 +8,7 @@ import ned.tools.ExecutionHelper;
 import ned.tools.HyperPlansManager;
 import ned.types.Document;
 import ned.types.GlobalData;
+import ned.types.LRUCache;
 import ned.types.Session;
 
 public class LSHTable
@@ -19,13 +20,13 @@ public class LSHTable
     public  Boolean fixingDim=false;
     
     private HyperPlansManager hyperPlanes;
-    private java.util.Dictionary<Long, Bucket> buckets = null;
+    private LRUCache<Long, Bucket> buckets = null;
     
     public LSHTable(int tableId,int hyperPlanesNumber, int dimension, int maxBucketSize)
     {
     	this.tableId=tableId;
     	this.hyperPlanesNumber = hyperPlanesNumber;
-        buckets = new Hashtable<Long, Bucket>();
+        buckets = new LRUCache<Long, Bucket>(maxBucketSize);
         this.maxBucketSize = maxBucketSize;
         this.dimension = dimension;
 		hyperPlanes = new HyperPlansManager(hyperPlanesNumber, dimension, GlobalData.getInstance().getParams().dimension_jumps);
