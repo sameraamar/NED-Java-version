@@ -164,17 +164,20 @@ public class DocumentCluster {
 		
 		for(String id : tmpList)
 		{
-			Document doc =  RedisHelper.getDocumentFromRedis(gd.ID2DOCUMENT,id);
-
-			ConcurrentHashMap<Integer, Integer> tmp = doc.getWordCount();
-			for (Integer i : tmp.keySet())
-			{
-				int count = wordcount.getOrDefault(i, 0); 
-				count += tmp.get(i).intValue();
-				wordcount.put(i, count);
+			Document doc =  RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
+			if(doc!=null){
+				ConcurrentHashMap<Integer, Integer> tmp = doc.getWordCount();
+				for (Integer i : tmp.keySet())
+				{
+					int count = wordcount.getOrDefault(i, 0); 
+					count += tmp.get(i).intValue();
+					wordcount.put(i, count);
+					
+					N += tmp.get(i).intValue();
+				}
 				
-				N += tmp.get(i).intValue();
 			}
+			
 		}
 		
 		double sum = 0.0;
