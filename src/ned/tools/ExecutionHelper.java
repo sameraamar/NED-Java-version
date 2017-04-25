@@ -14,7 +14,7 @@ import ned.types.GlobalData;
 
 public class ExecutionHelper {
 	private  static Executor executor = Executors.newFixedThreadPool(500);
-	private  static ForkJoinPool myForkJoinPool = new ForkJoinPool(1000);
+	private  static ForkJoinPool myForkJoinPool = new ForkJoinPool(2000);
 
 	
 	
@@ -77,7 +77,15 @@ public static Future<?> asyncAwaitRun(Runnable task) {
 	 		*/
 	}
 public static long activeCount(){
-	return myForkJoinPool.getStealCount();
+	return myForkJoinPool.getActiveThreadCount();
+}
+
+public static long getQueuedTaskCount(){
+	return myForkJoinPool.getQueuedTaskCount();
+}
+
+public static long getQueuedSubmissionCount(){
+	return myForkJoinPool.getQueuedSubmissionCount();
 }
 	
 	

@@ -32,7 +32,7 @@ public class GlobalData {
 		public int monitor_timer_seconds = 5; //seconds
 		public int number_of_threads =100;
 		public int print_limit = 5000;
-		public int number_of_tables = 70;
+		public int number_of_tables = 30;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
 		public int max_documents = 50000000;
@@ -444,7 +444,12 @@ public class GlobalData {
 	}
 
 	public String memoryGlance() {
-		System.out.println("Total Active threads="+Thread.activeCount()+" ActiveTasks= "+ExecutionHelper.activeCount());
+		System.out.println(""
+				+" Sumitted TaskCount "+ExecutionHelper.getQueuedSubmissionCount()
+				+" Total Active threads="+Thread.activeCount()+" ActiveTasks= "+ExecutionHelper.activeCount()
+				+" QueuedTaskCount "+ExecutionHelper.getQueuedTaskCount()
+		
+		);
 		return String.format("\t[monitor] Words: %d, Documents: %d, Clusters %d, Recent: %d",
 				this.word2index.size(),
 				RedisHelper.redisSize(ID2DOCUMENT),//this.id2document.size(),

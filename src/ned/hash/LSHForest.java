@@ -165,7 +165,19 @@ HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 	
 	public List<String> addDocument(Document doc)
     {
-		return this.addDocument32(doc);		
+		Callable <List<String>> task = () -> {
+			
+			return this.addDocument32(doc);
+		};
+	
+		try {
+			Future f=ExecutionHelper.asyncAwaitRun(task);
+			return (List<String>) f.get();
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+		}
+		return null;
     }
 	
 	public String toString()
