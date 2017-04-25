@@ -158,15 +158,16 @@ public class LSHTable
         String excludeId = doc.getId();
         synchronized(bucket){
         	bucket.put(doc.getId(),doc);
+        	list = new LinkedList<String>();
+     		ids = buckets.get(code).keySet();
+             for (String id : ids) {
+     			if (excludeId.compareTo(id) <= 0)
+     				continue;    		
+     			list.add((String)id);
+     		} 
+     		return list;
         }
-        list = new LinkedList<String>();
-		ids = buckets.get(code).keySet();
-        for (String id : ids) {
-			if (excludeId.compareTo(id) <= 0)
-				continue;    		
-			list.add((String)id);
-		} 
-		return list;
+       
       
 
         
