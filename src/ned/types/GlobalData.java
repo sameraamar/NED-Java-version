@@ -42,7 +42,7 @@ public class GlobalData {
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.95;
-		public double min_cluster_size = 5;
+		public double min_cluster_size = 1;
 		public int inital_dimension = 50000;
 		public int dimension_jumps = 5000;
 	}
@@ -52,9 +52,11 @@ public class GlobalData {
 	public static GlobalData getInstance() 
 	{
 		if (globalData == null)
-			globalData = new GlobalData();		
+			globalData = new GlobalData();
+		
 		return globalData;
-	}	
+	}
+	
 	//public Queue<String> queue; 
 	public Hashtable<String, Integer>    word2index;
 	//public Hashtable<String, Document>   id2document;
@@ -264,8 +266,9 @@ public class GlobalData {
 		
 		this.recentManager.AddToRecent(docId);
 	}
-	public List<String> getRecent() {		
-		return this.recentManager.getRecentCopy();
+	public List<String> getRecent() {
+		
+		return this.recentManager.getRecent();
 	}
 
 	public String tweetWithoutURL(String text)
