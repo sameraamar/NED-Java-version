@@ -84,6 +84,7 @@ public class RecentManager {
 
 	}	
 	private void  waitOnRecent(){
+		long start=System.currentTimeMillis();
 		while(locked){
 			try {
 				Thread.sleep(1);
@@ -92,6 +93,8 @@ public class RecentManager {
 				e.printStackTrace();
 			}
 		}
+		long dtime=System.currentTimeMillis()-start;
+		if(dtime>5) System.out.println(" waitOnRecent time="+dtime);
 		return ;		
 	}
 	
