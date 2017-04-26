@@ -10,24 +10,30 @@ import ned.types.LRUCache;
 public class ClusteringQueueManager {
 	
  	private Queue<String> queue; 
-
- 	public ClusteringQueueManager( ) {
+    private String next;
+	public ClusteringQueueManager( ){
+		
 		queue=new LinkedList<String>();
 
 	}
-	synchronized public String  poll() {
-		return this.queue.poll();	
+	synchronized public String  poll(){
+		queue.poll();
+		this.next=this.queue.poll();
+		return next;
+		
 	}
-	
 	synchronized public void  add(String str){
 		queue.add(str);
+		if(next==null)
+		next=queue.poll();
+		
 	}
 
 	public String peek() {
-		return queue.peek();
+		return next;
 	}
 	public boolean isEmpty() {
-		return queue.isEmpty();
+		return (next==null);
 	}
 	public Object size() {
 		return queue.size();
