@@ -14,7 +14,7 @@ import ned.types.GlobalData;
 
 public class ExecutionHelper {
 	private  static Executor executor = Executors.newFixedThreadPool(500);
-	private  static ForkJoinPool myForkJoinPool = new ForkJoinPool(500);
+	private  static ForkJoinPool myForkJoinPool = new ForkJoinPool(2000);
 
 	
 	
@@ -62,7 +62,7 @@ public static Future<?> asyncAwaitRun(Runnable task) {
 	 		//
 	 		return ForkJoinPool.commonPool();
 		}
-	public static ForkJoinPool getNewForkPool() {
+	 private static ForkJoinPool getNewForkPool() {
 	 	return myForkJoinPool;
 	 	/*
 		long start=System.currentTimeMillis();
@@ -88,8 +88,6 @@ public static long getQueuedSubmissionCount(){
 	return myForkJoinPool.getQueuedSubmissionCount();
 }
 	
-public static void setCommonPoolSize(){
-	System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "1000");
-}
+	
 
 }

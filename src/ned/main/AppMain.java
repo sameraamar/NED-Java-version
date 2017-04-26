@@ -13,7 +13,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ned.hash.DocumentHandler;
 import ned.hash.LSHForest;
-import ned.tools.ExecutionHelper;
 import ned.tools.RedisHelper;
 import ned.types.Document;
 import ned.types.DocumentClusteringThread;
@@ -39,7 +38,7 @@ public class AppMain {
 				System.out.print('.');
 				Thread.sleep(100);
 			}
-			ExecutionHelper.setCommonPoolSize();
+			System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "50");
 			String threadsFileName = "../temp/threads.txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			

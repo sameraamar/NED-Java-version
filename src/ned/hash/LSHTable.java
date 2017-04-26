@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import ned.tools.ExecutionHelper;
 import ned.tools.HyperPlansManager;
-import ned.tools.RecentManager;
 import ned.types.Document;
 import ned.types.GlobalData;
 import ned.types.LRUCache;
@@ -24,13 +23,13 @@ public class LSHTable
     public  Boolean fixingDim=false;
     
     private HyperPlansManager hyperPlanes;
-    private HashMap<Long, RecentManager> buckets = null;
+    private HashMap<Long, LRUCache<String,Document>> buckets = null;
     
     public LSHTable(int tableId,int hyperPlanesNumber, int dimension, int maxBucketSize)
     {
     	this.tableId=tableId;
     	this.hyperPlanesNumber = hyperPlanesNumber;
-        buckets = new HashMap<Long, RecentManager>(maxBucketSize);
+        buckets = new HashMap<Long, LRUCache<String,Document>>(maxBucketSize);
         this.maxBucketSize = maxBucketSize;
         this.dimension = dimension;
 		hyperPlanes = new HyperPlansManager(hyperPlanesNumber, dimension, GlobalData.getInstance().getParams().dimension_jumps);
@@ -152,22 +151,23 @@ public class LSHTable
     {
         long code = GenerateHashCode(doc);
         if (buckets.get(code) == null)
-            buckets.put(code, new RecentManager(maxBucketSize));
-        RecentManager bucket = buckets.get(code);
-        List<String> ids ;
+            buckets.put(code, new LRUCache<String,Document>(maxBucketSize));
+        LRUCache<String, Document> bucket = buckets.get(code);
+        Set<String> ids ;
         List<String> list;
         String excludeId = doc.getId();
-        
-        	bucket.AddToRecent(doc.getId());
+        synchronized(bucket){
+        	bucket.put(doc.getId(),doc);
         	list = new LinkedList<String>();
-     		ids = buckets.get(code).getRecentCopy();
+     		ids = buckets.get(code).keySet();
              for (String id : ids) {
      			if (excludeId.compareTo(id) <= 0)
      				continue;    		
      			list.add((String)id);
      		} 
      		return list;
-        
+        }
+       
       
 
         
