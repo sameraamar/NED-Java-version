@@ -21,7 +21,7 @@ public class LSHTable
 {
     private int maxBucketSize ;
     private int hyperPlanesNumber;
-    private int dimension;
+    //private int dimension;
     private int tableId;
     public  Boolean fixingDim=false;
     
@@ -34,44 +34,12 @@ public class LSHTable
     	this.hyperPlanesNumber = hyperPlanesNumber;
         buckets = new HashMap<Long, ArrayFixedSize>(maxBucketSize);
         this.maxBucketSize = maxBucketSize;
-        this.dimension = dimension;
 		hyperPlanes = new HyperPlansManager(hyperPlanesNumber, dimension, GlobalData.getInstance().getParams().dimension_jumps);
     }
 
     public void init()
     {
     	hyperPlanes.init();
-    }
-
-     private void FixDimension(int newDimension) 
-    {
-    	 Runnable task = () -> {
-    	    	//int nDimension = dimension + GlobalData.getInstance().getParams().dimension_jumps;
-    	    
-    			Session.getInstance().message(Session.DEBUG, "FixDimension", "Fixing to a new dimension: " + newDimension);
-    	    	
-    	    	hyperPlanes.fixDim(newDimension);
-    	    	
-    	    	dimension = hyperPlanes.getDimension();
-    	    	synchronized(fixingDim){
-    	    		fixingDim=false;
-    	   	 	}
-    	};
-    	    	
-    	synchronized(this){	 
-    	if(fixingDim) {
-    		System.out.println("fixingDim..........");
-    		return ;
-    	}else{
-    		fixingDim=true;
-    		ExecutionHelper.asyncAwaitRun(task);
-    		//new Thread(task).start();
-    	}
-    	
-   	 }
-    	
-    	
-    	
     }
     
      private long GenerateHashCode(Document doc)
@@ -82,11 +50,7 @@ public class LSHTable
      	
      	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
      	ConcurrentHashMap<Integer, Double> weights = doc.getWeights();
- 		if (!this.fixingDim && doc.getDimension() >= this.dimension-3*GlobalData.getInstance().getParams().dimension_jumps) 
-        {
-            this.FixDimension(doc.getDimension());
-        }
- 		
+     	hyperPlanes.fixDim(doc.getDimension());
  		
  		for (int i = 0 ; i<hyperPlanesNumber; i++)
     	{
@@ -99,7 +63,7 @@ public class LSHTable
 	    			tmp += weights.get(j) * hyperPlanes.get(i, j);
 					} catch(ArrayIndexOutOfBoundsException e)
 					{
-						System.out.println( "doc dimension: " + doc.getDimension() + " this.fixingDim = " + this.fixingDim);
+						System.out.println( "doc dimension: " + doc.getDimension() + " this.fixingDim = ");
 						throw e;
 					}
 	    		}
@@ -132,9 +96,9 @@ public class LSHTable
     	
     	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
     	ConcurrentHashMap<Integer, Double> weights = doc.getWeights();
-		if (!this.fixingDim && doc.getDimension() >= this.dimension-3*GlobalData.getInstance().getParams().dimension_jumps) 
+		if (!this.fixingDim && doc.getDimension() >= hyperPlanes.getDimension()-3*GlobalData.getInstance().getParams().dimension_jumps) 
 		{
-			this.FixDimension(doc.getDimension());
+			hyperPlanes.fixDim(doc.getDimension());
 		}
 		
     	for (int i = 0 ; i<hyperPlanesNumber; i++)
@@ -159,16 +123,20 @@ public class LSHTable
     public ArrayFixedSize AddDocument(Document doc)
     {
         long code = GenerateHashCode(doc);
-        if (buckets.get(code) == null)
+        ArrayFixedSize bucket = buckets.get(code);
+        if (bucket == null)
         {
         	//Rami -- watch out this sync. How can we avoid it?
         	//although i am not sure it will cause any issue since we create the bucket once per code
         	synchronized (buckets) {
-        		if (buckets.get(code) == null)
+        		bucket = buckets.get(code);
+        		if (bucket == null) //still null
+        		{
         			buckets.put(code, new ArrayFixedSize(maxBucketSize));
+        			bucket = buckets.get(code);
+        		}
         	}
         }
-        ArrayFixedSize bucket = buckets.get(code);
 
         List<String> list;
         String excludeId = doc.getId();
@@ -220,7 +188,7 @@ public class LSHTable
 	}
 
 	public int getDimension() {
-		return this.dimension;
+		return hyperPlanes.getDimension();
 	}
 
 }

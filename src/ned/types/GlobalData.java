@@ -31,12 +31,12 @@ public class GlobalData {
 	public class Parameters 
 	{
 		public int monitor_timer_seconds = 5; //seconds
-		public int number_of_threads =100;
+		public int number_of_threads =10;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
-		public int max_documents = 2000000;
+		public int max_documents = 5000000;
 		public int max_thread_delta_time = 3600; //seconds
 		public int skip_files = 0;//17;
 		public int offset = 0;//8800000-skip_files*500000;
@@ -44,7 +44,7 @@ public class GlobalData {
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 3;
-		public int inital_dimension = 50000;
+		public int inital_dimension = 5000;
 		public int dimension_jumps = 10000;
 	}
 	
