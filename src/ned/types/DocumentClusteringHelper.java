@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
+import ned.tools.ArrayFixedSize;
 import ned.tools.ExecutionHelper;
 import ned.tools.RedisHelper;
 
@@ -49,14 +50,19 @@ public class DocumentClusteringHelper {
 	
 	public static void postLSHMapping(Document doc, List<String> set)
 	{
-		set.addAll(GlobalData.getInstance().getRecentManager().getRecentCopy());
+		ArrayFixedSize recent = GlobalData.getInstance().getRecentManager();
+		if(recent!=null)
+		{
+			for(int i=0; i<recent.size(); i++)
+				set.add(recent.get(i));
+		}
 		DocumentClusteringHelper.determineClosest(doc, set);
 		//DocumentClusteringHelper.determineClosest(doc, GlobalData.getInstance().getRecent());
 		//handle recent documents
 		//searchInRecentDocuments(doc);
 	}
 	
-	public static void searchInRecentDocuments(Document doc) 
+	/*public static void searchInRecentDocuments(Document doc) 
 	{
 		GlobalData gd = GlobalData.getInstance();
 		
@@ -67,14 +73,13 @@ public class DocumentClusteringHelper {
 		  for(String str:tmp){
 			  doc.updateNearest(str);
 		  }
-		  /*
-		for (int i=0; i<tmp.length; i++)
-		//for (Document r : gd.recent)
-		{
-			Document r = (Document)tmp[i];
-		}
-		*/
-	}
+		  
+		//for (int i=0; i<tmp.length; i++)
+		//{
+		//	Document r = (Document)tmp[i];
+		//}
+		
+	}*/
 	
 	public static void mapToClusterHelper(Document doc)
 	{

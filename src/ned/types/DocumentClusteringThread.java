@@ -78,6 +78,11 @@ public class DocumentClusteringThread extends Thread {
 		String id = queue.peek();
 		if (id == null)
 			return null;
+		
+		boolean breakme = false;
+		if(id.equals("86417673814151168"))
+			breakme = true;
+		
 		Document doc =RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
 		if (doc==null)
 			return null;

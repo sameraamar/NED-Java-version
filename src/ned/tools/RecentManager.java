@@ -1,6 +1,7 @@
 package ned.tools;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import ned.types.Document;
 import ned.types.GlobalData;
@@ -10,90 +11,97 @@ public class RecentManager {
 	
 	private int recentSize;
 	
-	private boolean copyRecent=true;
+	//private boolean copyRecent=true;
 	private int recentBufferSize=20;
 	private List <String> recent;
 	private List <String> recentCopy;
-	
+	private int recentActualSize;
 	private List <String> recentBuffer;
 	private boolean locked=false;
 	public RecentManager(int recentSize ){
+		recentActualSize=0;
 		this.recentSize=recentSize;
-		this.recentBufferSize=recentSize/10;
-		recentBuffer=new ArrayList<String>();
+		this.recentBufferSize=recentSize/20;
+		recentBuffer= new ArrayList<String>();
 		recent=new ArrayList<String>();
 		recentCopy=new ArrayList<String>();
-
-	}
-	
+	}	
 	public List<String> getRecentCopy(){
-		
-			return recentCopy;
-		
+		return recentCopy;		
 	}
 	public int  getRecentsize(){
-		return recent.size();
-		
+		return recentActualSize;		
 	}
 	public void  AddToRecent(String docId){
-		
-		recentBuffer.add(docId);
+		//System.out.println("Start AddToRecent");
+		long start=System.currentTimeMillis();
+		if(recentActualSize<recentSize)
+		{
+			recentCopy.add(docId);
+		}
+		recentBuffer.add(docId);		
 		if(recentBuffer.size()>=this.recentBufferSize){
-			fulshBuffer();
+			Runnable task = () -> {
+				fulshBuffer();				
+			};		
+			try {
+				ExecutionHelper.asyncRun(task);				
+			} catch (Exception e) {				
+				e.printStackTrace();
+			}			
 		}
-		
-		
+		long dtime=System.currentTimeMillis()-start;
+		if(dtime>2)
+			System.out.println("End AddToRecent time="+dtime);
 	}
-	 private void fulshBuffer(){
-			waitOnRecent();
-			locked=true;
-			synchronized(recent){
-				synchronized(recentBuffer){
-					for(String str:recentBuffer){
-						recent.add(str);
-						if(recent.size()>recentSize) recent.remove(0);
-					}
-				}
+	private void fulshBuffer(){
+		long start=System.currentTimeMillis();
+		waitOnRecent();
+		locked=true;		
+		synchronized (recent) {
+		recent.addAll(recentBuffer);
+		recentBuffer.clear();
+		//synchronized(recent){
+			if(recent.size()>recentSize){
+				int startIndex=recent.size()-recentSize;
+				recent=recent.subList(startIndex, recent.size());
+				recentActualSize=recent.size();
 			}
-			
-			recentBuffer=new ArrayList<String>();
-		locked=false;
-		prepareCopy();
+		}
+			long dtime=System.currentTimeMillis()-start;
+			if(dtime>5) System.out.println("End fulshBuffer time="+dtime);
+		locked=false;	
+		prepareCopy();		
 	}
+	private void prepareCopy(){	
+		long start=System.currentTimeMillis();
+		List<String> temp = new ArrayList<String>();
+		waitOnRecent();
+		locked=true;	
+		int length=recent.size()-1;		
+		for(int i=length;i>=0;i--){
+			temp.add(recent.get(i));
+		}
+		locked=false;	
+		recentCopy=temp;	
+		long dtime=System.currentTimeMillis()-start;
+		if(dtime>5) System.out.println("End prepareCopy time="+dtime);
 
-	public List<String> getRecent() {
-		
-		return recent;
-	}
-	private void prepareCopy(){
-		
-			ArrayList<String> temp = new ArrayList<String>();
-			waitOnRecent();
-			locked=true;
-			for(String str:recent){
-				if(str!=null) 
-					temp.add(str);	
-			}
-			
-			locked=false;
-			copyRecent=false;
-			 recentCopy=temp;
-		}
-	
+	}	
 	private void  waitOnRecent(){
+		long start=System.currentTimeMillis();
 		while(locked){
 			try {
-				Thread.sleep(10);
+				Thread.sleep(1);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		return ;
-		
+		long dtime=System.currentTimeMillis()-start;
+		if(dtime>5) System.out.println(" waitOnRecent time="+dtime);
+		return ;		
 	}
 	
-	
-
 
 }

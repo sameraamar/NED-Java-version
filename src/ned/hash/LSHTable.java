@@ -7,8 +7,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import ned.tools.ArrayFixedSize;
 import ned.tools.ExecutionHelper;
 import ned.tools.HyperPlansManager;
+import ned.tools.RecentManager;
 import ned.types.Document;
 import ned.types.GlobalData;
 import ned.types.LRUCache;
@@ -23,13 +26,13 @@ public class LSHTable
     public  Boolean fixingDim=false;
     
     private HyperPlansManager hyperPlanes;
-    private HashMap<Long, LRUCache<String,Document>> buckets = null;
+    private HashMap<Long, ArrayFixedSize> buckets = null;
     
     public LSHTable(int tableId,int hyperPlanesNumber, int dimension, int maxBucketSize)
     {
     	this.tableId=tableId;
     	this.hyperPlanesNumber = hyperPlanesNumber;
-        buckets = new HashMap<Long, LRUCache<String,Document>>(maxBucketSize);
+        buckets = new HashMap<Long, ArrayFixedSize>(maxBucketSize);
         this.maxBucketSize = maxBucketSize;
         this.dimension = dimension;
 		hyperPlanes = new HyperPlansManager(hyperPlanesNumber, dimension, GlobalData.getInstance().getParams().dimension_jumps);
@@ -43,11 +46,11 @@ public class LSHTable
      private void FixDimension(int newDimension) 
     {
     	 Runnable task = () -> {
-    	    	int nDimension = dimension + GlobalData.getInstance().getParams().dimension_jumps;
+    	    	//int nDimension = dimension + GlobalData.getInstance().getParams().dimension_jumps;
     	    
     			Session.getInstance().message(Session.DEBUG, "FixDimension", "Fixing to a new dimension: " + newDimension);
     	    	
-    	    	hyperPlanes.fixDim(nDimension);
+    	    	hyperPlanes.fixDim(newDimension);
     	    	
     	    	dimension = hyperPlanes.getDimension();
     	    	synchronized(fixingDim){
@@ -92,7 +95,13 @@ public class LSHTable
     		//synchronized (weights) {
 				for (Integer j : weights.keySet()) 
 	    		{
+					try {
 	    			tmp += weights.get(j) * hyperPlanes.get(i, j);
+					} catch(ArrayIndexOutOfBoundsException e)
+					{
+						System.out.println( "doc dimension: " + doc.getDimension() + " this.fixingDim = " + this.fixingDim);
+						throw e;
+					}
 	    		}
     		//}
 			session.message(Session.DEBUG, "GenerateHashCode", ""+ tmp);
@@ -147,33 +156,44 @@ public class LSHTable
         return st.toString();
     }
 
-    public List<String> AddDocument(Document doc)
+    public ArrayFixedSize AddDocument(Document doc)
     {
         long code = GenerateHashCode(doc);
         if (buckets.get(code) == null)
-            buckets.put(code, new LRUCache<String,Document>(maxBucketSize));
-        LRUCache<String, Document> bucket = buckets.get(code);
-        Set<String> ids ;
+        {
+        	//Rami -- watch out this sync. How can we avoid it?
+        	//although i am not sure it will cause any issue since we create the bucket once per code
+        	synchronized (buckets) {
+        		if (buckets.get(code) == null)
+        			buckets.put(code, new ArrayFixedSize(maxBucketSize));
+        	}
+        }
+        ArrayFixedSize bucket = buckets.get(code);
+
         List<String> list;
         String excludeId = doc.getId();
-        synchronized(bucket){
-        	bucket.put(doc.getId(),doc);
-        	list = new LinkedList<String>();
-     		ids = buckets.get(code).keySet();
-             for (String id : ids) {
+        
+        if(bucket == null)
+        	System.out.println("************************************************************** Somethign strange (bucket is null)!");
+        
+        if(doc == null)
+        	System.out.println("************************************************************** Somethign strange (doc is null)!");
+        
+        bucket.add(doc.getId());
+        	
+        return bucket;
+        	/*list = new LinkedList<String>();
+        	
+     		for(int i=0; i<bucket.size(); i++)
+     		{
+     			String id = bucket.get(i);
      			if (excludeId.compareTo(id) <= 0)
      				continue;    		
      			list.add((String)id);
      		} 
-     		return list;
-        }
-       
-      
-
-        
-
-		
+     		return list;*/
 	}
+    
     public String toString() 
     {
     	StringBuffer sb = new StringBuffer();

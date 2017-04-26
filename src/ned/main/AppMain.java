@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ned.hash.DocumentHandler;
 import ned.hash.LSHForest;
+import ned.tools.ExecutionHelper;
 import ned.tools.RedisHelper;
 import ned.types.Document;
 import ned.types.DocumentClusteringThread;
@@ -38,8 +39,8 @@ public class AppMain {
 				System.out.print('.');
 				Thread.sleep(100);
 			}
-			System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "50");
-			String threadsFileName = "../temp/threads.txt";
+			ExecutionHelper.setCommonPoolSize();
+			String threadsFileName = "c:/temp/threads.txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
 			forest = new LSHForest(gd.getParams().number_of_tables, 
@@ -83,7 +84,7 @@ public class AppMain {
 		
 	String folder = "/tmp/";
 
-	//folder = "c:/data/events_db/petrovic";
+	folder = "c:/data/events_db/petrovic";
 	//folder = "C:\\private\\samer\\data";
 	//folder="/Users/ramidabbah/private/mandoma/samer_a/data";
 	//folder = "C:\\private\\samer\\data";

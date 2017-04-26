@@ -17,6 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ned.modules.Twokenize;
+import ned.tools.ArrayFixedSize;
 import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
 import ned.tools.RecentManager;
@@ -32,19 +33,19 @@ public class GlobalData {
 		public int monitor_timer_seconds = 5; //seconds
 		public int number_of_threads =100;
 		public int print_limit = 5000;
-		public int number_of_tables = 30;
+		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
-		public int max_documents = 50000000;
+		public int max_documents = 2000000;
 		public int max_thread_delta_time = 3600; //seconds
 		public int skip_files = 0;//17;
 		public int offset = 0;//8800000-skip_files*500000;
 		public int search_recents = 2000;
 		public double threshold = 0.6;
-		public double min_cluster_entropy = 0.95;
-		public double min_cluster_size = 1;
+		public double min_cluster_entropy = 0.0;
+		public double min_cluster_size = 3;
 		public int inital_dimension = 50000;
-		public int dimension_jumps = 5000;
+		public int dimension_jumps = 10000;
 	}
 	
 	
@@ -52,11 +53,9 @@ public class GlobalData {
 	public static GlobalData getInstance() 
 	{
 		if (globalData == null)
-			globalData = new GlobalData();
-		
+			globalData = new GlobalData();		
 		return globalData;
-	}
-	
+	}	
 	//public Queue<String> queue; 
 	public Hashtable<String, Integer>    word2index;
 	//public Hashtable<String, Document>   id2document;
@@ -71,9 +70,9 @@ public class GlobalData {
 	//public LRUCache<String,Document> recent;
 	
 	private ClusteringQueueManager queue;
-	private RecentManager recentManager;
+	private ArrayFixedSize recentManager;
 
-	public RecentManager getRecentManager() {
+	public ArrayFixedSize getRecentManager() {
 		return recentManager;
 	}
 
@@ -94,7 +93,7 @@ public class GlobalData {
 		queue = new ClusteringQueueManager();
 		word2idf = new ConcurrentHashMap<Integer, Double>();
 		id2cluster = new ConcurrentHashMap<String, String>();
-		recentManager = new RecentManager(parameters.search_recents);
+		recentManager = new ArrayFixedSize(parameters.search_recents);
 	}
 	
 	public ClusteringQueueManager getQueue() {
@@ -264,12 +263,12 @@ public class GlobalData {
 	
 	private void addToRecent(String docId) {
 		
-		this.recentManager.AddToRecent(docId);
+		this.recentManager.add(docId);
 	}
-	public List<String> getRecent() {
-		
-		return this.recentManager.getRecent();
-	}
+	
+	//public List<String> getRecent() {		
+	//	return this.recentManager.getRecentCopy();
+	//}
 
 	public String tweetWithoutURL(String text)
 	{
@@ -445,7 +444,7 @@ public class GlobalData {
 
 	public String memoryGlance() {
 		System.out.println(""
-				+" Sumitted TaskCount "+ExecutionHelper.getQueuedSubmissionCount()
+				+"Sumitted TaskCount "+ExecutionHelper.getQueuedSubmissionCount()
 				+" Total Active threads="+Thread.activeCount()+" ActiveTasks= "+ExecutionHelper.activeCount()
 				+" QueuedTaskCount "+ExecutionHelper.getQueuedTaskCount()
 		
@@ -454,7 +453,7 @@ public class GlobalData {
 				this.word2index.size(),
 				RedisHelper.redisSize(ID2DOCUMENT),//this.id2document.size(),
 				this.clusters.size(),
-				this.recentManager.getRecentsize()
+				this.recentManager.size()
 			);
 	}
 

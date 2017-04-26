@@ -66,7 +66,12 @@ public class WorkerThread implements Runnable
 		}
     	//Hashtable<Integer, Double> weights = doc.getWeights();
 		
+		boolean breakme = false;
+		if(doc.getId().equals("86417673814151168"))
+			breakme = false;
+		
     	List<String> set = forest.addDocument(this.doc);
+		
     	DocumentClusteringHelper.postLSHMapping(this.doc, set);
     	this.doc.setNearestDetermined( true);
 

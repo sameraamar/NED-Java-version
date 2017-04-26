@@ -26,32 +26,45 @@ public class HyperPlansManager {
 			data[i] = Utility.randomFill();
 	}
 	
-	synchronized public void fixDim(int newdim)
+	public void fixDim(int newdim)
 	{
-		if(newdim <= this.dimension)
+		if(newdim <= this.dimension-dimension_jumps)
 			return;
-
-		int n = newdim / dimension_jumps;
-		newdim = dimension_jumps * (n+1);
 		
-		
-		int newsize = hyperplanes * newdim;
-		data = Arrays.copyOf(data, newsize);
-		
-		int size = hyperplanes * this.dimension;
-		for(int i=size; i<newsize; i++)
-			data[i] = Utility.randomFill();
-
-		this.dimension = newdim;
-
+		synchronized (this)
+		{
+			if(newdim <= this.dimension-dimension_jumps)
+				return;
+			
+			int n = newdim / dimension_jumps;
+			newdim = dimension_jumps * (n+1);
+	
+			//System.out.println("working on fixing dimension to " + newdim);
+			
+			
+			int newsize = hyperplanes * newdim;
+			
+			data = Arrays.copyOf(data, newsize);
+			
+			int size = hyperplanes * this.dimension;
+			for(int i=size; i<newsize; i++)
+				data[i] = Utility.randomFill();
+	
+			this.dimension = newdim;
+		}
 	}
 	
 	public double get(int i, int j)
 	{
 		if (i>=this.hyperplanes || i<0)
-			throw new ArrayIndexOutOfBoundsException("Bad i in :(" + i + ", " + j + ")");
-		if (j>=this.dimension || j<0)
-			throw new ArrayIndexOutOfBoundsException("Bad j in :(" + i + ", " + j + ")");
+			throw new ArrayIndexOutOfBoundsException("Bad i in :(" + i + ", " + j + "). Dim: " + this.dimension);
+		if (j>=this.dimension)
+		{
+			System.out.println("Fixing dimension...");
+			fixDim(j); 
+		}
+		else if(j<0)
+			throw new ArrayIndexOutOfBoundsException("Bad j in :(" + i + ", " + j + "). Dim: " + this.dimension);
 		
 		return data[j*hyperplanes + i];
 	}

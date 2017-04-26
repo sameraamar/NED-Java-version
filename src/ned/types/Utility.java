@@ -6,7 +6,7 @@ import java.util.Random;
 import java.util.Set;
 
 final public class Utility {
-	private static Random rand = new Random();
+	private static Random rand = new Random(1000000);
 
 	private Utility()
 	{

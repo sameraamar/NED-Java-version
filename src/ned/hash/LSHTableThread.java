@@ -49,7 +49,7 @@ public class LSHTableThread extends Thread
 			if (doc == null)
 				continue;
 			
-			List<String> res = this.lsh.AddDocument(doc);
+			List<String> res = null ; //this.lsh.AddDocument(doc);
 			queueOut.add(res);			
 		}
 	}

@@ -15,6 +15,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.stream.Stream;
 
+import ned.tools.ArrayFixedSize;
 import ned.tools.ExecutionHelper;
 import ned.tools.GeneralHelper;
 import ned.types.Document;
@@ -58,9 +59,10 @@ public class LSHForest {
 
 		for (int i = 0; i<numberOfTables; i++)
 		{
-			List<String> tmpList = tables[i].AddDocument(doc);
+			ArrayFixedSize tmpList = tables[i].AddDocument(doc);
 			
-			for (String tmp : tmpList) {
+			for (int k=0; i<tmpList.size(); i++) {
+				String tmp = tmpList.get(k);
 				if ( tmp.compareTo(doc.getId()) >=0 )
 					continue;
 				
@@ -88,6 +90,8 @@ public class LSHForest {
         List<String> res = output.subList(0, toIndex);
         return res;
     }
+	
+	/*
 	public List<String> addDocument32(Document doc)
     {
 		
@@ -127,7 +131,8 @@ HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 		List<String> res = tmpList.subList(0, Math.min( tmpList.size(), 3*numberOfTables) );
         return res;
     }
-
+	 */
+	
 	protected List<String> findTopX(HashMap<String, Integer> hitCounts) {
 		PriorityQueue<String> pqueue = new PriorityQueue<String>(new Comparator<String> () 
         {  
@@ -165,9 +170,11 @@ HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 	
 	public List<String> addDocument(Document doc)
     {
+		return this.addDocument00(doc);
+		/*
 		Callable <List<String>> task = () -> {
+			return this.addDocument00(doc);
 			
-			return this.addDocument32(doc);
 		};
 	
 		try {
@@ -178,6 +185,7 @@ HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 			e.printStackTrace();
 		}
 		return null;
+		*/
     }
 	
 	public String toString()
