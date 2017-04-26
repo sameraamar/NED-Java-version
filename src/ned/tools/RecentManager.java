@@ -36,11 +36,15 @@ public class RecentManager {
 		
 	}
 	public void  AddToRecent(String docId){
-		
-		recentBuffer.add(docId);
-		if(recentBuffer.size()>=this.recentBufferSize){
-			fulshBuffer();
+		synchronized(recentBuffer){
+			recentBuffer.add(docId);
+			if(recentBuffer.size()>=this.recentBufferSize){
+				fulshBuffer();
+			}
+			
 		}
+		
+		
 		
 		
 	}
@@ -48,15 +52,16 @@ public class RecentManager {
 			waitOnRecent();
 			locked=true;
 			synchronized(recent){
-				synchronized(recentBuffer){
-					for(String str:recentBuffer){
+				for(String str:recentBuffer){
 						recent.add(str);
 						if(recent.size()>recentSize) recent.remove(0);
-					}
-				}
+					}				
+			}
+			synchronized(recentBuffer){
+				recentBuffer=new ArrayList<String>();
 			}
 			
-			recentBuffer=new ArrayList<String>();
+			
 		locked=false;
 		prepareCopy();
 	}

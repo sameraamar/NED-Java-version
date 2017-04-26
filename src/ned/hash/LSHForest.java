@@ -165,9 +165,11 @@ HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 	
 	public List<String> addDocument(Document doc)
     {
+		return this.addDocument00(doc);
+		/*
 		Callable <List<String>> task = () -> {
+			return this.addDocument00(doc);
 			
-			return this.addDocument32(doc);
 		};
 	
 		try {
@@ -178,6 +180,7 @@ HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 			e.printStackTrace();
 		}
 		return null;
+		*/
     }
 	
 	public String toString()

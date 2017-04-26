@@ -32,7 +32,7 @@ public class GlobalData {
 		public int monitor_timer_seconds = 5; //seconds
 		public int number_of_threads =100;
 		public int print_limit = 5000;
-		public int number_of_tables = 30;
+		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
 		public int max_documents = 50000000;
@@ -445,7 +445,7 @@ public class GlobalData {
 
 	public String memoryGlance() {
 		System.out.println(""
-				+" Sumitted TaskCount "+ExecutionHelper.getQueuedSubmissionCount()
+				+"Sumitted TaskCount "+ExecutionHelper.getQueuedSubmissionCount()
 				+" Total Active threads="+Thread.activeCount()+" ActiveTasks= "+ExecutionHelper.activeCount()
 				+" QueuedTaskCount "+ExecutionHelper.getQueuedTaskCount()
 		
