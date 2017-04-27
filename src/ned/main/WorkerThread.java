@@ -1,9 +1,6 @@
 package ned.main;
 
-import java.util.Hashtable;
 import java.util.List;
-
-import ned.hash.DocumentHandler;
 import ned.hash.LSHForest;
 import ned.types.Document;
 import ned.types.DocumentClusteringHelper;
@@ -64,11 +61,6 @@ public class WorkerThread implements Runnable
 	        this.doc.setNearestDetermined( true);
 			return;
 		}
-    	//Hashtable<Integer, Double> weights = doc.getWeights();
-		
-		boolean breakme = false;
-		if(doc.getId().equals("86417673814151168"))
-			breakme = false;
 		
     	List<String> set = forest.addDocument(this.doc);
 		

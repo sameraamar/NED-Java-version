@@ -1,16 +1,12 @@
 package ned.types;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 import ned.tools.ArrayFixedSize;
 import ned.tools.ExecutionHelper;

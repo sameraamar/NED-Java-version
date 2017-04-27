@@ -2,21 +2,12 @@ package ned.hash;
 
 import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.PriorityQueue;
-import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
-import java.util.stream.Stream;
-
 import ned.tools.ArrayFixedSize;
-import ned.tools.ExecutionHelper;
 import ned.tools.GeneralHelper;
 import ned.types.Document;
 

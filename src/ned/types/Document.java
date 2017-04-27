@@ -2,25 +2,21 @@ package ned.types;
 
 import java.io.Serializable;
 import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
-import ned.tools.ExecutionHelper;
 import ned.tools.RedisHelper;
 
 public class Document  implements Serializable{
-    private String id;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4575371423244913253L;
+	
+	private String id;
     private String text ;
     private List<String> words;
     //private java.util.Hashtable<Integer, Double> weights ;

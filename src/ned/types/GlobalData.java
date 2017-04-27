@@ -2,25 +2,19 @@ package ned.types;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.SynchronousQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import ned.modules.Twokenize;
 import ned.tools.ArrayFixedSize;
 import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
-import ned.tools.RecentManager;
 import ned.tools.RedisHelper;
 
 public class GlobalData {
@@ -42,7 +36,7 @@ public class GlobalData {
 		public int offset = 0;//8800000-skip_files*500000;
 		public int search_recents = 2000;
 		public double threshold = 0.6;
-		public double min_cluster_entropy = 0.0;
+		public double min_cluster_entropy = 0.5;
 		public double min_cluster_size = 3;
 		public int inital_dimension = 5000;
 		public int dimension_jumps = 10000;
