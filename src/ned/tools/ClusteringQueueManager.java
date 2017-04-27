@@ -1,11 +1,6 @@
 package ned.tools;
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
-
-import ned.types.Document;
-import ned.types.LRUCache;
 
 public class ClusteringQueueManager {
 	

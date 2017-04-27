@@ -16,6 +16,9 @@ public class ArrayFixedSize
 	
 	public void add(String s) 
 	{
+		if(data.length == 0)
+			return;
+		
 		synchronized(index)
 		{
 			index = (index + 1) % data.length; //update based on FIFO
@@ -27,6 +30,10 @@ public class ArrayFixedSize
 	}
 
 	public void add(int i, String element) {
+
+		if(data.length == 0)
+			return;
+		
 		if(i >= currentSize)
 			throw new ArrayIndexOutOfBoundsException(i);
 

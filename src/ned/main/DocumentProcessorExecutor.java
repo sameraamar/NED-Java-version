@@ -1,15 +1,9 @@
 package ned.main;
 
-import java.util.List;
-import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import ned.hash.LSHForest;
-import ned.tools.ExecutionHelper;
 import ned.types.Document;
 
 public class DocumentProcessorExecutor {
