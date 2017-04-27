@@ -40,7 +40,7 @@ public class AppMain {
 				Thread.sleep(100);
 			}
 			ExecutionHelper.setCommonPoolSize();
-			String threadsFileName = "c:/temp/threads.txt";
+			String threadsFileName = "../temp/threads.txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
 			forest = new LSHForest(gd.getParams().number_of_tables, 
@@ -84,7 +84,7 @@ public class AppMain {
 		
 	String folder = "/tmp/";
 
-	folder = "c:/data/events_db/petrovic";
+	//folder = "c:/data/events_db/petrovic";
 	//folder = "C:\\private\\samer\\data";
 	//folder="/Users/ramidabbah/private/mandoma/samer_a/data";
 	//folder = "C:\\private\\samer\\data";
