@@ -1,16 +1,11 @@
 package ned.tools;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
-
-import javax.annotation.Generated;
-
-import ned.types.GlobalData;
 
 public class ExecutionHelper {
 	private  static Executor executor = Executors.newFixedThreadPool(20);
