@@ -24,34 +24,32 @@ public class RedisHelper {
 
 
 	
-	 public static LRUCache<String, Document> id2DocumentCache;//=new LRUCache<String, Document>(2000);
-	 public static LRUCache<String, String> word2IndexCache;//=new LRUCache<String, String>(2000);
-	 public static LRUCache<Integer, Double> word2idfCache;
+	private  static  LRUCache<String, Document> id2DocumentCache;//=new LRUCache<String, Document>(2000);
+	private  static  LRUCache<String, String> word2IndexCache;//=new LRUCache<String, String>(2000);
+	private  static  LRUCache<Integer, Double> word2idfCache=new LRUCache<Integer, Double>(2000);;
 	private static JedisPool jedisPool = null;
 	private static RedisSerializer<Object> docSerializer ;
 
 	
 	synchronized public static void initRedisConnectionPool() {
-		System.out.println("Preparing jedisPool....  ");
-		if(jedisPool==null){
-		
-				if(jedisPool==null)
-				{	
-					JedisPoolConfig config = new JedisPoolConfig();
-					//config.setMaxTotal(REDIS_MAX_CONNECTIONS);
-					config.setMaxIdle(100);
-					config.setMinIdle(50);
-					//config.setMaxWaitMillis(10);
-					config.setTestOnBorrow(false);
-					config.setTestOnReturn(false);
-					config.setTestWhileIdle(false);
-					//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
-					jedisPool = new JedisPool(config,"localhost", 6379, 18000);
+		System.out.println("Preparing jedisPool....  ");		
+		if(jedisPool==null)
+		{	
+			JedisPoolConfig config = new JedisPoolConfig();
+			//config.setMaxTotal(REDIS_MAX_CONNECTIONS);
+			config.setMaxIdle(100);
+			config.setMinIdle(50);
+			//config.setMaxWaitMillis(10);
+			config.setTestOnBorrow(false);
+			config.setTestOnReturn(false);
+			config.setTestWhileIdle(false);
+			//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
+			jedisPool = new JedisPool(config,"localhost", 6379, 18000);
 
-					System.out.println("jedisPool is Ready "+jedisPool.getNumActive());
-				}
-			}
-		clearRedisKeys();
+			System.out.println("jedisPool is Ready "+jedisPool.getNumActive());
+		}
+			
+		
 		if(id2DocumentCache==null){
 			id2DocumentCache=new LRUCache<String, Document>(lru_cache_size);
 		}
@@ -61,6 +59,7 @@ public class RedisHelper {
 		if(word2idfCache==null){
 			word2idfCache=new LRUCache<Integer, Double>(lru_cache_size);
 		}
+		clearRedisKeys();
 		ready=true;
 	}
 
@@ -264,10 +263,7 @@ public class RedisHelper {
 	private static void clearRedisKeys()
 	{
 		
-		/*
-		if(id2document != null)
-			return;
-		*/
+		
 		while(jedisPool==null){
 			
 		}
@@ -280,12 +276,10 @@ public class RedisHelper {
 	
 	public static double getIDF(int k)
 	{
-		if(word2idfCache==null){
-			word2idfCache=new LRUCache<Integer, Double>(lru_cache_size);
-			System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-		}
+		
 		double res=-1;
-		res=word2idfCache.get(k);
+		if(word2idfCache!=null)
+		//res=word2idfCache.get(k);
 		if(res>-1){
 			return res;
 		}else{
@@ -307,15 +301,15 @@ public class RedisHelper {
 	public static void setIDF(int k,double idf)
 	{
 		word2idfCache.put(k, idf);
-		Runnable runnable = () -> {
-			Jedis jedis=getRedisClient();
-			String key=String.valueOf(k);
-			String value=String.valueOf(idf);
-			jedis.hset(WORD2IDF,key,value);
-			retunRedisClient(jedis);
-		};
-		
-		ExecutionHelper.asyncRun (runnable);
+	Runnable runnable = () -> {
+		Jedis jedis=getRedisClient();
+		String key=String.valueOf(k);
+		String value=String.valueOf(idf);
+		jedis.hset(WORD2IDF,key,value);
+		retunRedisClient(jedis);
+	};
+	
+	ExecutionHelper.asyncRun (runnable);
 		
 		//return word2idf.getOrDefault(k, -1.0);
 	}
