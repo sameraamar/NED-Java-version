@@ -180,7 +180,7 @@ public class RedisHelper {
 			if(hashValues!=null){
 				hashValues.forEach(doc->{
 					if(doc!=null){
-						Document tDoc=(Document) this.getDocSerializer().deserialize(doc);
+						Document tDoc=(Document) getDocSerializer().deserialize(doc);
 						result.put(tDoc.getId(),tDoc );
 					}
 				});
@@ -276,6 +276,48 @@ public class RedisHelper {
 		jedis.del(WORD2INDEX);
 		
 		retunRedisClient(jedis);
+	}
+	
+	public static double getIDF(int k)
+	{
+		if(word2idfCache==null){
+			word2idfCache=new LRUCache<Integer, Double>(lru_cache_size);
+			System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+		}
+		double res=-1;
+		res=word2idfCache.get(k);
+		if(res>-1){
+			return res;
+		}else{
+			Jedis jedis=getRedisClient();
+			String resStr=jedis.get(String.valueOf(k));
+			if(resStr!=null)	{
+				return Double.valueOf(resStr);
+
+			}
+		}
+		return -1;
+	}
+	
+	public static double getIDFOrDefault(int k)
+	{
+		return getIDF(k);
+		//return word2idf.getOrDefault(k, -1.0);
+	}
+	public static void setIDF(int k,double idf)
+	{
+		word2idfCache.put(k, idf);
+		Runnable runnable = () -> {
+			Jedis jedis=getRedisClient();
+			String key=String.valueOf(k);
+			String value=String.valueOf(idf);
+			jedis.hset(WORD2IDF,key,value);
+			retunRedisClient(jedis);
+		};
+		
+		ExecutionHelper.asyncRun (runnable);
+		
+		//return word2idf.getOrDefault(k, -1.0);
 	}
 
 
