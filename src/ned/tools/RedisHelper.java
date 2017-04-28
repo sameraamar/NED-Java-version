@@ -284,7 +284,7 @@ public class RedisHelper {
 			return res;
 		}else{
 			Jedis jedis=getRedisClient();
-			String resStr=jedis.get(String.valueOf(k));
+			String resStr=jedis.hget(WORD2IDF,String.valueOf(k));
 			if(resStr!=null)	{
 				return Double.valueOf(resStr);
 
