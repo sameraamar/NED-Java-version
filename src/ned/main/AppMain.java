@@ -40,7 +40,7 @@ public class AppMain {
 				Thread.sleep(100);
 			}
 			ExecutionHelper.setCommonPoolSize();
-			String threadsFileName = "c:/temp/threads.txt";
+			String threadsFileName = "../temp/threads.txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
 			forest = new LSHForest(gd.getParams().number_of_tables, 
@@ -84,7 +84,7 @@ public class AppMain {
 		
 	String folder = "/tmp/";
 
-	folder = "c:/data/events_db/petrovic";
+	//folder = "c:/data/events_db/petrovic";
 	//folder = "C:\\private\\samer\\data";
 	//folder="/Users/ramidabbah/private/mandoma/samer_a/data";
 	//folder = "C:\\private\\samer\\data";
@@ -209,17 +209,24 @@ public class AppMain {
 	            {
 	        		//clustering.mapToCluster();
 	        		
-	        		long tmp = System.nanoTime() - middletime;
+	            	long currenttime = System.nanoTime();
+	        		long tmp = currenttime - middletime;
 	            	double average2 = 1.0 * TimeUnit.NANOSECONDS.toMillis(tmp) / middle_processed;
 	            	average2 = Math.round(100.0 * average2) / 100.0;
 	            	
 	            	StringBuffer msg = new StringBuffer();
 	            	msg.append( "Processed " ).append ( processed ).append(" docs. ");
-	            	long seconds = TimeUnit.NANOSECONDS.toSeconds( System.nanoTime() - base);
+	            	long seconds = TimeUnit.NANOSECONDS.toSeconds( currenttime - base );
+	            	long milliseconds = TimeUnit.NANOSECONDS.toMillis( currenttime - base );
 	            	msg.append(" elapsed time: ").append(Utility.humanTime(seconds));
 	            	msg.append("(AHT: ").append(average2).append(" ms). ");
 //	            	//msg.append("Cursor: ").append(doc.getId());
 	            	msg.append(". Dim: ").append( forest.getDimension() );
+	            	if(clustering.clusteredCounter > 0)
+	            	{
+	            		String ahtStr = String.format(". Finalized %d docs, ms/doc: %.3f", clustering.clusteredCounter, 1.0 * milliseconds / clustering.clusteredCounter);
+	            		msg.append( ahtStr ).append(" ms");
+	            	}
 	            	
 	            	Session.getInstance().message(Session.INFO, "Reader", msg.toString());
 	            	
