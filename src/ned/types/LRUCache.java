@@ -45,13 +45,22 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	  synchronized(jedis){
 		  try{
 				 // System.out.println(value.getClass().getName());
-			  byte[] serObject; serObject=mySerialize(value);
+			  byte[]  serObject=mySerialize(value);
 				 //= this.jedis.hset(hashName.getBytes(StandardCharsets.UTF_8), key.toString().getBytes(StandardCharsets.UTF_8), serObject);
+			  if(verifySerializer(value,serObject)){
 				  this.jedis.hset(hashName.getBytes(), String.valueOf(key).getBytes(), serObject);
+			  }else{
+				  throw new Exception("verifySerializer "+value); 
+			  }
 
 			  }catch(JedisException e){		
 				e.printStackTrace();
 				jedis=RedisHelper.getRedisClient();
+				//this.put(key,value);
+			  }
+		  		catch(Exception e){		
+				e.printStackTrace();
+				//jedis=RedisHelper.getRedisClient();
 				//this.put(key,value);
 			  }
 	  	}
@@ -145,6 +154,9 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	return (V) RedisHelper.getDocSerializer().deserialize(o);
 	  
   }
-  
+  private boolean verifySerializer(V value,  byte[] serObject){
+	return value.getClass().getName().equals(myDeSerialize(serObject).getClass().getName());
+	  
+  }
   
 }

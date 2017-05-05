@@ -19,7 +19,7 @@ public class RedisHelper {
 	public static final String ID2DOCUMENT = "id2document";
 	public static final String WORD2INDEX = "word2index";
 	public static final String WORD2IDF = "word2idf";
-	public static final int lru_cache_size = 50000;
+	public static final int lru_cache_size = 10000;
 	public static  boolean ready = false;
 
 
@@ -132,17 +132,8 @@ public class RedisHelper {
 	}
 
 	public static Document getDocumentFromRedis(String key) {
-		Document doc=null;
-		if(key == null)
-			return null;
-		
-		if(id2DocumentCache != null)
-		{
-			doc= id2DocumentCache.get(key);
+			Document doc = id2DocumentCache.get(key);
 			return doc;
-		}
-		return null;
-	
 	}
 	
 	public Hashtable  <String,Document> getMultiDocumentFromRedis(String hash,String keys) {
