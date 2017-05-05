@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.springframework.data.redis.serializer.SerializationException;
 
+import ned.tools.ExecutionHelper;
 import ned.tools.RedisHelper;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
@@ -36,41 +37,56 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
   protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
     return size() >= cacheSize;
   }
-  synchronized public V put(K key, V value) {
+   public V put(K key, V value) {
 	  V r = super.put(key, value);
-	  byte[] serObject;
+	 
 	  actualSize++;	
-	  try{
-		 // System.out.println(value.getClass().getName());
-		  serObject=mySerialize(value);
-		 //= this.jedis.hset(hashName.getBytes(StandardCharsets.UTF_8), key.toString().getBytes(StandardCharsets.UTF_8), serObject);
-		  this.jedis.hset(hashName.getBytes(), String.valueOf(key).getBytes(), serObject);
+	  Runnable task= () ->{
+	  synchronized(jedis){
+		  try{
+				 // System.out.println(value.getClass().getName());
+			  byte[] serObject; serObject=mySerialize(value);
+				 //= this.jedis.hset(hashName.getBytes(StandardCharsets.UTF_8), key.toString().getBytes(StandardCharsets.UTF_8), serObject);
+				  this.jedis.hset(hashName.getBytes(), String.valueOf(key).getBytes(), serObject);
 
-	  }catch(JedisException e){		
-		e.printStackTrace();
-		jedis=RedisHelper.getRedisClient();
-		//this.put(key,value);
-	  }
+			  }catch(JedisException e){		
+				e.printStackTrace();
+				jedis=RedisHelper.getRedisClient();
+				//this.put(key,value);
+			  }
+	  	}
+	  };
+	  task.run();
+	 // ExecutionHelper.asyncRun(task);
 	 return r;
   }
 @SuppressWarnings("unchecked")
-synchronized public V get(Object key) {
+ public V get(Object key) {
 	  V r = super.get(key);
-	  if(r==null){			
-			 try {
-				// Object o=this.jedis.hget(hashName, String.valueOf(key));
-				 Object o=this.jedis.hget(hashName.getBytes(), String.valueOf(key).getBytes());
-				 if(o!=null) r =(V) o;
-			} catch (Exception e) {
-				// System.out.println("Str="+str+" r="+r);
-				e.printStackTrace();
-				 jedis=RedisHelper.getRedisClient();
-				// return  this.get(key);
-			}		
-	 }else{
-		 return r;
+	  if(r==null){		
+		  synchronized(jedis){
+			  try {
+					// Object o=this.jedis.hget(hashName, String.valueOf(key));
+					 Object o=this.jedis.hget(hashName.getBytes(), String.valueOf(key).getBytes());
+					 if(o!=null ){
+						 r =myDeSerialize((byte[]) o);
+					 }else{
+						 if(actualSize>cacheSize){
+							 System.out.println("NOT In redis "+key);
+							// r=get(key);
+						 }
+						
+					 }
+				} catch (Exception e) {
+					//
+					e.printStackTrace();
+					 jedis=RedisHelper.getRedisClient();
+					// return  this.get(key);
+				}		
+		  }
+			
 	 }
-	return null;
+	  return r;
   }
   
   protected void finalize() {
@@ -102,6 +118,31 @@ synchronized public V get(Object key) {
 	  }
 	//  System.out.println(clazz);
 	return String.valueOf(o).getBytes();
+	  
+  }
+  private V myDeSerialize(byte[] o){
+	  String clazz=o.getClass().getName();
+	 if(this.hashName.equals("numberOfDocsIncludeWord")){
+		 Integer i=Integer.valueOf(new String(o));
+		 return (V)  i;
+	 }
+	 if(this.hashName.equals("word2index")){	
+		 String s=new String(o);
+		 System.out.println("s= "+s);
+		 return (V)  s;
+	 }
+	 if(this.hashName.equals("word2idf")){
+		 Double d = Double.valueOf(new String(o));
+		
+			 System.out.println("d= "+d);
+		 
+		 return (V)  d;
+	 }
+	 if(this.hashName.equals("id2document")){			
+		 return (V) RedisHelper.getDocSerializer().deserialize(o);
+	 }
+	
+	return (V) RedisHelper.getDocSerializer().deserialize(o);
 	  
   }
   

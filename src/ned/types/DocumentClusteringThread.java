@@ -83,7 +83,7 @@ public class DocumentClusteringThread extends Thread {
 		if(id.equals("86417673814151168"))
 			breakme = true;
 		
-		Document doc =RedisHelper.getDocumentFromRedis(RedisHelper.ID2DOCUMENT,id);
+		Document doc =RedisHelper.getDocumentFromRedis(id);
 		if (doc==null)
 			return null;
 		

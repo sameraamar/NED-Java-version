@@ -131,7 +131,7 @@ public class RedisHelper {
 		return len;
 	}
 
-	public static Document getDocumentFromRedis(String hash,String key) {
+	public static Document getDocumentFromRedis(String key) {
 		Document doc=null;
 		if(key == null)
 			return null;

@@ -225,7 +225,7 @@ public class Document  implements Serializable{
 		if(rightId == null)
 			return;
 		
-		Document right =RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
+		Document right =RedisHelper.getDocumentFromRedis(rightId);
 		updateNearest(right);
 	}
 
