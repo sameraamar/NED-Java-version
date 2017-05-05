@@ -51,15 +51,15 @@ public class RedisHelper {
 					System.out.println("jedisPool is Ready "+jedisPool.getNumActive());
 				}
 			}
-		clearRedisKeys();
+		//clearRedisKeys();
 		if(id2DocumentCache==null){
-			id2DocumentCache=new LRUCache<String, Document>(lru_cache_size,ID2DOCUMENT);
+			id2DocumentCache=new LRUCache<String, Document>(lru_cache_size,ID2DOCUMENT,true);
 		}
 		if(word2IndexCache==null){
-			word2IndexCache=new LRUCache<String, String>(lru_cache_size,WORD2INDEX);
+			word2IndexCache=new LRUCache<String, String>(lru_cache_size,WORD2INDEX,true);
 		}
 		if(word2idfCache==null){
-			word2idfCache=new LRUCache<Integer, Double>(lru_cache_size,WORD2INDEX);
+			word2idfCache=new LRUCache<Integer, Double>(lru_cache_size,WORD2INDEX,true);
 		}
 		ready=true;
 	}

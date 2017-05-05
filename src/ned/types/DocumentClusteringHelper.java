@@ -28,7 +28,7 @@ public class DocumentClusteringHelper {
 			String rightId = iter.next();
 		    if(rightId.compareTo(id) < 0)
 		    {
-		    	Document right = RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
+		    	Document right = RedisHelper.getDocumentFromRedis(RedisHelper.ID2DOCUMENT, rightId);
 				doc.updateNearest(right);
 		    }
 		}
@@ -89,7 +89,7 @@ public class DocumentClusteringHelper {
 		Double distance = null;
 		if (doc.getNearest() != null)
 		{
-			nearest =RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getNearest()); // data.id2document.get(doc.getNearest());
+			nearest =RedisHelper.getDocumentFromRedis(RedisHelper.ID2DOCUMENT, doc.getNearest()); // data.id2document.get(doc.getNearest());
 			distance = doc.getNearestDist();
 		}
 		

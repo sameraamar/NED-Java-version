@@ -24,9 +24,7 @@ import ned.tools.RecentManager;
 import ned.tools.RedisHelper;
 
 public class GlobalData {
-	public static final String ID2DOCUMENT = "id2document";
-	public static final String WORD2INDEX = "word2index";
-	public static final String WORD2IDF = "word2idf";
+	public static final String DOCSICLUDEDWORD = "numberOfDocsIncludeWord";
 	
 	public class Parameters 
 	{
@@ -64,7 +62,7 @@ public class GlobalData {
 	int numberOfDocuments;
 	private ConcurrentHashMap<Integer, Double> word2idf;
 
-	public ConcurrentHashMap<Integer, Integer>   numberOfDocsIncludeWord;
+	public LRUCache<Integer, Integer>   numberOfDocsIncludeWord;
 	public ConcurrentHashMap<String, DocumentCluster>  clusters;
 	public ConcurrentHashMap<String, String> id2cluster;
 	//public LRUCache<String,Document> recent;
@@ -85,7 +83,7 @@ public class GlobalData {
 		word2index  = new Hashtable<String , Integer>();
 		//index2word  = new Hashtable<Integer, String>();
 		//id2document = new Hashtable<String , Document>();
-		numberOfDocsIncludeWord = new ConcurrentHashMap<Integer, Integer>();
+		numberOfDocsIncludeWord = new LRUCache<Integer, Integer>(RedisHelper.lru_cache_size,DOCSICLUDEDWORD,true);
 		cleanClusterQueue = new LinkedList<String>();
 		//cleanClusterQueue = (List<String>) Collections.synchronizedList(new LinkedList<String>()); //new LinkedList<Document>();
 		clusters = new ConcurrentHashMap<String, DocumentCluster>();
@@ -252,7 +250,7 @@ public class GlobalData {
 		
 		doc.setDimension ( d );
 		//id2document.put(doc.getId(), doc);
-		RedisHelper.setDocumentFromRedis(ID2DOCUMENT, doc.getId(), doc);
+		RedisHelper.setDocumentFromRedis(RedisHelper.ID2DOCUMENT, doc.getId(), doc);
 
 		numberOfDocuments++;
 		
@@ -451,7 +449,7 @@ public class GlobalData {
 		);
 		return String.format("\t[monitor] Words: %d, Documents: %d, Clusters %d, Recent: %d",
 				this.word2index.size(),
-				RedisHelper.redisSize(ID2DOCUMENT),//this.id2document.size(),
+				RedisHelper.redisSize(RedisHelper.ID2DOCUMENT),//this.id2document.size(),
 				this.clusters.size(),
 				this.recentManager.size()
 			);

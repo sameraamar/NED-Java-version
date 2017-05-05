@@ -22,12 +22,15 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 
   
 
-  public LRUCache(int cacheSize,String hashName) {
+  public LRUCache(int cacheSize,String hashName,boolean flush) {
     super(16, (float) 0.75, true);
     this.cacheSize = cacheSize;
     this.jedis=RedisHelper.getRedisClient();
     this.hashName=hashName;
     this.actualSize=0;
+    if(flush){
+    	jedis.del(hashName);
+    }
   }
 
   protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
@@ -81,8 +84,8 @@ synchronized public V get(Object key) {
 		  return  String.valueOf(l.longValue()).getBytes();
 		   
 	  }
-	  if(clazz.equals("java.lang.Intger")){
-		  Long l=(Long)o;
+	  if(clazz.equals("java.lang.Integer")){
+		  Integer l=(Integer)o;
 		  return  String.valueOf(l.intValue()).getBytes();
 	  }
 	  if(clazz.equals("java.lang.Double")){
@@ -97,8 +100,8 @@ synchronized public V get(Object key) {
 		  String l=(String)o;
 		  return l.getBytes();
 	  }
-	  System.out.println(clazz);
-	return null;
+	//  System.out.println(clazz);
+	return String.valueOf(o).getBytes();
 	  
   }
   
