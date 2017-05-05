@@ -55,7 +55,7 @@ public class GlobalData {
 		return globalData;
 	}	
 	//public Queue<String> queue; 
-	public Hashtable<String, Integer>    word2index;
+	public LRUCache<String, Integer>    word2index;
 	//public Hashtable<String, Document>   id2document;
 	
 	//for calculating IDF
@@ -80,7 +80,7 @@ public class GlobalData {
 	
 	private GlobalData()
 	{	
-		word2index  = new Hashtable<String , Integer>();
+		word2index  = new LRUCache<String , Integer>(RedisHelper.lru_cache_size,DOCSICLUDEDWORD,true);
 		//index2word  = new Hashtable<Integer, String>();
 		//id2document = new Hashtable<String , Document>();
 		numberOfDocsIncludeWord = new LRUCache<Integer, Integer>(RedisHelper.lru_cache_size,DOCSICLUDEDWORD,true);
@@ -449,7 +449,7 @@ public class GlobalData {
 		);
 		return String.format("\t[monitor] Words: %d, Documents: %d, Clusters %d, Recent: %d",
 				this.word2index.size(),
-				RedisHelper.redisSize(RedisHelper.ID2DOCUMENT),//this.id2document.size(),
+				RedisHelper.id2DocumentCache.size(),//this.id2document.size(),
 				this.clusters.size(),
 				this.recentManager.size()
 			);

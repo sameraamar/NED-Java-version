@@ -17,7 +17,7 @@ import redis.clients.jedis.exceptions.JedisException;
 
 public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	private int cacheSize;
-	private long actualSize;
+	private int actualSize;
     private Jedis jedis;
     private final String hashName;
 
@@ -157,6 +157,10 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
   private boolean verifySerializer(V value,  byte[] serObject){
 	return value.getClass().getName().equals(myDeSerialize(serObject).getClass().getName());
 	  
+  }
+  
+  public int size(){
+	  return this.actualSize;
   }
   
 }
