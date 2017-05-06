@@ -59,7 +59,7 @@ public class RedisHelper {
 			word2IndexCache=new LRUCache<String, String>(lru_cache_size,WORD2INDEX,true);
 		}
 		if(word2idfCache==null){
-			word2idfCache=new LRUCache<Integer, Double>(lru_cache_size,WORD2INDEX,true);
+			word2idfCache=new LRUCache<Integer, Double>(lru_cache_size,WORD2IDF,true);
 		}
 		ready=true;
 	}
