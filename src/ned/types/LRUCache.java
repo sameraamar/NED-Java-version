@@ -15,6 +15,10 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	private int cacheSize;
     private Jedis wjedis;
     private Jedis rjedis;
+    
+    private Integer readLock = 0;
+    private Integer writeLock = 1;
+    
     private JedisPool myJedisPool;
     private boolean storeInRedis;
     private final String hashName;
@@ -44,7 +48,7 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	  
 	  if(storeInRedis) {
 		  Runnable task= () ->{
-		  synchronized(wjedis){
+		  synchronized(writeLock){
 			  try{
 					 // System.out.println(value.getClass().getName());
 				  byte[]  serObject=mySerialize(value);
@@ -78,7 +82,7 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	  V r = super.get(key);
 
 	  if(storeInRedis && r==null){		
-		  synchronized(rjedis){
+		  synchronized(readLock){
 			  try {
 					// Object o=this.jedis.hget(hashName, String.valueOf(key));
 					 Object o=this.rjedis.hget(hashNameBytes, String.valueOf(key).getBytes());
@@ -166,8 +170,12 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
   
   public int size(){
 	  if(storeInRedis)
-		  return wjedis.hlen(hashNameBytes).intValue();
-	  
+	  {
+		  synchronized(readLock) 
+		  {
+			  return rjedis.hlen(hashNameBytes).intValue();
+		  }
+	  }
 	  return super.size();
   }
   
