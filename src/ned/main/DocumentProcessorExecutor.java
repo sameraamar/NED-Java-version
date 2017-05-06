@@ -1,15 +1,9 @@
 package ned.main;
 
-import java.util.List;
-import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import ned.hash.LSHForest;
-import ned.tools.ExecutionHelper;
 import ned.types.Document;
 
 public class DocumentProcessorExecutor {
@@ -22,9 +16,9 @@ public class DocumentProcessorExecutor {
 		executor = Executors.newFixedThreadPool(number_of_threads);		
 	}
 	
-	public void submit(Document doc)
+	public void submit(Document doc, int idx)
 	{
-		WorkerThread worker = new WorkerThread(forest, doc);
+		WorkerThread worker = new WorkerThread(forest, doc, idx);
 		worker.preRun();
 		//ExecutionHelper.asyncRun(worker);
 		//worker.run();

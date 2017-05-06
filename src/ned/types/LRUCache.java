@@ -1,97 +1,89 @@
 package ned.types;
 
-
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import org.springframework.data.redis.serializer.SerializationException;
-
-import ned.tools.ExecutionHelper;
 import ned.tools.RedisHelper;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisException;
 
 public class LRUCache<K, V> extends LinkedHashMap<K, V> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6418459494767522439L;
 	private int cacheSize;
-	private int actualSize;
     private Jedis wjedis;
     private Jedis rjedis;
     private JedisPool myJedisPool;
-
+    private boolean storeInRedis;
     private final String hashName;
-
-  
-
-  public LRUCache(int cacheSize,String hashName,boolean flush) {
+    byte[] hashNameBytes;
+    
+  public LRUCache(int cacheSize, String hashName, boolean resetRedis, boolean storeInRedis) {
     super(16, (float) 0.75, true);
     this.cacheSize = cacheSize;
+    this.storeInRedis = storeInRedis;
     myJedisPool=RedisHelper.getRedisConnectionPool();
     this.wjedis=myJedisPool.getResource();
     this.rjedis=myJedisPool.getResource();
 
     this.hashName=hashName;
-    this.actualSize=0;
-    if(flush){
+	hashNameBytes = hashName.getBytes();
+
+    if(resetRedis){
     	wjedis.del(hashName);
-    }
+    } 
   }
 
   protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-    return size() >= cacheSize;
+    return super.size() >= cacheSize;
   }
    public V put(K key, V value) {
 	  V r = super.put(key, value);
-	 
-	  actualSize++;	
-	  Runnable task= () ->{
-	  synchronized(wjedis){
-		  try{
-				 // System.out.println(value.getClass().getName());
-			  byte[]  serObject=mySerialize(value);
-				 //= this.jedis.hset(hashName.getBytes(StandardCharsets.UTF_8), key.toString().getBytes(StandardCharsets.UTF_8), serObject);
-			  if(verifySerializer(value,serObject)){
-				  this.wjedis.hset(hashName.getBytes(), String.valueOf(key).getBytes(), serObject);
-			  }else{
-				  throw new Exception("verifySerializer "+value); 
-			  }
-
-			  }catch(JedisException e){		
-				e.printStackTrace();
-				wjedis=myJedisPool.getResource();
-				//this.put(key,value);
-			  }
-		  		catch(Exception e){		
-				e.printStackTrace();
-				//jedis=RedisHelper.getRedisClient();
-				//this.put(key,value);
-			  }
-	  	}
-	  };
-	  task.run();
-	 // ExecutionHelper.asyncRun(task);
-	 return r;
+	  
+	  if(storeInRedis) {
+		  Runnable task= () ->{
+		  synchronized(wjedis){
+			  try{
+					 // System.out.println(value.getClass().getName());
+				  byte[]  serObject=mySerialize(value);
+					 //= this.jedis.hset(hashName.getBytes(StandardCharsets.UTF_8), key.toString().getBytes(StandardCharsets.UTF_8), serObject);
+				  if(verifySerializer(value,serObject)){
+					  this.wjedis.hset(hashNameBytes, String.valueOf(key).getBytes(), serObject);
+				  }else{
+					  throw new Exception("verifySerializer "+value); 
+				  }
+	
+				  }catch(JedisException e){		
+					e.printStackTrace();
+					wjedis=myJedisPool.getResource();
+					//this.put(key,value);
+				  }
+			  		catch(Exception e){		
+					e.printStackTrace();
+					//jedis=RedisHelper.getRedisClient();
+					//this.put(key,value);
+				  }
+		  	}
+		  };
+		  task.run();
+		  // ExecutionHelper.asyncRun(task);
+	  }
+	  
+	  return r;
   }
 @SuppressWarnings("unchecked")
  public V get(Object key) {
 	  V r = super.get(key);
-	  if(r==null){		
+
+	  if(storeInRedis && r==null){		
 		  synchronized(rjedis){
 			  try {
 					// Object o=this.jedis.hget(hashName, String.valueOf(key));
-					 Object o=this.rjedis.hget(hashName.getBytes(), String.valueOf(key).getBytes());
+					 Object o=this.rjedis.hget(hashNameBytes, String.valueOf(key).getBytes());
 					 if(o!=null ){
 						 r =myDeSerialize((byte[]) o);
-					 }else{
-						 if(actualSize>cacheSize){
-							// System.out.println("NOT In redis "+key);
-							// r=get(key);
-						 }
-						
 					 }
 				} catch (Exception e) {
 					//
@@ -105,6 +97,14 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	  return r;
   }
   
+	@Override
+	public V getOrDefault(Object key, V defaultValue) {
+		V val = get(key);
+		if (val == null)
+			return defaultValue;
+		return val;
+	}
+
   protected void finalize() {
 	    if( rjedis != null ) rjedis.close() ;
 	    if( wjedis != null ) wjedis.close() ;
@@ -140,20 +140,19 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
   }
   private V myDeSerialize(byte[] o){
 	  String clazz=o.getClass().getName();
-	 if(this.hashName.equals("numberOfDocsIncludeWord")){
+	 if(this.hashName.equals(GlobalData.DOCSICLUDEDWORD)){
 		 Integer i=Integer.valueOf(new String(o));
 		 return (V)  i;
 	 }
-	 if(this.hashName.equals("word2index")){	
+	 if(this.hashName.equals(RedisHelper.WORD2INDEX)){	
 		 Integer i=Integer.valueOf(new String(o));
-		//System.out.println("s= "+s);
 		 return (V)  i;
 	 }
-	 if(this.hashName.equals("word2idf")){
-		 Double d = Double.valueOf(new String(o));		 
+	 if(this.hashName.equals(RedisHelper.WORD2IDF)){
+		 Double d = Double.valueOf(new String(o));
 		 return (V)  d;
 	 }
-	 if(this.hashName.equals("id2document")){			
+	 if(this.hashName.equals(RedisHelper.ID2DOCUMENT)){			
 		 return (V) RedisHelper.getDocSerializer().deserialize(o);
 	 }
 	
@@ -161,22 +160,15 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	  
   }
   private boolean verifySerializer(V value,  byte[] serObject){
-	  Object d=myDeSerialize(serObject);
-	boolean res= value.getClass().getName().equals(d.getClass().getName());
-	
-	if(!res){
-		try {
-			d=(V)d;
-			res= value.getClass().getName().equals(d.getClass().getName());
-		}catch(Exception e){
-			return false;
-		}
-	}
-	  return res;
+	return value.getClass().getName().equals(myDeSerialize(serObject).getClass().getName());
+	  
   }
   
   public int size(){
-	  return this.actualSize;
+	  if(storeInRedis)
+		  return wjedis.hlen(hashNameBytes).intValue();
+	  
+	  return super.size();
   }
   
 }

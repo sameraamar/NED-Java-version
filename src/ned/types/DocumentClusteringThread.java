@@ -1,11 +1,6 @@
 package ned.types;
 
 import java.io.PrintStream;
-import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-
 import ned.tools.ClusteringQueueManager;
 import ned.tools.RedisHelper;
 
@@ -58,7 +53,8 @@ public class DocumentClusteringThread extends Thread {
 		while(doc!=null)
 		{
 	        DocumentClusteringHelper.mapToClusterHelper(doc);
-	        last = doc;
+	        
+			last = doc;
 			doc = next();
 		}
 		
@@ -78,10 +74,6 @@ public class DocumentClusteringThread extends Thread {
 		String id = queue.peek();
 		if (id == null)
 			return null;
-		
-		boolean breakme = false;
-		if(id.equals("86417673814151168"))
-			breakme = true;
 		
 		Document doc =RedisHelper.getDocumentFromRedis(id);
 		if (doc==null)

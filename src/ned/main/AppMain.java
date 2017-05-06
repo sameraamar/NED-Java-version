@@ -35,12 +35,13 @@ public class AppMain {
 		try {
 			GlobalData gd = GlobalData.getInstance();
 			RedisHelper.initRedisConnectionPool();
+
 			while(!RedisHelper.ready){
 				System.out.print('.');
 				Thread.sleep(100);
 			}
 			ExecutionHelper.setCommonPoolSize();
-			String threadsFileName = "../temp/threads.txt";
+			String threadsFileName = "c:/temp/threads.txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
 			forest = new LSHForest(gd.getParams().number_of_tables, 
@@ -84,10 +85,10 @@ public class AppMain {
 		
 	String folder = "/tmp/";
 
-	//folder = "c:/data/events_db/petrovic";
+	folder = "c:/data/events_db/petrovic";
 	//folder = "C:\\private\\samer\\data";
 	//folder="/Users/ramidabbah/private/mandoma/samer_a/data";
-	folder = "C:\\private\\samer\\data";
+	//folder = "C:\\private\\samer\\data";
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
 	                    "petrovic_01000000.gz",
@@ -173,11 +174,24 @@ public class AppMain {
     	clustering.start();
 
 		int offset = gd.getParams().offset;
+		int skip_files = (offset / 500_000);
+		offset = offset % 500_000;
+		
 		int offset_p = (int)(offset * 0.05);
+		int fileidx = -1;
 		boolean flushData = false;
 		for (String filename : files) {
+			fileidx++;
 			if (stop)
 				break;
+			
+			if(fileidx < skip_files)
+			{
+            	Session.getInstance().message(Session.INFO, "Reader", "Skipping file " + fileidx + ": " + filename);
+				continue;
+			}
+	    	Session.getInstance().message(Session.INFO, "Reader", "reading from file: " + filename);
+
 			
 			GZIPInputStream stream = new GZIPInputStream(new FileInputStream(folder + "/" + filename));
 			Reader decoder = new InputStreamReader(stream, "UTF-8");
@@ -200,7 +214,7 @@ public class AppMain {
 				Document doc = DocumentHandler.preprocessor(line);
 				GlobalData.getInstance().getQueue().add(doc.getId());
 				
-				executer.submit(doc);
+				executer.submit(doc, gd.getParams().offset+processed);
 								
 	            processed ++;
 	            middle_processed++;

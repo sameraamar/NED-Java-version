@@ -1,22 +1,13 @@
 package ned.hash;
 
-import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.PriorityQueue;
-import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
-import java.util.stream.Stream;
-
 import ned.tools.ArrayFixedSize;
-import ned.tools.ExecutionHelper;
 import ned.tools.GeneralHelper;
 import ned.types.Document;
 
@@ -57,12 +48,23 @@ public class LSHForest {
     {
 		ConcurrentHashMap<String, Integer> hitCounts = new ConcurrentHashMap<String, Integer>();
 
-		for (int i = 0; i<numberOfTables; i++)
+		for (int t = 0; t<numberOfTables; t++)
 		{
-			ArrayFixedSize tmpList = tables[i].AddDocument(doc);
+			ArrayFixedSize tmpList = tables[t].AddDocument(doc);
 			
-			for (int k=0; i<tmpList.size(); i++) {
-				String tmp = tmpList.get(k);
+//			if(doc.getId().equals("86498628092440576"))
+//			{
+//				System.out.println("HASH CODE "+t+": (" + doc.getId() + ") = " + tables[t].GenerateHashCode(doc));
+//				
+//				Document origin = RedisHelper.id2DocumentCache.get("86494861607436288");
+//				System.out.println("HASH CODE "+t+": (" + origin.getId() + ") = " + tables[t].GenerateHashCode(origin));
+//
+//				origin = RedisHelper.id2DocumentCache.get("86492005273845760");
+//				System.out.println("HASH CODE "+t+": (" + origin.getId() + ") = " + tables[t].GenerateHashCode(origin));
+//			}
+
+			for (int d=0; d<tmpList.size(); d++) {
+				String tmp = tmpList.get(d);
 				if ( tmp.compareTo(doc.getId()) >=0 )
 					continue;
 				
@@ -71,7 +73,12 @@ public class LSHForest {
 			}
 			
 		}
-
+		
+//		if(doc.getId().equals("86498628092440576"))
+//		{
+//			System.out.println("NEAREST: \t" + doc.getNearestDist() + " " + doc.getNearest());	
+//		}
+		
         ArrayList<String> output = new ArrayList<String>();
         output.addAll(hitCounts.keySet());
         

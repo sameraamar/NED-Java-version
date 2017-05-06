@@ -2,25 +2,18 @@ package ned.types;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.SynchronousQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import ned.modules.Twokenize;
 import ned.tools.ArrayFixedSize;
 import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
-import ned.tools.RecentManager;
 import ned.tools.RedisHelper;
 
 public class GlobalData {
@@ -34,16 +27,16 @@ public class GlobalData {
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
-		public int max_documents = 50000000;
+		public int max_documents = 100_000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int skip_files = 0;//17;
-		public int offset = 0;//8800000-skip_files*500000;
+		public int offset = 100_000;//8800000
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
-		public double min_cluster_size = 3;
-		public int inital_dimension = 50000;
+		public double min_cluster_size = 1;
+		public int inital_dimension = 5000;
 		public int dimension_jumps = 10000;
+		public boolean reset_redis = false;
 	}
 	
 	
@@ -59,7 +52,7 @@ public class GlobalData {
 	//public Hashtable<String, Document>   id2document;
 	
 	//for calculating IDF
-	int numberOfDocuments;
+	//int numberOfDocuments;
 	//private ConcurrentHashMap<Integer, Double> word2idf;
 
 	public LRUCache<Integer, Integer>   numberOfDocsIncludeWord;
@@ -80,19 +73,31 @@ public class GlobalData {
 	
 	private GlobalData()
 	{	
-		//word2index  = new LRUCache<String , Integer>(RedisHelper.lru_cache_size,DOCSICLUDEDWORD,true);
 		//index2word  = new Hashtable<Integer, String>();
 		//id2document = new Hashtable<String , Document>();
-		numberOfDocsIncludeWord = new LRUCache<Integer, Integer>(RedisHelper.lru_cache_size,DOCSICLUDEDWORD,true);
+		numberOfDocsIncludeWord = new LRUCache<Integer, Integer>(RedisHelper.lru_cache_size,DOCSICLUDEDWORD, parameters.reset_redis, true);
 		cleanClusterQueue = new LinkedList<String>();
 		//cleanClusterQueue = (List<String>) Collections.synchronizedList(new LinkedList<String>()); //new LinkedList<Document>();
 		clusters = new ConcurrentHashMap<String, DocumentCluster>();
-		numberOfDocuments = 0;
+		//numberOfDocuments = 0;
 		queue = new ClusteringQueueManager();
-		//word2idf = new ConcurrentHashMap<Integer, Double>();
 		id2cluster = new ConcurrentHashMap<String, String>();
 		recentManager = new ArrayFixedSize(parameters.search_recents);
+		//word2index  = new LRUCache<String , Integer>(RedisHelper.lru_cache_size,DOCSICLUDEDWORD, parameters.reset_redis);
+		//word2idf = new ConcurrentHashMap<Integer, Double>();
+		
+		if(parameters.reset_redis)
+		{
+			numberOfDocsIncludeWord.put(-2, getParams().offset);
+			numberOfDocsIncludeWord.put(-1, 0); //numberOfDocuments
+		}
 	}
+	
+	/*public void init()
+	{
+		word2index  = RedisHelper.word2IndexCache; // new LRUCache<String , Integer>(RedisHelper.lru_cache_size,DOCSICLUDEDWORD,true);
+		word2idf = RedisHelper.word2idfCache; //new ConcurrentHashMap<Integer, Double>();
+	}*/
 	
 	public ClusteringQueueManager getQueue() {
 		return queue;
@@ -134,7 +139,9 @@ public class GlobalData {
 	
 	public double calcIDF(int word) 
 	{		
-		double numerator = (numberOfDocuments + 0.5) / numberOfDocsIncludeWord.get(word);
+		int numberOfDocuments = numberOfDocsIncludeWord.get(-1);
+		Integer n = numberOfDocsIncludeWord.get(word);
+		double numerator = (numberOfDocuments + 0.5) / n;
 		numerator = Math.log10(numerator);
 		
 		double denominator = Math.log10(numberOfDocuments + 1.0);	
@@ -142,40 +149,41 @@ public class GlobalData {
 		return numerator / denominator;
 	}
 	
-	public double getIDF(int k)
+	/*public double getIDF(int k)
 	{
-		return RedisHelper.word2idfCache.get(k);
-	}
+		return word2idf.get(k);
+	}*/
 	
 	
-	public double getOrDefault(int k)
+	/*public double getOrDefault(int k)
 	{
-		return RedisHelper.word2idfCache.get(k);
-	}
+		return word2idf.getOrDefault(k, -1.0);
+	}*/
 	
 	public void calcWeights(Document doc, ConcurrentHashMap<Integer, Double> tmp2) 
 	{
-		
 			 ConcurrentHashMap<Integer, Integer> wordCount = doc.getWordCount();
 				Enumeration<Integer> tmp = wordCount.keys();
 				ConcurrentHashMap<Integer, Double> newtemp =new ConcurrentHashMap<Integer, Double> ();
-
+				
 				while(tmp.hasMoreElements())
 				{
 					int k = tmp.nextElement();
 					Integer a = wordCount.get(k);
-					if (RedisHelper.word2idfCache.get(k)==null)
-						{
-							double val = calcIDF(k);
-							RedisHelper.word2idfCache.put(k, val);
-						}
 					Double b = RedisHelper.word2idfCache.get(k);
+					if (b==null)
+						{
+							b = calcIDF(k);
+							RedisHelper.word2idfCache.put(k, b);
+						}
 					
 					newtemp.put(k, a*b);
 				}
+				
 				tmp2.putAll(newtemp);
 	}
 	
+	/*
 	public void calcWeights1(Document doc, Hashtable<Integer, Double> weights) 
 	{		
 		
@@ -196,6 +204,7 @@ public class GlobalData {
 		}
 		
 	}
+	*/
 	
 	private int wordCounts(List<String> list, ConcurrentHashMap<Integer, Integer> concurrentHashMap)
 	{
@@ -225,13 +234,12 @@ public class GlobalData {
 		
 		return max;
 	}	
+	
 	private int addWord(String word)
 	{
+		int idx = RedisHelper.word2IndexCache.getOrDefault(word, -1);
 		
-		
-		Integer idx =  RedisHelper.word2IndexCache.get(word);
-		
-		if (idx==null || idx == -1) 
+		if (idx == -1) 
 		{
 			idx = RedisHelper.word2IndexCache.size();
 			//index2word.put(idx, word);
@@ -241,26 +249,34 @@ public class GlobalData {
 		return idx;
 	}
 	
-	public void addDocument(Document doc) 
+	public void addDocument(Document doc, int idx) 
 	{
 		int d = wordCounts( doc.getWords(), doc.getWordCount());
+		doc.setDimension ( d );
 
-		//update number of documents holding each word (for TFIDF)
-		for (int i : doc.getWordCount().keySet()) 
+		int offset = numberOfDocsIncludeWord.get(-2);
+		int numberOfDocuments = numberOfDocsIncludeWord.get(-1);
+
+		if(offset + numberOfDocuments <= idx)
 		{
-			int val = numberOfDocsIncludeWord.getOrDefault(i, 0);
-			numberOfDocsIncludeWord.put(i, val+1);					
+			//update number of documents holding each word (for TFIDF)
+			for (int i : doc.getWordCount().keySet()) 
+			{
+				int val = numberOfDocsIncludeWord.getOrDefault(i, 0);
+				numberOfDocsIncludeWord.put(i, val+1);					
+			}
+			numberOfDocsIncludeWord.put(-1, numberOfDocuments+1);
 		}
 		
-		doc.setDimension ( d );
 		//id2document.put(doc.getId(), doc);
 		RedisHelper.setDocumentFromRedis(RedisHelper.ID2DOCUMENT, doc.getId(), doc);
-
-		numberOfDocuments++;
 		
 		addToRecent(doc.getId());
 		//for (int i : doc.getWordCount().keySet()) 
 		//	word2idf.put(i, calcIDF(i));
+		
+//		if(doc.getId().equals("86498628092440576") )
+//			System.out.println(doc.getId() + ": " + doc.getText());	
 	}
 	
 	private void addToRecent(String docId) {

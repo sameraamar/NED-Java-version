@@ -1,9 +1,6 @@
 package ned.main;
 
-import java.util.Hashtable;
 import java.util.List;
-
-import ned.hash.DocumentHandler;
 import ned.hash.LSHForest;
 import ned.types.Document;
 import ned.types.DocumentClusteringHelper;
@@ -14,13 +11,15 @@ public class WorkerThread implements Runnable
 	private static Boolean locker = true;
 	private static long time = 0;
 	private static int counter = 0;
+	private int idx;
 	
 	private Document doc;
 	private LSHForest forest;
 	
-    public WorkerThread(LSHForest forest, Document doc)
+    public WorkerThread(LSHForest forest, Document doc, int idx)
     {
         this.doc = doc;
+        this.idx = idx;
         this.forest = forest;
     }
 
@@ -64,11 +63,11 @@ public class WorkerThread implements Runnable
 	        this.doc.setNearestDetermined( true);
 			return;
 		}
-    	//Hashtable<Integer, Double> weights = doc.getWeights();
 		
-		boolean breakme = false;
-		if(doc.getId().equals("86417673814151168"))
-			breakme = false;
+//		if(doc.getId().equals("86498628092440576"))
+//		{
+//			System.out.println("NEAREST:\t" + doc.getNearestDist() + " " + doc.getNearest());	
+//		}
 		
     	List<String> set = forest.addDocument(this.doc);
 		
@@ -84,7 +83,7 @@ public class WorkerThread implements Runnable
     }
 
 	public void preRun() {
-		GlobalData.getInstance().addDocument(doc);
+		GlobalData.getInstance().addDocument(doc, idx);
 	}
 
 }

@@ -2,19 +2,12 @@ package ned.hash;
 
 
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import ned.tools.ArrayFixedSize;
-import ned.tools.ExecutionHelper;
 import ned.tools.HyperPlansManager;
-import ned.tools.RecentManager;
 import ned.types.Document;
 import ned.types.GlobalData;
-import ned.types.LRUCache;
 import ned.types.Session;
 
 public class LSHTable
@@ -42,7 +35,7 @@ public class LSHTable
     	hyperPlanes.init();
     }
     
-     private long GenerateHashCode(Document doc)
+     public long GenerateHashCode(Document doc)
      {
      	
      	boolean[] st = new boolean [hyperPlanesNumber];

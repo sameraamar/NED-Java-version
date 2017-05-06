@@ -1,6 +1,5 @@
 package ned.tools;
 
-
 public class ArrayFixedSize
 {
 	String[] data;
@@ -48,4 +47,8 @@ public class ArrayFixedSize
 		return currentSize;
 	}
 
+	@Override
+	public String toString() {
+		return data.toString();
+	}
 }

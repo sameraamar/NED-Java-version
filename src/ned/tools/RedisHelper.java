@@ -3,11 +3,10 @@ package ned.tools;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
-
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
-
 import ned.types.Document;
+import ned.types.GlobalData;
 import ned.types.LRUCache;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -19,13 +18,13 @@ public class RedisHelper {
 	public static final String ID2DOCUMENT = "id2document";
 	public static final String WORD2INDEX = "word2index";
 	public static final String WORD2IDF = "word2idf";
-	public static final int lru_cache_size = 100000;
+	public static final int lru_cache_size = 500000;
 	public static  boolean ready = false;
 
 
 	
-	 public static LRUCache<String, Document> id2DocumentCache;//=new LRUCache<String, Document>(2000);
-	 public static LRUCache<String, Integer> word2IndexCache;//=new LRUCache<String, String>(2000);
+	 public static LRUCache<String, Document> id2DocumentCache;
+	 public static LRUCache<String, Integer> word2IndexCache;
 	 public static LRUCache<Integer, Double> word2idfCache;
 	private static JedisPool jedisPool = null;
 	private static RedisSerializer<Object> docSerializer ;
@@ -53,13 +52,13 @@ public class RedisHelper {
 			}
 		//clearRedisKeys();
 		if(id2DocumentCache==null){
-			id2DocumentCache=new LRUCache<String, Document>(lru_cache_size,ID2DOCUMENT,true);
+			id2DocumentCache=new LRUCache<String, Document>(lru_cache_size,ID2DOCUMENT, GlobalData.getInstance().getParams().reset_redis, true);
 		}
 		if(word2IndexCache==null){
-			word2IndexCache=new LRUCache<String, Integer>(lru_cache_size,WORD2INDEX,true);
+			word2IndexCache=new LRUCache<String, Integer>(lru_cache_size,WORD2INDEX, GlobalData.getInstance().getParams().reset_redis, true);
 		}
 		if(word2idfCache==null){
-			word2idfCache=new LRUCache<Integer, Double>(lru_cache_size,WORD2IDF,true);
+			word2idfCache=new LRUCache<Integer, Double>(10, WORD2IDF, true, false);
 		}
 		ready=true;
 	}
