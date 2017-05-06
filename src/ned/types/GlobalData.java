@@ -42,7 +42,7 @@ public class GlobalData {
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 3;
-		public int inital_dimension = 5000;
+		public int inital_dimension = 50000;
 		public int dimension_jumps = 10000;
 	}
 	

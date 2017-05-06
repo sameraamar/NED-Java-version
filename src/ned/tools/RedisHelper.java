@@ -42,11 +42,11 @@ public class RedisHelper {
 					config.setMaxIdle(100);
 					config.setMinIdle(50);
 					//config.setMaxWaitMillis(10);
-					config.setTestOnBorrow(false);
+					config.setTestOnBorrow(true);
 					config.setTestOnReturn(false);
 					config.setTestWhileIdle(false);
 					//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
-					jedisPool = new JedisPool(config,"localhost", 6379, 18000);
+					jedisPool = new JedisPool(config,"localhost", 6379, 2000);
 
 					System.out.println("jedisPool is Ready "+jedisPool.getNumActive());
 				}
@@ -62,6 +62,22 @@ public class RedisHelper {
 			word2idfCache=new LRUCache<Integer, Double>(lru_cache_size,WORD2INDEX,true);
 		}
 		ready=true;
+	}
+	synchronized public static JedisPool getRedisConnectionPool() {
+			
+					JedisPoolConfig config = new JedisPoolConfig();
+					//config.setMaxTotal(REDIS_MAX_CONNECTIONS);
+					config.setMaxIdle(100);
+					config.setMinIdle(50);
+					//config.setMaxWaitMillis(10);
+					config.setTestOnBorrow(true);
+					config.setTestOnReturn(false);
+					config.setTestWhileIdle(false);
+					//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
+					JedisPool newjedisPool = new JedisPool(config,"localhost", 6379, 2000);
+
+			
+		return newjedisPool;
 	}
 
 	public static Jedis getRedisClient() {
