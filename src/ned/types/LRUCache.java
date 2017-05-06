@@ -88,7 +88,7 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 						 r =myDeSerialize((byte[]) o);
 					 }else{
 						 if(actualSize>cacheSize){
-							 System.out.println("NOT In redis "+key);
+							// System.out.println("NOT In redis "+key);
 							// r=get(key);
 						 }
 						
