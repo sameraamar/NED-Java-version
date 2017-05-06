@@ -55,12 +55,12 @@ public class GlobalData {
 		return globalData;
 	}	
 	//public Queue<String> queue; 
-	public LRUCache<String, Integer>    word2index;
+	//public LRUCache<String, Integer>    word2index;
 	//public Hashtable<String, Document>   id2document;
 	
 	//for calculating IDF
 	int numberOfDocuments;
-	private ConcurrentHashMap<Integer, Double> word2idf;
+	//private ConcurrentHashMap<Integer, Double> word2idf;
 
 	public LRUCache<Integer, Integer>   numberOfDocsIncludeWord;
 	public ConcurrentHashMap<String, DocumentCluster>  clusters;
@@ -80,7 +80,7 @@ public class GlobalData {
 	
 	private GlobalData()
 	{	
-		word2index  = new LRUCache<String , Integer>(RedisHelper.lru_cache_size,DOCSICLUDEDWORD,true);
+		//word2index  = new LRUCache<String , Integer>(RedisHelper.lru_cache_size,DOCSICLUDEDWORD,true);
 		//index2word  = new Hashtable<Integer, String>();
 		//id2document = new Hashtable<String , Document>();
 		numberOfDocsIncludeWord = new LRUCache<Integer, Integer>(RedisHelper.lru_cache_size,DOCSICLUDEDWORD,true);
@@ -89,7 +89,7 @@ public class GlobalData {
 		clusters = new ConcurrentHashMap<String, DocumentCluster>();
 		numberOfDocuments = 0;
 		queue = new ClusteringQueueManager();
-		word2idf = new ConcurrentHashMap<Integer, Double>();
+		//word2idf = new ConcurrentHashMap<Integer, Double>();
 		id2cluster = new ConcurrentHashMap<String, String>();
 		recentManager = new ArrayFixedSize(parameters.search_recents);
 	}
@@ -144,13 +144,13 @@ public class GlobalData {
 	
 	public double getIDF(int k)
 	{
-		return word2idf.get(k);
+		return RedisHelper.word2idfCache.get(k);
 	}
 	
 	
 	public double getOrDefault(int k)
 	{
-		return word2idf.getOrDefault(k, -1.0);
+		return RedisHelper.word2idfCache.get(k);
 	}
 	
 	public void calcWeights(Document doc, ConcurrentHashMap<Integer, Double> tmp2) 
@@ -158,20 +158,22 @@ public class GlobalData {
 		
 			 ConcurrentHashMap<Integer, Integer> wordCount = doc.getWordCount();
 				Enumeration<Integer> tmp = wordCount.keys();
-				
+				ConcurrentHashMap<Integer, Double> newtemp =new ConcurrentHashMap<Integer, Double> ();
+
 				while(tmp.hasMoreElements())
 				{
 					int k = tmp.nextElement();
 					Integer a = wordCount.get(k);
-					if (word2idf.get(k)==null)
+					if (RedisHelper.word2idfCache.get(k)==null)
 						{
 							double val = calcIDF(k);
-							word2idf.put(k, val);
+							RedisHelper.word2idfCache.put(k, val);
 						}
-					Double b = word2idf.get(k);
+					Double b = RedisHelper.word2idfCache.get(k);
 					
-					tmp2.put(k, a*b);
+					newtemp.put(k, a*b);
 				}
+				tmp2.putAll(newtemp);
 	}
 	
 	public void calcWeights1(Document doc, Hashtable<Integer, Double> weights) 
@@ -201,7 +203,7 @@ public class GlobalData {
 		
 		for (String w : list) 
 		{
-			int idx = word2index.get(w);
+			int idx = RedisHelper.word2IndexCache.get(w);
 			int val = concurrentHashMap.getOrDefault(idx,  0);
 			val += 1;
 			concurrentHashMap.put(idx, val);
@@ -225,13 +227,15 @@ public class GlobalData {
 	}	
 	private int addWord(String word)
 	{
-		int idx = word2index.getOrDefault(word, -1);
 		
-		if (idx == -1) 
+		
+		Integer idx =  RedisHelper.word2IndexCache.get(word);
+		
+		if (idx==null || idx == -1) 
 		{
-			idx = word2index.size();
+			idx = RedisHelper.word2IndexCache.size();
 			//index2word.put(idx, word);
-			word2index.put(word, idx);
+			RedisHelper.word2IndexCache.put(word, idx);
 		}
 		
 		return idx;
@@ -448,7 +452,7 @@ public class GlobalData {
 		
 		);
 		return String.format("\t[monitor] Words: %d, Documents: %d, Clusters %d, Recent: %d",
-				this.word2index.size(),
+				RedisHelper.word2IndexCache.size(),
 				RedisHelper.id2DocumentCache.size(),//this.id2document.size(),
 				this.clusters.size(),
 				this.recentManager.size()

@@ -25,7 +25,7 @@ public class RedisHelper {
 
 	
 	 public static LRUCache<String, Document> id2DocumentCache;//=new LRUCache<String, Document>(2000);
-	 public static LRUCache<String, String> word2IndexCache;//=new LRUCache<String, String>(2000);
+	 public static LRUCache<String, Integer> word2IndexCache;//=new LRUCache<String, String>(2000);
 	 public static LRUCache<Integer, Double> word2idfCache;
 	private static JedisPool jedisPool = null;
 	private static RedisSerializer<Object> docSerializer ;
@@ -56,7 +56,7 @@ public class RedisHelper {
 			id2DocumentCache=new LRUCache<String, Document>(lru_cache_size,ID2DOCUMENT,true);
 		}
 		if(word2IndexCache==null){
-			word2IndexCache=new LRUCache<String, String>(lru_cache_size,WORD2INDEX,true);
+			word2IndexCache=new LRUCache<String, Integer>(lru_cache_size,WORD2INDEX,true);
 		}
 		if(word2idfCache==null){
 			word2idfCache=new LRUCache<Integer, Double>(lru_cache_size,WORD2IDF,true);

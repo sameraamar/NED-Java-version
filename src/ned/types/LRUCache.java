@@ -145,15 +145,12 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 		 return (V)  i;
 	 }
 	 if(this.hashName.equals("word2index")){	
-		 String s=new String(o);
-		 System.out.println("s= "+s);
-		 return (V)  s;
+		 Integer i=Integer.valueOf(new String(o));
+		//System.out.println("s= "+s);
+		 return (V)  i;
 	 }
 	 if(this.hashName.equals("word2idf")){
-		 Double d = Double.valueOf(new String(o));
-		
-			 System.out.println("d= "+d);
-		 
+		 Double d = Double.valueOf(new String(o));		 
 		 return (V)  d;
 	 }
 	 if(this.hashName.equals("id2document")){			
@@ -164,8 +161,18 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	  
   }
   private boolean verifySerializer(V value,  byte[] serObject){
-	return value.getClass().getName().equals(myDeSerialize(serObject).getClass().getName());
-	  
+	  Object d=myDeSerialize(serObject);
+	boolean res= value.getClass().getName().equals(d.getClass().getName());
+	
+	if(!res){
+		try {
+			d=(V)d;
+			res= value.getClass().getName().equals(d.getClass().getName());
+		}catch(Exception e){
+			return false;
+		}
+	}
+	  return res;
   }
   
   public int size(){
