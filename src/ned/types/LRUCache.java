@@ -50,14 +50,14 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 		  Runnable task= () ->{
 		  synchronized(writeLock){
 			  try{
-					 // System.out.println(value.getClass().getName());
 				  byte[]  serObject=mySerialize(value);
-					 //= this.jedis.hset(hashName.getBytes(StandardCharsets.UTF_8), key.toString().getBytes(StandardCharsets.UTF_8), serObject);
-				  if(verifySerializer(value,serObject)){
+				  // remove verifySerializer because it for debug reasons 
+				  
+				 // if(verifySerializer(value,serObject)){
 					  this.wjedis.hset(hashNameBytes, String.valueOf(key).getBytes(), serObject);
-				  }else{
-					  throw new Exception("verifySerializer "+value); 
-				  }
+				  //}else{
+			//		  throw new Exception("verifySerializer "+value); 
+				//  }
 	
 				  }catch(JedisException e){		
 					e.printStackTrace();
