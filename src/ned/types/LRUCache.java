@@ -2,6 +2,8 @@ package ned.types;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import ned.tools.RedisHelper;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -15,7 +17,9 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	private int cacheSize;
     private Jedis wjedis;
     private Jedis rjedis;
-    
+    private AtomicInteger nextJedisIndex;
+    private Jedis[] jedisArr;
+    private int jedisArrSize=6;
     private Integer readLock = 0;
     private Integer writeLock = 1;
     
@@ -31,13 +35,33 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
     myJedisPool=RedisHelper.getRedisConnectionPool();
     this.wjedis=myJedisPool.getResource();
     this.rjedis=myJedisPool.getResource();
-
     this.hashName=hashName;
 	hashNameBytes = hashName.getBytes();
+    prepareJedis();
+
 
     if(resetRedis){
     	wjedis.del(hashName);
     } 
+  }
+  
+  private void prepareJedis(){
+	  jedisArr=new Jedis[jedisArrSize];
+	  for(int i=0;i<jedisArrSize;++i){
+		  jedisArr[i]=myJedisPool.getResource();
+		// System.out.println(this.hashName+i);
+	  }
+	  this.nextJedisIndex=new AtomicInteger(0);
+	  System.out.println(this.hashName+" Done ");
+  }
+  
+  private Jedis getJedis(){
+		Jedis jedis=jedisArr[this.nextJedisIndex.get()%jedisArrSize];
+		nextJedisIndex.set((nextJedisIndex.incrementAndGet()%jedisArrSize));
+		return jedis;	
+	
+	
+	  
   }
 
   protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
@@ -50,8 +74,9 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 		  
 			  try{
 				  byte[]  serObject=mySerialize(value);
-				  	synchronized(wjedis){
-					  this.wjedis.hset(hashNameBytes, String.valueOf(key).getBytes(), serObject);
+				  Jedis jedis=getJedis();
+				  	synchronized(jedis){
+					  jedis.hset(hashNameBytes, String.valueOf(key).getBytes(), serObject);
 					}
 				  }catch(JedisException e){		
 					e.printStackTrace();
@@ -76,8 +101,9 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	  if(storeInRedis && r==null){		
 			  try {
 				  Object o;
-				  synchronized(rjedis){
-					   o=this.rjedis.hget(hashNameBytes, String.valueOf(key).getBytes());
+				  Jedis jedis=getJedis();
+				  synchronized(jedis){
+					   o=jedis.hget(hashNameBytes, String.valueOf(key).getBytes());
 				  }
 				 if(o!=null ){
 					 r =myDeSerialize((byte[]) o);

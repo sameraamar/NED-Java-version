@@ -54,7 +54,7 @@ public class DocumentClusteringHelper {
 		if(recent!=null)
 		{
 			for(int i=0; i<recent.size(); i++)
-				set.add(recent.get(i));
+				set.add((String) recent.get(i));
 		}
 		DocumentClusteringHelper.determineClosest(doc, set);
 		//DocumentClusteringHelper.determineClosest(doc, GlobalData.getInstance().getRecent());

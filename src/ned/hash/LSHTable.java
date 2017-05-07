@@ -42,7 +42,7 @@ public class LSHTable
      	Session session = Session.getInstance();
      	
      	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
-     	ConcurrentHashMap<Integer, Double> weights = doc.getWeights();
+     	HashMap<Integer, Double> weights = doc.getWeights();
      	hyperPlanes.fixDim(doc.getDimension());
  		
  		for (int i = 0 ; i<hyperPlanesNumber; i++)
@@ -88,7 +88,7 @@ public class LSHTable
     	Session session = Session.getInstance();
     	
     	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
-    	ConcurrentHashMap<Integer, Double> weights = doc.getWeights();
+    	HashMap<Integer, Double> weights = doc.getWeights();
 		if (!this.fixingDim && doc.getDimension() >= hyperPlanes.getDimension()-3*GlobalData.getInstance().getParams().dimension_jumps) 
 		{
 			hyperPlanes.fixDim(doc.getDimension());

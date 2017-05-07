@@ -3,6 +3,7 @@ package ned.types;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,14 +30,14 @@ public class GlobalData {
 		public int max_bucket_size = 2000;
 		public int max_documents = 100_000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 100_000;//8800000
+		public int offset = 0;//8800000
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
 		public int inital_dimension = 5000;
 		public int dimension_jumps = 10000;
-		public boolean reset_redis = false;
+		public boolean reset_redis = true;
 	}
 	
 	
@@ -160,7 +161,7 @@ public class GlobalData {
 		return word2idf.getOrDefault(k, -1.0);
 	}*/
 	
-	public void calcWeights(Document doc, ConcurrentHashMap<Integer, Double> tmp2) 
+	public void calcWeights(Document doc, HashMap<Integer, Double> tmp2) 
 	{
 			 ConcurrentHashMap<Integer, Integer> wordCount = doc.getWordCount();
 				Enumeration<Integer> tmp = wordCount.keys();

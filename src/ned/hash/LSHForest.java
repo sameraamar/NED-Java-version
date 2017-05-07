@@ -64,7 +64,7 @@ public class LSHForest {
 //			}
 
 			for (int d=0; d<tmpList.size(); d++) {
-				String tmp = tmpList.get(d);
+				String tmp = (String) tmpList.get(d);
 				if ( tmp.compareTo(doc.getId()) >=0 )
 					continue;
 				

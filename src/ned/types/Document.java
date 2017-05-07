@@ -2,6 +2,7 @@ package ned.types;
 
 import java.io.Serializable;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -84,13 +85,13 @@ public class Document  implements Serializable{
 		super.finalize();
 	}
 	
-    private static double Norm(ConcurrentHashMap<Integer, Double> weights) {
+    private static double Norm(HashMap<Integer, Double> hashMap) {
     	double res = 0;
-        Enumeration<Double> values = weights.elements();
+        Set<Integer> keys = hashMap.keySet();
         
-        while(values.hasMoreElements())
+		for( Integer key:keys)
         {
-			double v = values.nextElement();
+			double v = hashMap.get(key);
             res += v * v;
         }
 
@@ -118,8 +119,8 @@ public class Document  implements Serializable{
             left = tmp;
         }
         
-        ConcurrentHashMap<Integer, Double> rWeights = right.getWeights();
-        ConcurrentHashMap<Integer, Double> lWeights = left.getWeights();
+        HashMap<Integer, Double> rWeights = right.getWeights();
+        HashMap<Integer, Double> lWeights = left.getWeights();
         
         double res = 0;
         double norms = Norm(rWeights) * Norm(lWeights);
@@ -155,14 +156,14 @@ public class Document  implements Serializable{
 		return text;
 	}
 
-	public ConcurrentHashMap<Integer, Double> getWeights() {
+	public HashMap<Integer, Double> getWeights() {
 		//if (weights == null) 
 		//{
 			//synchronized(this) {
 				//if (weights!=null) //some other process already handlde
 				//	return weights;
 				
-		ConcurrentHashMap<Integer, Double> tmp = new ConcurrentHashMap<Integer, Double>();
+		HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
 				
 				GlobalData gd = GlobalData.getInstance();
 				//gd.addDocument(this);
