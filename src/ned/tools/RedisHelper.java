@@ -18,7 +18,7 @@ public class RedisHelper {
 	public static final String ID2DOCUMENT = "id2document";
 	public static final String WORD2INDEX = "word2index";
 	public static final String WORD2IDF = "word2idf";
-	public static final int lru_cache_size = 500000;
+	public static final int lru_cache_size = 1000000;
 	public static  boolean ready = false;
 
 

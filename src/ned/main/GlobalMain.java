@@ -8,7 +8,7 @@ public class GlobalMain {
 
 	public static void main(String[] args) {
 		GlobalData.getInstance().getParams().offset = 0;
-		GlobalData.getInstance().getParams().max_documents = 10000;
+		GlobalData.getInstance().getParams().max_documents = 1500000;
 		GlobalData.getInstance().getParams().reset_redis = true;
 
 		try {
