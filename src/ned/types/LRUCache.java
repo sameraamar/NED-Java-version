@@ -47,31 +47,23 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	  V r = super.put(key, value);
 	  
 	  if(storeInRedis) {
-		  Runnable task= () ->{
-		  synchronized(writeLock){
+		  
 			  try{
 				  byte[]  serObject=mySerialize(value);
-				  // remove verifySerializer because it for debug reasons 
-				  
-				 // if(verifySerializer(value,serObject)){
+				  	synchronized(wjedis){
 					  this.wjedis.hset(hashNameBytes, String.valueOf(key).getBytes(), serObject);
-				  //}else{
-			//		  throw new Exception("verifySerializer "+value); 
-				//  }
-	
+					}
 				  }catch(JedisException e){		
 					e.printStackTrace();
 					wjedis=myJedisPool.getResource();
-					//this.put(key,value);
+					this.put(key,value);
 				  }
 			  		catch(Exception e){		
 					e.printStackTrace();
 					//jedis=RedisHelper.getRedisClient();
 					//this.put(key,value);
 				  }
-		  	}
-		  };
-		  task.run();
+		
 		  // ExecutionHelper.asyncRun(task);
 	  }
 	  
@@ -82,20 +74,21 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	  V r = super.get(key);
 
 	  if(storeInRedis && r==null){		
-		  synchronized(readLock){
 			  try {
-					// Object o=this.jedis.hget(hashName, String.valueOf(key));
-					 Object o=this.rjedis.hget(hashNameBytes, String.valueOf(key).getBytes());
-					 if(o!=null ){
-						 r =myDeSerialize((byte[]) o);
-					 }
+				  Object o;
+				  synchronized(rjedis){
+					   o=this.rjedis.hget(hashNameBytes, String.valueOf(key).getBytes());
+				  }
+				 if(o!=null ){
+					 r =myDeSerialize((byte[]) o);
+				 }
 				} catch (Exception e) {
 					//
 					e.printStackTrace();
 					 rjedis=myJedisPool.getResource();
-					// return  this.get(key);
+					 return  this.get(key);
 				}		
-		  }
+		  
 			
 	 }
 	  return r;
@@ -171,7 +164,7 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
   public int size(){
 	  if(storeInRedis)
 	  {
-		  synchronized(readLock) 
+		  synchronized(rjedis) 
 		  {
 			  return rjedis.hlen(hashNameBytes).intValue();
 		  }
