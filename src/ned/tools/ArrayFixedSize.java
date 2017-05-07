@@ -1,34 +1,33 @@
 package ned.tools;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class ArrayFixedSize
 {
 	String[] data;
 	int currentSize;
-	Integer index;
+	AtomicInteger index;
 
 	public ArrayFixedSize(int size)
 	{
-		index = -1;
+		index=new AtomicInteger(-1);
 		currentSize = 0;
 		data = new String[size];
 	}
 	
 	public void add(String s) 
 	{
-		synchronized(index)
-		{
-			index = (index + 1) % data.length; //update based on FIFO
-			
-			data[index] = s;
-			if(currentSize < data.length)
-				currentSize++;
-		}
+		
+			index.set( (index.incrementAndGet()) % data.length); //update based on FIFO
+		
+		data[index.get()] = s;
+		if(currentSize < data.length)
+			currentSize++;		
 	}
 
 	public void add(int i, String element) {
 		if(i >= currentSize)
 			throw new ArrayIndexOutOfBoundsException(i);
-
 		data[i] = element;
 	}
 
