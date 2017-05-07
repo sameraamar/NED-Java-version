@@ -1,8 +1,8 @@
 package ned.tools;
 
-public class ArrayFixedSize
+public class ArrayFixedSize<T>
 {
-	String[] data;
+	Object[] data;
 	int currentSize;
 	Integer index;
 
@@ -10,10 +10,10 @@ public class ArrayFixedSize
 	{
 		index = -1;
 		currentSize = 0;
-		data = new String[size];
+		data = new Object[size];
 	}
 	
-	public void add(String s) 
+	public void add(T s) 
 	{
 		synchronized(index)
 		{
@@ -25,18 +25,18 @@ public class ArrayFixedSize
 		}
 	}
 
-	public void add(int i, String element) {
+	public void add(int i, T element) {
 		if(i >= currentSize)
 			throw new ArrayIndexOutOfBoundsException(i);
 
 		data[i] = element;
 	}
 
-	public String get(int i) {
+	public T get(int i) {
 		if(i >= currentSize)
 			throw new ArrayIndexOutOfBoundsException(i);
 
-		return data[i];
+		return (T)data[i];
 	}
 
 	public boolean isEmpty() {

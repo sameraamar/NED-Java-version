@@ -19,13 +19,13 @@ public class LSHTable
     public  Boolean fixingDim=false;
     
     private HyperPlansManager hyperPlanes;
-    private HashMap<Long, ArrayFixedSize> buckets = null;
+    private HashMap<Long, ArrayFixedSize<String>> buckets = null;
     
     public LSHTable(int tableId,int hyperPlanesNumber, int dimension, int maxBucketSize)
     {
     	this.tableId=tableId;
     	this.hyperPlanesNumber = hyperPlanesNumber;
-        buckets = new HashMap<Long, ArrayFixedSize>(maxBucketSize);
+        buckets = new HashMap<Long, ArrayFixedSize<String>>(maxBucketSize);
         this.maxBucketSize = maxBucketSize;
 		hyperPlanes = new HyperPlansManager(hyperPlanesNumber, dimension, GlobalData.getInstance().getParams().dimension_jumps);
     }
@@ -113,10 +113,10 @@ public class LSHTable
         return st.toString();
     }
 
-    public ArrayFixedSize AddDocument(Document doc)
+    public ArrayFixedSize<String> AddDocument(Document doc)
     {
         long code = GenerateHashCode(doc);
-        ArrayFixedSize bucket = buckets.get(code);
+        ArrayFixedSize<String> bucket = buckets.get(code);
         if (bucket == null)
         {
         	//Rami -- watch out this sync. How can we avoid it?
@@ -125,7 +125,7 @@ public class LSHTable
         		bucket = buckets.get(code);
         		if (bucket == null) //still null
         		{
-        			buckets.put(code, new ArrayFixedSize(maxBucketSize));
+        			buckets.put(code, new ArrayFixedSize<String>(maxBucketSize));
         			bucket = buckets.get(code);
         		}
         	}

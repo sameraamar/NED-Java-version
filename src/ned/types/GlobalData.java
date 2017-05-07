@@ -27,16 +27,16 @@ public class GlobalData {
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
-		public int max_documents = 100_000;
+		public int max_documents = 1_500_000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 100_000;//8800000
+		public int offset = 0;//8800000
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
 		public int inital_dimension = 5000;
 		public int dimension_jumps = 10000;
-		public boolean reset_redis = false;
+		public boolean reset_redis = true;
 	}
 	
 	
@@ -61,9 +61,9 @@ public class GlobalData {
 	//public LRUCache<String,Document> recent;
 	
 	private ClusteringQueueManager queue;
-	private ArrayFixedSize recentManager;
+	private ArrayFixedSize<String> recentManager;
 
-	public ArrayFixedSize getRecentManager() {
+	public ArrayFixedSize<String> getRecentManager() {
 		return recentManager;
 	}
 
@@ -82,7 +82,7 @@ public class GlobalData {
 		//numberOfDocuments = 0;
 		queue = new ClusteringQueueManager();
 		id2cluster = new ConcurrentHashMap<String, String>();
-		recentManager = new ArrayFixedSize(parameters.search_recents);
+		recentManager = new ArrayFixedSize<String>(parameters.search_recents);
 		//word2index  = new LRUCache<String , Integer>(RedisHelper.lru_cache_size,DOCSICLUDEDWORD, parameters.reset_redis);
 		//word2idf = new ConcurrentHashMap<Integer, Double>();
 		

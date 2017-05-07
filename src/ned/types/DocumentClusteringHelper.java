@@ -50,7 +50,7 @@ public class DocumentClusteringHelper {
 //		}
 		
 		
-		ArrayFixedSize recent = GlobalData.getInstance().getRecentManager();
+		ArrayFixedSize<String> recent = GlobalData.getInstance().getRecentManager();
 		if(recent!=null)
 		{
 			for(int i=0; i<recent.size(); i++)

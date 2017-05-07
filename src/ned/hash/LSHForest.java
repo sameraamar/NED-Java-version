@@ -50,7 +50,7 @@ public class LSHForest {
 
 		for (int t = 0; t<numberOfTables; t++)
 		{
-			ArrayFixedSize tmpList = tables[t].AddDocument(doc);
+			ArrayFixedSize<String> tmpList = tables[t].AddDocument(doc);
 			
 //			if(doc.getId().equals("86498628092440576"))
 //			{
