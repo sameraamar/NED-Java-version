@@ -5,6 +5,7 @@ public class ArrayFixedSize<T>
 	Object[] data;
 	int currentSize;
 	Integer index;
+	Object indexLocker = new Integer(0);
 
 	public ArrayFixedSize(int size)
 	{
@@ -15,7 +16,7 @@ public class ArrayFixedSize<T>
 	
 	public void add(T s) 
 	{
-		synchronized(index)
+		synchronized(indexLocker)
 		{
 			index = (index + 1) % data.length; //update based on FIFO
 			
