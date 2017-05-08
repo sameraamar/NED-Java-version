@@ -117,6 +117,11 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 		  
 			
 	 }
+	  if(r!=null){
+		  super.put((K) key, r);
+	  }
+		  
+		  
 	  return r;
   }
   

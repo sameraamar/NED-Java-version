@@ -23,7 +23,7 @@ public class GlobalData {
 	public class Parameters 
 	{
 		public int monitor_timer_seconds = 5; //seconds
-		public int number_of_threads =10;
+		public int number_of_threads =100;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
@@ -35,7 +35,7 @@ public class GlobalData {
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
-		public int inital_dimension = 5000;
+		public int inital_dimension = 50000;
 		public int dimension_jumps = 10000;
 		public boolean reset_redis = true;
 	}

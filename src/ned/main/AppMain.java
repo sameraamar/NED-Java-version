@@ -85,10 +85,10 @@ public class AppMain {
 		
 	String folder = "/tmp/";
 
-	folder = "c:/data/events_db/petrovic";
+	//folder = "c:/data/events_db/petrovic";
 	//folder = "C:\\private\\samer\\data";
 	//folder="/Users/ramidabbah/private/mandoma/samer_a/data";
-	folder = "C:\\private\\samer\\data";
+	//folder = "C:\\private\\samer\\data";
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
 	                    "petrovic_01000000.gz",
