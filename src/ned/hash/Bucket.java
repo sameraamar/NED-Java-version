@@ -1,23 +1,24 @@
 package ned.hash;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.PriorityQueue;
+
 
 import ned.types.Document;
 
 public class Bucket
 {
-	private ConcurrentHashMap<String, Document> documents;
-	private ConcurrentLinkedQueue<String> queue;
+	private HashMap<String, Document> documents;
+	private PriorityQueue<String> queue;
     private int maxBucketSize ;
 
     public Bucket(int maxBucketSize)
     {
         this.maxBucketSize = maxBucketSize;
-        documents = new ConcurrentHashMap<String, Document>();
-        queue = new ConcurrentLinkedQueue<String>();
+        documents = new HashMap<String, Document>();
+        queue = new PriorityQueue<String>();
     }
 
     public void Append(Document doc)

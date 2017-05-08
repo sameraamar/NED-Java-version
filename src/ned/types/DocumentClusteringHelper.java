@@ -2,6 +2,7 @@ package ned.types;
 
 import java.io.PrintStream;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -132,7 +133,7 @@ public class DocumentClusteringHelper {
 	
 	public static void pprint(PrintStream out)
 	{
-		Runnable task=()->{
+		//Runnable task=()->{
 		GlobalData gd = GlobalData.getInstance();
 		
 		for (String leadId : gd.getId2Cluster().keySet())
@@ -143,8 +144,8 @@ public class DocumentClusteringHelper {
 				out.println(c.toString());
 			}
 		}
-		};
-		ExecutionHelper.asyncRun(task);
+		//};
+		//ExecutionHelper.asyncRun(task);
 	}
 	
 //	 public static <T> List<T> intersection(List<T> list1, List<T> list2) {
@@ -158,25 +159,23 @@ public class DocumentClusteringHelper {
 //	        return list;
 //	}
 	
-	 public static <K, V> Set<K> intersection(ConcurrentHashMap<K, V> left, ConcurrentHashMap<K, V> right) {
+	 public static <K, V> Set<K> intersection(HashMap<K, V> left,HashMap<K, V> right) {
 		 if (left.size() > right.size())
 	        {
-			 ConcurrentHashMap<K, V> tmp = right;
+			 HashMap<K, V> tmp = right;
 				right = left;
 				left = tmp;
 	        }
 	        
 	        HashSet<K> intersection = new HashSet<K>();
-	        Enumeration<K> lkeys = left.keys();
-	        while( lkeys.hasMoreElements() )
-	        {
-	        	K key = lkeys.nextElement();
-				if (right.containsKey(key))
+	        Set<K> lkeys = left.keySet();
+	        for (K key : lkeys) {
+	        	if (right.containsKey(key))
 	            {
 					intersection.add(key);
 	            }
-	        }
-
+			}
+	       
 	        return intersection;
 	    }
 	

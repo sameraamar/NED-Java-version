@@ -1,13 +1,13 @@
 package ned.hash;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.PriorityQueue;
 import ned.types.Document;
 
 public class LSHTableThread extends Thread 
 {
-	ConcurrentLinkedQueue<Document> queueIn ;
-	ConcurrentLinkedQueue<List<String>> queueOut ;
+	PriorityQueue<Document> queueIn ;
+	PriorityQueue<List<String>> queueOut ;
 	boolean stop;
 	
 	LSHTable lsh;
@@ -16,8 +16,8 @@ public class LSHTableThread extends Thread
 	{
 		this.lsh = new LSHTable(id,hyperPlanesNumber, dimension, maxBucketSize);
 		this.stop = false;
-		this.queueIn = new ConcurrentLinkedQueue<Document>(); 
-		this.queueOut= new ConcurrentLinkedQueue<List<String>>();
+		this.queueIn = new PriorityQueue<Document>(); 
+		this.queueOut= new PriorityQueue<List<String>>();
 	}
 	
 	public void addDocumentRequest(Document doc)

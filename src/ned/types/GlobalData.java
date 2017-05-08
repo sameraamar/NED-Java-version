@@ -22,7 +22,7 @@ public class GlobalData {
 	
 	public class Parameters 
 	{
-		public int monitor_timer_seconds = 5; //seconds
+		public int monitor_timer_seconds = 10; //seconds
 		public int number_of_threads =100;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
@@ -163,13 +163,10 @@ public class GlobalData {
 	
 	public void calcWeights(Document doc, HashMap<Integer, Double> tmp2) 
 	{
-			 ConcurrentHashMap<Integer, Integer> wordCount = doc.getWordCount();
-				Enumeration<Integer> tmp = wordCount.keys();
-				ConcurrentHashMap<Integer, Double> newtemp =new ConcurrentHashMap<Integer, Double> ();
+			 HashMap<Integer, Integer> wordCount = doc.getWordCount();
+				Set<Integer> tmp = wordCount.keySet();
 				
-				while(tmp.hasMoreElements())
-				{
-					int k = tmp.nextElement();
+				for (Integer k : tmp) {
 					Integer a = wordCount.get(k);
 					Double b = RedisHelper.word2idfCache.get(k);
 					if (b==null)
@@ -178,10 +175,12 @@ public class GlobalData {
 							RedisHelper.word2idfCache.put(k, b);
 						}
 					
-					newtemp.put(k, a*b);
+					tmp2.put(k, a*b);
 				}
 				
-				tmp2.putAll(newtemp);
+				
+				
+				
 	}
 	
 	/*
@@ -207,16 +206,16 @@ public class GlobalData {
 	}
 	*/
 	
-	private int wordCounts(List<String> list, ConcurrentHashMap<Integer, Integer> concurrentHashMap)
+	private int wordCounts(List<String> list, HashMap<Integer, Integer> hashMap)
 	{
 		int max_idx = addWords(list);
 		
 		for (String w : list) 
 		{
 			int idx = RedisHelper.word2IndexCache.get(w);
-			int val = concurrentHashMap.getOrDefault(idx,  0);
+			int val = hashMap.getOrDefault(idx,  0);
 			val += 1;
-			concurrentHashMap.put(idx, val);
+			hashMap.put(idx, val);
 		}
 		
 		return max_idx;

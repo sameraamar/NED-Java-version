@@ -161,7 +161,7 @@ public class DocumentCluster {
 		{
 			Document doc =  RedisHelper.getDocumentFromRedis(id);
 			if(doc!=null){
-				ConcurrentHashMap<Integer, Integer> tmp = doc.getWordCount();
+				HashMap<Integer, Integer> tmp = doc.getWordCount();
 				for (Integer i : tmp.keySet())
 				{
 					int count = wordcount.getOrDefault(i, 0); 
