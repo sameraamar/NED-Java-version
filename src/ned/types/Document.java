@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import ned.tools.RedisHelper;
 
 public class Document  implements Serializable{
     /**
@@ -130,16 +129,7 @@ public class Document  implements Serializable{
 		}
         
         res = dot / norms; 
-        res = 1.0 - res;
-        //if(res < 0)
-        //	res = 0;
-        
-//		if(left.getId().equals("86498628092440576"))
-//		{
-//			System.out.println("dist\t" + left.getId() + "\t" + right.getId() + "\t" + res);	
-//		}
-        
-        return res;
+        return 1.0 - res;
      	 
     }
 
@@ -230,7 +220,8 @@ public class Document  implements Serializable{
 		if(rightId == null)
 			return;
 		
-		Document right =RedisHelper.getDocumentFromRedis(rightId);
+		//Document right = RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
+		Document right = GlobalData.getInstance().id2doc.get(rightId);
 		updateNearest(right);
 	}
 
@@ -239,6 +230,10 @@ public class Document  implements Serializable{
 	}
 
 	public void setNearestDetermined(boolean nearestDetermined) {
+		if(id.equals("86383662215598080"))
+		{	
+			String t = "86383662215598080";
+		}
 		this.nearestDetermined = nearestDetermined;
 	}
 

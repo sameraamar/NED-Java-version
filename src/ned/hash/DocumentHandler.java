@@ -1,8 +1,16 @@
 package ned.hash;
 
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import ned.types.Document;
+import ned.types.GlobalData;
+import ned.types.Session;
+import ned.types.DocumentClusteringHelper;
 
 public class DocumentHandler {
 //	private static LinkedList<DocumentHandler>  list;

@@ -1,18 +1,20 @@
 package ned.types;
 
 import java.io.PrintStream;
+
 import ned.tools.ClusteringQueueManager;
-import ned.tools.RedisHelper;
 
 public class DocumentClusteringThread extends Thread {
 	private boolean stop = false;
 	private GlobalData gd;
 	private PrintStream out;
+	public int clusteredCounter;
 	
 	public DocumentClusteringThread(PrintStream out)
 	{
 		this.out = out;
 		gd = GlobalData.getInstance();
+		clusteredCounter = 0;
 	}
 	
 	@Override
@@ -27,7 +29,7 @@ public class DocumentClusteringThread extends Thread {
     		
 			try 
 			{
-				sleep(4000);
+				sleep(4);
 			} 
 			catch (InterruptedException e) 
 			{
@@ -53,8 +55,8 @@ public class DocumentClusteringThread extends Thread {
 		while(doc!=null)
 		{
 	        DocumentClusteringHelper.mapToClusterHelper(doc);
-	        
-			last = doc;
+			clusteredCounter++;
+	        last = doc;
 			doc = next();
 		}
 		
@@ -75,7 +77,7 @@ public class DocumentClusteringThread extends Thread {
 		if (id == null)
 			return null;
 		
-		Document doc =RedisHelper.getDocumentFromRedis(id);
+		Document doc = GlobalData.getInstance().id2doc.get(id); //RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
 		if (doc==null)
 			return null;
 		

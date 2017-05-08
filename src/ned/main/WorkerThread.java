@@ -64,11 +64,6 @@ public class WorkerThread implements Runnable
 			return;
 		}
 		
-//		if(doc.getId().equals("86498628092440576"))
-//		{
-//			System.out.println("NEAREST:\t" + doc.getNearestDist() + " " + doc.getNearest());	
-//		}
-		
     	List<String> set = forest.addDocument(this.doc);
 		
     	DocumentClusteringHelper.postLSHMapping(this.doc, set);

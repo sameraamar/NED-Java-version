@@ -12,7 +12,7 @@ public class MyMonitorThread extends Thread
     private int seconds;
     private long starttime;
 
-    private boolean run=true;
+    private boolean stop=false;
 
     public MyMonitorThread(ExecutorService executorService, int delay)
     {
@@ -28,16 +28,15 @@ public class MyMonitorThread extends Thread
     }
 
     public void shutdown() {
-Session.getInstance().message(Session.INFO, "[monitor]", "request to shutdown");
-
-        this.run=false;
+    	Session.getInstance().message(Session.INFO, "[monitor]", "request to shutdown");
+        this.stop=true;
     }
 
     @Override
     public void run()
     {
     starttime = System.nanoTime();
-        while(run){
+        while(!stop){
             /*System.out.println(
                     String.format("[monitor] [%d/%d] Active: %d, Completed: %d, Task: %d, isShutdown: %s, isTerminated: %s",
                         this.executor.getPoolSize(),

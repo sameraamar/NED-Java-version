@@ -35,7 +35,7 @@ public class LSHTable
     	hyperPlanes.init();
     }
     
-     public long GenerateHashCode(Document doc)
+     private long GenerateHashCode(Document doc)
      {
      	
      	boolean[] st = new boolean [hyperPlanesNumber];

@@ -1,8 +1,8 @@
 package ned.hash;
 
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.TreeMap;
@@ -52,33 +52,17 @@ public class LSHForest {
 		{
 			ArrayFixedSize<String> tmpList = tables[t].AddDocument(doc);
 			
-//			if(doc.getId().equals("86498628092440576"))
-//			{
-//				System.out.println("HASH CODE "+t+": (" + doc.getId() + ") = " + tables[t].GenerateHashCode(doc));
-//				
-//				Document origin = RedisHelper.id2DocumentCache.get("86494861607436288");
-//				System.out.println("HASH CODE "+t+": (" + origin.getId() + ") = " + tables[t].GenerateHashCode(origin));
-//
-//				origin = RedisHelper.id2DocumentCache.get("86492005273845760");
-//				System.out.println("HASH CODE "+t+": (" + origin.getId() + ") = " + tables[t].GenerateHashCode(origin));
-//			}
-
-			for (int d=0; d<tmpList.size(); d++) {
-				String tmp = tmpList.get(d);
-				if ( tmp.compareTo(doc.getId()) >=0 )
+			for (int k=0; k<tmpList.size(); k++) {
+				String tmp = tmpList.get(k);
+				String id = doc.getId();
+				if ( tmp.compareTo(id) >=0 )
 					continue;
 				
 				Integer c = hitCounts.getOrDefault(tmp, 0);
 				hitCounts.put(tmp, c+1);
 			}
-			
 		}
-		
-//		if(doc.getId().equals("86498628092440576"))
-//		{
-//			System.out.println("NEAREST: \t" + doc.getNearestDist() + " " + doc.getNearest());	
-//		}
-		
+
         ArrayList<String> output = new ArrayList<String>();
         output.addAll(hitCounts.keySet());
         

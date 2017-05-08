@@ -3,10 +3,11 @@ package ned.tools;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
+
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
+
 import ned.types.Document;
-import ned.types.GlobalData;
 import ned.types.LRUCache;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -18,13 +19,13 @@ public class RedisHelper {
 	public static final String ID2DOCUMENT = "id2document";
 	public static final String WORD2INDEX = "word2index";
 	public static final String WORD2IDF = "word2idf";
-	public static final int lru_cache_size = 1000000;
+	public static final int lru_cache_size = 50000;
 	public static  boolean ready = false;
 
 
 	
-	 public static LRUCache<String, Document> id2DocumentCache;
-	 public static LRUCache<String, Integer> word2IndexCache;
+	 public static LRUCache<String, Document> id2DocumentCache;//=new LRUCache<String, Document>(2000);
+	 public static LRUCache<String, String> word2IndexCache;//=new LRUCache<String, String>(2000);
 	 public static LRUCache<Integer, Double> word2idfCache;
 	private static JedisPool jedisPool = null;
 	private static RedisSerializer<Object> docSerializer ;
@@ -41,42 +42,26 @@ public class RedisHelper {
 					config.setMaxIdle(100);
 					config.setMinIdle(50);
 					//config.setMaxWaitMillis(10);
-					config.setTestOnBorrow(true);
+					config.setTestOnBorrow(false);
 					config.setTestOnReturn(false);
 					config.setTestWhileIdle(false);
 					//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
-					jedisPool = new JedisPool(config,"localhost", 6379, 2000);
+					jedisPool = new JedisPool(config,"localhost", 6379, 18000);
 
 					System.out.println("jedisPool is Ready "+jedisPool.getNumActive());
 				}
 			}
-		//clearRedisKeys();
+		clearRedisKeys();
 		if(id2DocumentCache==null){
-			id2DocumentCache=new LRUCache<String, Document>(lru_cache_size,ID2DOCUMENT, GlobalData.getInstance().getParams().reset_redis, true);
+			id2DocumentCache=new LRUCache<String, Document>(lru_cache_size);
 		}
 		if(word2IndexCache==null){
-			word2IndexCache=new LRUCache<String, Integer>(lru_cache_size,WORD2INDEX, GlobalData.getInstance().getParams().reset_redis, true);
+			word2IndexCache=new LRUCache<String, String>(lru_cache_size);
 		}
 		if(word2idfCache==null){
-			word2idfCache=new LRUCache<Integer, Double>(10, WORD2IDF, true, false);
+			word2idfCache=new LRUCache<Integer, Double>(lru_cache_size);
 		}
 		ready=true;
-	}
-	synchronized public static JedisPool getRedisConnectionPool() {
-			
-					JedisPoolConfig config = new JedisPoolConfig();
-					//config.setMaxTotal(REDIS_MAX_CONNECTIONS);
-					config.setMaxIdle(100);
-					config.setMinIdle(50);
-					//config.setMaxWaitMillis(10);
-					config.setTestOnBorrow(true);
-					config.setTestOnReturn(false);
-					config.setTestWhileIdle(false);
-					//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
-					JedisPool newjedisPool = new JedisPool(config,"localhost", 6379, 2000);
-
-			
-		return newjedisPool;
 	}
 
 	public static Jedis getRedisClient() {
@@ -146,9 +131,30 @@ public class RedisHelper {
 		return len;
 	}
 
-	public static Document getDocumentFromRedis(String key) {
-			Document doc = id2DocumentCache.get(key);
-			return doc;
+	public static Document getDocumentFromRedis(String hash,String key) {
+		Document doc=null;
+		if(key == null)
+			return null;
+		
+		if(id2DocumentCache != null)
+		{
+			doc= id2DocumentCache.get(key);
+			if(doc!=null || id2DocumentCache.size()<lru_cache_size) {
+				return doc;
+			}
+		}
+	//	System.out.println("Cache Miss :("+key);
+		Jedis jedis=getRedisClient();
+		
+		byte[] kbytes = key.getBytes();
+		byte[] hbytes = hash.getBytes();
+		byte[] retobject=jedis.hget(hbytes,kbytes);
+		if(retobject!=null){
+			doc=(Document) getDocSerializer().deserialize(retobject);
+		}
+		//jdis.close();
+		retunRedisClient(jedis);
+		return doc;
 	}
 	
 	public Hashtable  <String,Document> getMultiDocumentFromRedis(String hash,String keys) {
@@ -229,7 +235,24 @@ public class RedisHelper {
 			id2DocumentCache.put(key, doc);
 			//System.out.println("Add to Cache "+key);
 		}
-		
+		Runnable runnable = () -> {
+			Date start=new Date();
+			Jedis jdis=getRedisClient();
+			
+			
+			byte[] sobject=getDocSerializer().serialize(doc);
+			
+			jdis.hset(hash.getBytes(),key.getBytes(),sobject);
+			jdis.close();
+			Date stop=new Date();
+			long rediscoontime=start.getTime()-stop.getTime();
+			if(rediscoontime>1)
+			{
+				System.out.println("setDocumentFromRedis Time ==="+rediscoontime);
+			    System.out.println("redisConnections="+jedisPool.getNumActive());
+			}
+		};
+		ExecutionHelper.asyncRun (runnable);	
 	}
 	 public static RedisSerializer<Object> getDocSerializer() {
 		if(docSerializer==null){

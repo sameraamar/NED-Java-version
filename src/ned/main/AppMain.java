@@ -14,10 +14,13 @@ import com.google.gson.GsonBuilder;
 import ned.hash.DocumentHandler;
 import ned.hash.LSHForest;
 import ned.tools.ExecutionHelper;
-import ned.tools.RedisHelper;
+import ned.tools.RedisAccessHelper;
 import ned.types.Document;
 import ned.types.DocumentClusteringThread;
 import ned.types.GlobalData;
+import ned.types.RedisBasedMap;
+import ned.types.SerializeHelper;
+import ned.types.SerializeHelperIntInt;
 import ned.types.Session;
 import ned.types.Utility;
 
@@ -28,20 +31,19 @@ public class AppMain {
 	private static DocumentProcessorExecutor executer;
 	private static MyMonitorThread threadMonitor;
 	private static DocumentClusteringThread clustering;
-	
+		
 
 	public static void main(String[] args) throws IOException
 	{
 		try {
 			GlobalData gd = GlobalData.getInstance();
-			RedisHelper.initRedisConnectionPool();
-
-			while(!RedisHelper.ready){
+			RedisAccessHelper.initRedisConnectionPool();
+			while(!RedisAccessHelper.ready){
 				System.out.print('.');
 				Thread.sleep(100);
 			}
 			ExecutionHelper.setCommonPoolSize();
-			String threadsFileName = "c:/temp/threads.txt";
+			String threadsFileName = "c:/temp/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset+".txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
 			forest = new LSHForest(gd.getParams().number_of_tables, 
@@ -67,7 +69,6 @@ public class AppMain {
 			if ( clustering != null )
 			{
 		    	Session.getInstance().message(Session.INFO, "Main", "Waiting for clustering thread to finish...");
-
 				clustering.shutdown();
 			}
 			if (threadMonitor != null)
@@ -164,6 +165,27 @@ public class AppMain {
 
 		printParameters(out);
 
+		
+    	if(gd.getParams().resume_mode) 
+    	{
+    		RedisAccessHelper.loadStrIntMap(GlobalData.K_WORD2INDEX, gd.word2index);
+    		System.out.println(GlobalData.K_WORD2INDEX + " loaded..." + gd.word2index.size());
+    		
+
+    		RedisAccessHelper.loadIntIntMap(GlobalData.K_WORD2COUNTS, gd.numberOfDocsIncludeWord);
+    		System.out.println(GlobalData.K_WORD2COUNTS + " loaded..." + gd.numberOfDocsIncludeWord.size());
+    		
+        	
+        	RedisAccessHelper.loadStrDocMap(GlobalData.K_ID2DOCUMENT, gd.id2doc);
+        	System.out.println(GlobalData.K_ID2DOCUMENT + " loaded..." + gd.id2doc.size());
+    	} 
+    	else 
+    	{
+    		RedisAccessHelper.resetKey(GlobalData.K_WORD2INDEX);
+    		RedisAccessHelper.resetKey(GlobalData.K_WORD2COUNTS);
+    		RedisAccessHelper.resetKey(GlobalData.K_ID2DOCUMENT);
+    	}
+    	
 
 		//CleanupThread thread = new CleanupThread(out);
 		//threadsFileName.isDaemon(true);
@@ -173,12 +195,12 @@ public class AppMain {
 
     	clustering.start();
 
-		int offset = gd.getParams().offset;
+    	int offset = gd.getParams().offset;
 		int skip_files = (offset / 500_000);
 		offset = offset % 500_000;
+		int fileidx = -1;
 		
 		int offset_p = (int)(offset * 0.05);
-		int fileidx = -1;
 		boolean flushData = false;
 		for (String filename : files) {
 			fileidx++;
@@ -192,7 +214,6 @@ public class AppMain {
 			}
 	    	Session.getInstance().message(Session.INFO, "Reader", "reading from file: " + filename);
 
-			
 			GZIPInputStream stream = new GZIPInputStream(new FileInputStream(folder + "/" + filename));
 			Reader decoder = new InputStreamReader(stream, "UTF-8");
 			BufferedReader buffered = new BufferedReader(decoder);
@@ -214,26 +235,35 @@ public class AppMain {
 				Document doc = DocumentHandler.preprocessor(line);
 				GlobalData.getInstance().getQueue().add(doc.getId());
 				
-				executer.submit(doc, gd.getParams().offset+processed);
-								
+	            int idx = gd.getParams().offset+processed;
+				executer.submit(doc, idx);
+				
 	            processed ++;
 	            middle_processed++;
-
+	            idx++;
+	            
 	            if (processed % (gd.getParams().print_limit) == 0)
 	            {
 	        		//clustering.mapToCluster();
 	        		
-	        		long tmp = System.nanoTime() - middletime;
+	            	long currenttime = System.nanoTime();
+	        		long tmp = currenttime - middletime;
 	            	double average2 = 1.0 * TimeUnit.NANOSECONDS.toMillis(tmp) / middle_processed;
 	            	average2 = Math.round(100.0 * average2) / 100.0;
 	            	
 	            	StringBuffer msg = new StringBuffer();
 	            	msg.append( "Processed " ).append ( processed ).append(" docs. ");
-	            	long seconds = TimeUnit.NANOSECONDS.toSeconds( System.nanoTime() - base);
+	            	long seconds = TimeUnit.NANOSECONDS.toSeconds( currenttime - base );
+	            	long milliseconds = TimeUnit.NANOSECONDS.toMillis( currenttime - base );
 	            	msg.append(" elapsed time: ").append(Utility.humanTime(seconds));
 	            	msg.append("(AHT: ").append(average2).append(" ms). ");
 //	            	//msg.append("Cursor: ").append(doc.getId());
 	            	msg.append(". Dim: ").append( forest.getDimension() );
+	            	if(clustering.clusteredCounter > 0)
+	            	{
+	            		String ahtStr = String.format(". Finalized %d docs, ms/doc: %.3f", clustering.clusteredCounter, 1.0 * milliseconds / clustering.clusteredCounter);
+	            		msg.append( ahtStr ).append(" ms");
+	            	}
 	            	
 	            	Session.getInstance().message(Session.INFO, "Reader", msg.toString());
 	            	
@@ -250,6 +280,7 @@ public class AppMain {
             		middletime = System.nanoTime();
             		middle_processed = 0;
 	            }
+	            
 	            if (processed % (gd.getParams().print_limit* 40) == 0){
 	            	System.out.println("GC submited");
 	            	System.gc();
@@ -257,6 +288,39 @@ public class AppMain {
 	            
 	            if (processed == gd.getParams().max_documents)
 	            	stop = true;
+	            
+	            
+	            if (stop || processed % (gd.getParams().print_limit* 10) == 0)
+	            {
+	            	
+	            	int oldoffset = gd.numberOfDocsIncludeWord.get(-2);
+	        		int numberOfDocuments = gd.numberOfDocsIncludeWord.get(-1);
+
+	        		if(oldoffset + numberOfDocuments <= idx)
+	        		{
+		            	System.out.println("Wait for queue to get empty!");
+		            	while(!gd.getQueue().isEmpty())
+		            	{
+		            		try {
+								Thread.sleep(10);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+		            	}
+	
+	
+		            	RedisAccessHelper.saveStrIntMap(GlobalData.K_WORD2INDEX, gd.word2index);
+		            	System.out.println(GlobalData.K_WORD2INDEX + " saved...");
+		            	
+	
+		            	RedisAccessHelper.saveIntIntMap(GlobalData.K_WORD2COUNTS, gd.numberOfDocsIncludeWord);
+		            	System.out.println(GlobalData.K_WORD2COUNTS + " saved...");
+		            	
+		            	
+		            	RedisAccessHelper.saveStrDocMap(GlobalData.K_ID2DOCUMENT, gd.id2doc);
+		            	System.out.println(GlobalData.K_ID2DOCUMENT + " saved...");
+	        		}
+	            }
 	            
 	            line=buffered.readLine();
 	        }
@@ -266,15 +330,9 @@ public class AppMain {
 		
 		//wait till all processes finish
 		executer.shutdown();
+		ExecutionHelper.shutdown();
 		
 		Session.getInstance().message(Session.INFO, "Summary", "wait till all processes finish");
-
-		/*while(!clustering.mapToCluster())
-		{
-		}
-		
-		gd.flushClustersAll(out);*/
-		
 
 		long current = System.nanoTime();
 		long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);

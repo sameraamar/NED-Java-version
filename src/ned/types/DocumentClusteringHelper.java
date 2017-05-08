@@ -7,9 +7,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import ned.tools.ArrayFixedSize;
 import ned.tools.ExecutionHelper;
-import ned.tools.RedisHelper;
 
 public class DocumentClusteringHelper {
 	
@@ -23,11 +23,12 @@ public class DocumentClusteringHelper {
 			String rightId = iter.next();
 		    if(rightId.compareTo(id) < 0)
 		    {
-		    	Document right = RedisHelper.getDocumentFromRedis(rightId);
+		    	Document right = GlobalData.getInstance().id2doc.get(rightId);//RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
 				doc.updateNearest(right);
 		    }
 		}
-				
+		
+		
 	/*
 		Object[] tmp = list.toArray();
 		for (int i=0; i<tmp.length; i++)
@@ -44,12 +45,6 @@ public class DocumentClusteringHelper {
 	
 	public static void postLSHMapping(Document doc, List<String> set)
 	{
-//		if(doc.getId().equals("86498628092440576"))
-//		{
-//			System.out.println("NEAREST: \t" + doc.getNearestDist() + " " + doc.getNearest());	
-//		}
-		
-		
 		ArrayFixedSize<String> recent = GlobalData.getInstance().getRecentManager();
 		if(recent!=null)
 		{
@@ -89,14 +84,9 @@ public class DocumentClusteringHelper {
 		Double distance = null;
 		if (doc.getNearest() != null)
 		{
-			nearest =RedisHelper.getDocumentFromRedis(doc.getNearest()); // data.id2document.get(doc.getNearest());
+			nearest = GlobalData.getInstance().id2doc.get(doc.getNearest());//RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getNearest()); // data.id2document.get(doc.getNearest());
 			distance = doc.getNearestDist();
 		}
-		
-//		if(doc.getId().equals("86498628092440576"))
-//		{
-//			System.out.println("NEAREST - to cluster: \t" + doc.getNearestDist() + " " + doc.getNearest());	
-//		}
 		
 		boolean createNewThread = false;
 		

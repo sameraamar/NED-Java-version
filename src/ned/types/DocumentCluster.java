@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import ned.tools.RedisHelper;
 
 public class DocumentCluster {
 	private List<String> idList;
@@ -111,11 +110,11 @@ public class DocumentCluster {
 		for (int i =0; i<this.idList.size(); i++)
 		{
 			String docId = idList.get(i);
-			Document doc = RedisHelper.getDocumentFromRedis(docId);
+			Document doc = GlobalData.getInstance().id2doc.get(docId); //RedisHelper.getDocumentFromRedis(gd.ID2DOCUMENT,docId);
 			
 			Document nDoc = null;
 			if(i>0) { //this is placeholder for the lead - skip
-				nDoc = RedisHelper.getDocumentFromRedis(doc.getNearest());
+				nDoc = GlobalData.getInstance().id2doc.get(doc.getNearest()); //RedisHelper.getDocumentFromRedis(gd.ID2DOCUMENT,doc.getNearest());
 			}
 			
 			sb.append(docId).append("\t");
@@ -159,7 +158,7 @@ public class DocumentCluster {
 		
 		for(String id : tmpList)
 		{
-			Document doc =  RedisHelper.getDocumentFromRedis(id);
+			Document doc = GlobalData.getInstance().id2doc.get(id);// RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
 			if(doc!=null){
 				ConcurrentHashMap<Integer, Integer> tmp = doc.getWordCount();
 				for (Integer i : tmp.keySet())
@@ -195,7 +194,7 @@ public class DocumentCluster {
 			return 0;
 		
 		String id = this.idList.get(s-1);
-		Document doc =RedisHelper.getDocumentFromRedis(id);
+		Document doc = GlobalData.getInstance().id2doc.get(id); //RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
 		long lasttime = doc.getTimestamp();
 		
 		return (lasttime-starttime); //check if we need to divide by 1000?
