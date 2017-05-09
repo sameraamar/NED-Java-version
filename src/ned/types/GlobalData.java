@@ -7,16 +7,15 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import ned.modules.Twokenize;
 import ned.tools.ArrayFixedSize;
 import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
-import ned.tools.RedisAccessHelper;
 
 public class GlobalData {
 	public static final String K_ID2DOCUMENT = "id2doc";
@@ -32,7 +31,7 @@ public class GlobalData {
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
-		public int max_documents = 100000;
+		public int max_documents = 30000;
 		public int max_thread_delta_time = 3600; //seconds
 		public int offset = 0;
 		public int search_recents = 2000;
@@ -51,7 +50,6 @@ public class GlobalData {
 		if (globalData == null)
 		{
 			globalData = new GlobalData();
-			globalData.init();
 		}
 		return globalData;
 	}	
@@ -74,14 +72,11 @@ public class GlobalData {
 	//public LRUCache<String,Document> recent;
 	
 	private ClusteringQueueManager queue;
-	private ArrayFixedSize<String> recentManager;
-
-	public ArrayFixedSize<String> getRecentManager() {
-		return recentManager;
-	}
+	private ArrayFixedSize<String> recentManager = null;
 
 	private Parameters parameters = new Parameters();
 	public List<String> cleanClusterQueue = null;
+	private AtomicInteger nextWord;
 	
 	
 	private GlobalData()
@@ -89,6 +84,7 @@ public class GlobalData {
 		//word2index  = new Hashtable<String , Integer>();
 		//index2word  = new Hashtable<Integer, String>();
 		//numberOfDocsIncludeWord = new ConcurrentHashMap<Integer, Integer>();
+		nextWord = new AtomicInteger (0);
 		cleanClusterQueue = new LinkedList<String>();
 		//cleanClusterQueue = (List<String>) Collections.synchronizedList(new LinkedList<String>()); //new LinkedList<Document>();
 		clusters = new ConcurrentHashMap<String, DocumentCluster>();
@@ -98,18 +94,25 @@ public class GlobalData {
 		id2cluster = new ConcurrentHashMap<String, String>();
 	}
 	
-	private void init()
+	synchronized public void init()
 	{
+		if(recentManager != null)
+			return;
+		
 		recentManager = new ArrayFixedSize<String>(parameters.search_recents);
 		//id2doc = new Hashtable<String, Document>();
-		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, 10, getParams().resume_mode, new SerializeHelperStrDoc() );
-		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, 10, getParams().resume_mode, new SerializeHelperStrInt() );
-		numberOfDocsIncludeWord = new RedisBasedMap<Integer, Integer>(GlobalData.K_WORD2COUNTS, 10, getParams().resume_mode, new SerializeHelperIntInt() );
+		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, getParams().resume_mode, new SerializeHelperStrDoc() );
+		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, getParams().resume_mode, new SerializeHelperStrInt() );
+		numberOfDocsIncludeWord = new RedisBasedMap<Integer, Integer>(GlobalData.K_WORD2COUNTS, getParams().resume_mode, new SerializeHelperIntInt() );
 		
 		numberOfDocsIncludeWord.put(-1, 0);
 		numberOfDocsIncludeWord.put(-2, getParams().offset);
 	}
 	
+	public ArrayFixedSize<String> getRecentManager() {
+		return recentManager;
+	}
+
 	public ClusteringQueueManager getQueue() {
 		return queue;
 	}
@@ -247,7 +250,7 @@ public class GlobalData {
 		
 		if (idx == -1) 
 		{
-			idx = word2index.size();
+			idx = nextWord.incrementAndGet(); //word2index.size();
 			//index2word.put(idx, word);
 			word2index.put(word, idx);
 		}

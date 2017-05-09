@@ -1,7 +1,5 @@
 package ned.types;
 
-
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import ned.tools.RedisAccessHelper;
 import redis.clients.jedis.Jedis;
@@ -12,14 +10,12 @@ public class RedisBasedMap<K, V> extends ConcurrentHashMap<K, V> {
 	 */
 	private static final long serialVersionUID = -389590226404496306L;
 	
-	private int cacheSize;
 	private String jedisKey;
 	private SerializeHelper<K, V> s;
 
-	public RedisBasedMap(String redisKey, int cacheSize, boolean resumeMode, SerializeHelper<K, V> s) {
+	public RedisBasedMap(String redisKey, boolean resumeMode, SerializeHelper<K, V> s) {
 		//super(16, (float) 0.75, true);
 		super(16, (float) 0.75);
-		this.cacheSize = cacheSize;
 		this.jedisKey = redisKey;
 		this.s= s;
 		
@@ -65,10 +61,8 @@ public class RedisBasedMap<K, V> extends ConcurrentHashMap<K, V> {
 	
 	public void save()
 	{
-		System.out.println("saving "+size()+"... " + jedisKey);
 		s.saveMap(jedisKey, this);
 		clear();
-		System.out.println("saved: " + jedisKey);
 	}
 	
 	public void load()

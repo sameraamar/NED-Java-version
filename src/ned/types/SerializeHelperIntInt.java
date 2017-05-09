@@ -1,6 +1,5 @@
 package ned.types;
 
-import ned.tools.RedisAccessHelper;
 import redis.clients.jedis.Jedis;
 
 public class SerializeHelperIntInt implements SerializeHelper<Integer, Integer>{
@@ -23,6 +22,6 @@ public class SerializeHelperIntInt implements SerializeHelper<Integer, Integer>{
 
 	@Override
 	public void saveMap(String jedisKey, RedisBasedMap<Integer, Integer> redisBasedMap) {
-		RedisAccessHelper.saveIntIntMap(jedisKey, redisBasedMap);
+		//RedisAccessHelper.saveIntIntMap(jedisKey, redisBasedMap);
 	}
 }

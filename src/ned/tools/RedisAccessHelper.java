@@ -2,14 +2,10 @@ package ned.tools;
 
 import java.util.Date;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
-
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
-
 import ned.types.Document;
-import ned.types.LRUCache;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -128,45 +124,61 @@ public class RedisAccessHelper {
 	{		
 	}
 	
-	public static void saveStrIntMap(String key, Map<String, Integer> data)
+	/*public static void saveStrIntMap(String key, Map<String, Integer> data)
 	{
 		Jedis jedis=getRedisClient();
 		
-		//jedis.hset(key, "-100", Integer.toString(data.size()));
+		int count = 0;
+		int update = 0;
 		
 		for (String field : data.keySet())
 		{
 			Integer value = data.get(field);
+			if(jedis.exists(key))
+				update++;
+			else
+				count++;
 			jedis.hset(key, field, value.toString());
 		}
 		
+		System.out.println(key + ": updated " + update + " added " + count);
+		
 		retunRedisClient(jedis);
-	}
+	}*/
 	
 	public static void saveStrDocMap(String key, Map<String, Document> data)
 	{
 		Jedis jedis=getRedisClient();
-		
-		//jedis.hset(key, "-100", Integer.toString(data.size()));
+
 		int count = 0;
+		int update = 0;
+		int skip = 0;
+		
 		for (String field : data.keySet())
 		{
 			Document value = data.get(field);
 			if(value.isDirty)
 			{
 				byte[] bytes = getDocSerializer().serialize(value);
+
+				if(jedis.exists(key))
+					update++;
+				else
+					count++;
+
 				jedis.hset(key.getBytes(), field.getBytes(), bytes);
 				value.isDirty = false;
-				count++;
 			}
+			else
+				skip ++;
 		}
 		
-		System.out.println("wrote: " + count + " documents to redis");
+		System.out.println(key + ": skipped " + skip + ", updated " + update + " added " + count);
 		
 		retunRedisClient(jedis);
 	}
 	
-	public static void loadStrIntMap(String key, Map<String, Integer> data)
+	/*public static void loadStrIntMap(String key, Map<String, Integer> data)
 	{
 		Jedis jedis=getRedisClient();
 		
@@ -188,14 +200,21 @@ public class RedisAccessHelper {
 	{
 		Jedis jedis=getRedisClient();
 		
-		//jedis.hset(key, "-100", Integer.toString(data.size()));
-		
+		int count = 0;
+		int update = 0;		
 		for (Integer field : data.keySet())
 		{
 			Integer value = data.get(field);
+			
+			if(jedis.exists(key))
+				update++;
+			else
+				count++;
+			
 			jedis.hset(key, field.toString(), value.toString());
 		}
 		
+		System.out.println(key + ": updated " + update + " added " + count);
 		retunRedisClient(jedis);
 	}
 	
@@ -216,7 +235,7 @@ public class RedisAccessHelper {
 			data.put(field, value );
 		}
 		retunRedisClient(jedis);
-	}
+	}*/
 
 	public static void loadStrDocMap(String key, Hashtable<String, Document> data) {
 		Jedis jedis=getRedisClient();

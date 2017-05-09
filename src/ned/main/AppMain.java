@@ -18,9 +18,6 @@ import ned.tools.RedisAccessHelper;
 import ned.types.Document;
 import ned.types.DocumentClusteringThread;
 import ned.types.GlobalData;
-import ned.types.RedisBasedMap;
-import ned.types.SerializeHelper;
-import ned.types.SerializeHelperIntInt;
 import ned.types.Session;
 import ned.types.Utility;
 
@@ -49,6 +46,9 @@ public class AppMain {
 				System.out.print('.');
 				Thread.sleep(100);
 			}
+
+			gd.init();
+			
 			ExecutionHelper.setCommonPoolSize();
 			String threadsFileName = "c:/temp/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset+".txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
