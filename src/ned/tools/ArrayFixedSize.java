@@ -11,9 +11,9 @@ public class ArrayFixedSize<T>
 
 	public ArrayFixedSize(int size)
 	{
+		data = new Object[size];
 		index = new AtomicInteger(-1);
 		currentSize = new AtomicInteger( 0 );
-		data = new Object[size];
 	}
 	
 	public void add(T s) 

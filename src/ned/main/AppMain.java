@@ -31,7 +31,14 @@ public class AppMain {
 	private static DocumentProcessorExecutor executer;
 	private static MyMonitorThread threadMonitor;
 	private static DocumentClusteringThread clustering;
-		
+
+	public static void release()
+	{
+		forest = null;
+		executer = null;
+		threadMonitor = null;
+		clustering = null;
+	}
 
 	public static void main(String[] args) throws IOException
 	{
@@ -70,14 +77,16 @@ public class AppMain {
 			{
 		    	Session.getInstance().message(Session.INFO, "Main", "Waiting for clustering thread to finish...");
 				clustering.shutdown();
+				while(clustering.isAlive())
+					;
 			}
-			if (threadMonitor != null)
+			if (threadMonitor != null) {
 				threadMonitor.shutdown();
+				while(threadMonitor.isAlive())
+					;
+			}
 			
-//			if(executer!=null)
-//				executer.shutdown();
-			
-			//DocumentHandler.waitForSuProcesses();
+			release();
 		}
 	}
 
@@ -168,22 +177,9 @@ public class AppMain {
 		
     	if(gd.getParams().resume_mode) 
     	{
-    		RedisAccessHelper.loadStrIntMap(GlobalData.K_WORD2INDEX, gd.word2index);
-    		System.out.println(GlobalData.K_WORD2INDEX + " loaded..." + gd.word2index.size());
-    		
-
-    		RedisAccessHelper.loadIntIntMap(GlobalData.K_WORD2COUNTS, gd.numberOfDocsIncludeWord);
-    		System.out.println(GlobalData.K_WORD2COUNTS + " loaded..." + gd.numberOfDocsIncludeWord.size());
-    		
-        	
-        	RedisAccessHelper.loadStrDocMap(GlobalData.K_ID2DOCUMENT, gd.id2doc);
-        	System.out.println(GlobalData.K_ID2DOCUMENT + " loaded..." + gd.id2doc.size());
-    	} 
-    	else 
-    	{
-    		RedisAccessHelper.resetKey(GlobalData.K_WORD2INDEX);
-    		RedisAccessHelper.resetKey(GlobalData.K_WORD2COUNTS);
-    		RedisAccessHelper.resetKey(GlobalData.K_ID2DOCUMENT);
+    		gd.numberOfDocsIncludeWord.load();
+    		gd.word2index.load();
+    		gd.id2doc.load();
     	}
     	
 
@@ -258,7 +254,7 @@ public class AppMain {
 	            	msg.append(" elapsed time: ").append(Utility.humanTime(seconds));
 	            	msg.append("(AHT: ").append(average2).append(" ms). ");
 //	            	//msg.append("Cursor: ").append(doc.getId());
-	            	msg.append(". Dim: ").append( forest.getDimension() );
+	            	msg.append("Dim: ").append( forest.getDimension() );
 	            	if(clustering.clusteredCounter > 0)
 	            	{
 	            		String ahtStr = String.format(". Finalized %d docs, ms/doc: %.3f", clustering.clusteredCounter, 1.0 * milliseconds / clustering.clusteredCounter);
@@ -281,10 +277,10 @@ public class AppMain {
             		middle_processed = 0;
 	            }
 	            
-	            if (processed % (gd.getParams().print_limit* 40) == 0){
-	            	System.out.println("GC submited");
-	            	System.gc();
-	            }
+	            //if (processed % (gd.getParams().print_limit* 40) == 0){
+	            //	System.out.println("GC submited");
+	            //	System.gc();
+	            //}
 	            
 	            if (processed == gd.getParams().max_documents)
 	            	stop = true;
@@ -307,18 +303,12 @@ public class AppMain {
 								e.printStackTrace();
 							}
 		            	}
-	
-	
-		            	RedisAccessHelper.saveStrIntMap(GlobalData.K_WORD2INDEX, gd.word2index);
-		            	System.out.println(GlobalData.K_WORD2INDEX + " saved...");
 		            	
-	
-		            	RedisAccessHelper.saveIntIntMap(GlobalData.K_WORD2COUNTS, gd.numberOfDocsIncludeWord);
-		            	System.out.println(GlobalData.K_WORD2COUNTS + " saved...");
+		            	gd.word2index.save();
+		            	gd.id2doc.save();
+		            	gd.numberOfDocsIncludeWord.save();
 		            	
-		            	
-		            	RedisAccessHelper.saveStrDocMap(GlobalData.K_ID2DOCUMENT, gd.id2doc);
-		            	System.out.println(GlobalData.K_ID2DOCUMENT + " saved...");
+		            	System.gc();
 	        		}
 	            }
 	            

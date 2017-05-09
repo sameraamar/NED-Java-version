@@ -1,15 +1,12 @@
 package ned.types;
 
 
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.function.Function;
+import java.util.concurrent.ConcurrentHashMap;
 import ned.tools.RedisAccessHelper;
-import ned.tools.RedisHelper;
 import redis.clients.jedis.Jedis;
 
-public class RedisBasedMap<K, V> extends LinkedHashMap<K, V> {
+public class RedisBasedMap<K, V> extends ConcurrentHashMap<K, V> {
   /**
 	 * 
 	 */
@@ -17,10 +14,11 @@ public class RedisBasedMap<K, V> extends LinkedHashMap<K, V> {
 	
 	private int cacheSize;
 	private String jedisKey;
-	private SerializeHelper<V> s;
+	private SerializeHelper<K, V> s;
 
-	public RedisBasedMap(String redisKey, int cacheSize, boolean resumeMode, SerializeHelper<V> s) {
-		super(16, (float) 0.75, true);
+	public RedisBasedMap(String redisKey, int cacheSize, boolean resumeMode, SerializeHelper<K, V> s) {
+		//super(16, (float) 0.75, true);
+		super(16, (float) 0.75);
 		this.cacheSize = cacheSize;
 		this.jedisKey = redisKey;
 		this.s= s;
@@ -38,8 +36,11 @@ public class RedisBasedMap<K, V> extends LinkedHashMap<K, V> {
 		if (value == null)
 		{
 			Jedis jedis = RedisAccessHelper.getRedisClient();
-			value = s.get(jedis, jedisKey, key);
+			value = s.get(jedis, jedisKey, (K)key);
 			RedisAccessHelper.retunRedisClient(jedis);
+			
+			if (value != null)
+				super.put((K)key, value);
 		}
 		
 		return value;
@@ -56,7 +57,22 @@ public class RedisBasedMap<K, V> extends LinkedHashMap<K, V> {
 		return v;
 	}
 
-	protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+	/*protected boolean removeEldestEntry(Map.Entry<K, V> eldest) 
+	{
+		System.out.println(">>>>>>>>>>> removeEldestEntry");
 		return size() >= cacheSize;
+	}*/
+	
+	public void save()
+	{
+		System.out.println("saving "+size()+"... " + jedisKey);
+		s.saveMap(jedisKey, this);
+		clear();
+		System.out.println("saved: " + jedisKey);
+	}
+	
+	public void load()
+	{
+		
 	}
 }

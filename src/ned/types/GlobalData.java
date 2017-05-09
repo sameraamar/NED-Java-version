@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -15,6 +16,7 @@ import ned.modules.Twokenize;
 import ned.tools.ArrayFixedSize;
 import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
+import ned.tools.RedisAccessHelper;
 
 public class GlobalData {
 	public static final String K_ID2DOCUMENT = "id2doc";
@@ -53,15 +55,20 @@ public class GlobalData {
 		}
 		return globalData;
 	}	
+	
+	public static void release()
+	{
+		globalData = null;
+	}
 	//public Queue<String> queue; 
-	public Hashtable<String, Integer>    word2index;
-	public Hashtable<String, Document>   id2doc;
+	public RedisBasedMap<String, Integer>    word2index;
+	public RedisBasedMap<String, Document>   id2doc;
 	
 	//for calculating IDF
 	//int numberOfDocuments;
 	private ConcurrentHashMap<Integer, Double> word2idf;
 
-	public ConcurrentHashMap<Integer, Integer>   numberOfDocsIncludeWord;
+	public RedisBasedMap<Integer, Integer>   numberOfDocsIncludeWord;
 	public ConcurrentHashMap<String, DocumentCluster>  clusters;
 	public ConcurrentHashMap<String, String> id2cluster;
 	//public LRUCache<String,Document> recent;
@@ -75,15 +82,13 @@ public class GlobalData {
 
 	private Parameters parameters = new Parameters();
 	public List<String> cleanClusterQueue = null;
-	private RedisBasedMap<String, Document> mymap;
 	
 	
 	private GlobalData()
 	{	
-		word2index  = new Hashtable<String , Integer>();
+		//word2index  = new Hashtable<String , Integer>();
 		//index2word  = new Hashtable<Integer, String>();
-		id2doc = new Hashtable<String , Document>();
-		numberOfDocsIncludeWord = new ConcurrentHashMap<Integer, Integer>();
+		//numberOfDocsIncludeWord = new ConcurrentHashMap<Integer, Integer>();
 		cleanClusterQueue = new LinkedList<String>();
 		//cleanClusterQueue = (List<String>) Collections.synchronizedList(new LinkedList<String>()); //new LinkedList<Document>();
 		clusters = new ConcurrentHashMap<String, DocumentCluster>();
@@ -95,10 +100,14 @@ public class GlobalData {
 	
 	private void init()
 	{
+		recentManager = new ArrayFixedSize<String>(parameters.search_recents);
+		//id2doc = new Hashtable<String, Document>();
+		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, 10, getParams().resume_mode, new SerializeHelperStrDoc() );
+		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, 10, getParams().resume_mode, new SerializeHelperStrInt() );
+		numberOfDocsIncludeWord = new RedisBasedMap<Integer, Integer>(GlobalData.K_WORD2COUNTS, 10, getParams().resume_mode, new SerializeHelperIntInt() );
+		
 		numberOfDocsIncludeWord.put(-1, 0);
 		numberOfDocsIncludeWord.put(-2, getParams().offset);
-		recentManager = new ArrayFixedSize<String>(parameters.search_recents);
-		//mymap = new RedisBasedMap<String, Document>("temp", 10, getParams().resume_mode, new SerializeHelperStrDoc() );
 	}
 	
 	public ClusteringQueueManager getQueue() {

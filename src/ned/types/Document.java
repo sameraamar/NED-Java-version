@@ -230,10 +230,6 @@ public class Document  implements Serializable{
 	}
 
 	public void setNearestDetermined(boolean nearestDetermined) {
-		if(id.equals("86383662215598080"))
-		{	
-			String t = "86383662215598080";
-		}
 		this.nearestDetermined = nearestDetermined;
 	}
 
