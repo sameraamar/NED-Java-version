@@ -148,13 +148,20 @@ public class RedisAccessHelper {
 		Jedis jedis=getRedisClient();
 		
 		//jedis.hset(key, "-100", Integer.toString(data.size()));
-		
+		int count = 0;
 		for (String field : data.keySet())
 		{
 			Document value = data.get(field);
-			byte[] bytes = getDocSerializer().serialize(value);
-			jedis.hset(key.getBytes(), field.getBytes(), bytes);
+			if(value.isDirty)
+			{
+				byte[] bytes = getDocSerializer().serialize(value);
+				jedis.hset(key.getBytes(), field.getBytes(), bytes);
+				value.isDirty = false;
+				count++;
+			}
 		}
+		
+		System.out.println("wrote: " + count + " documents to redis");
 		
 		retunRedisClient(jedis);
 	}

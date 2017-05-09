@@ -15,6 +15,8 @@ public class Document  implements Serializable{
 	 */
 	private static final long serialVersionUID = 4575371423244913253L;
 	
+	public boolean isDirty;
+	
 	private String id;
     private String text ;
     private List<String> words;
@@ -43,6 +45,7 @@ public class Document  implements Serializable{
 	
     public Document(String id, String text, long timestamp)
     {
+    	this.isDirty = true;
     	this.id = id;
         this.text = text;
         //this.weights = null;
@@ -183,10 +186,12 @@ public class Document  implements Serializable{
 
 	void setWordCount(ConcurrentHashMap<Integer, Integer> wordCount) {
 		this.wordCount = wordCount;
+		isDirty = true;
 	}
 
 	void setDimension(int dimension) {
 		this.dimension = dimension;
+		isDirty = true;
 	}
 
 	public long getTimestamp() {
@@ -199,6 +204,7 @@ public class Document  implements Serializable{
 
 	public void setCreatedAt(String created_at) {
 		this.created_at = created_at;
+		isDirty = true;
 	}
 
 	public void updateNearest(Document right) {
@@ -213,6 +219,7 @@ public class Document  implements Serializable{
 		{
 			nearestDist = tmp;
 			nearest = right.getId();
+			isDirty = true;
 		}
 	}
 	public void updateNearest(String rightId) 
@@ -231,6 +238,7 @@ public class Document  implements Serializable{
 
 	public void setNearestDetermined(boolean nearestDetermined) {
 		this.nearestDetermined = nearestDetermined;
+		isDirty = true;
 	}
 
 	public double getNearestDist() {

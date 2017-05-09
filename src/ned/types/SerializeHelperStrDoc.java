@@ -10,6 +10,7 @@ public class SerializeHelperStrDoc implements SerializeHelper<String, Document>{
 	{
 		byte[] svalue = RedisAccessHelper.getDocSerializer().serialize(value);
 		jedis.hset(jedisKey.getBytes(), key.getBytes(), svalue);
+		value.isDirty = false;
 	}
 
 	@Override
@@ -20,6 +21,7 @@ public class SerializeHelperStrDoc implements SerializeHelper<String, Document>{
 			return null;
 		
 		Document doc = (Document) RedisAccessHelper.getDocSerializer().deserialize(svalue);
+		doc.isDirty = false;
 		return doc;
 	}
 
