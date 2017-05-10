@@ -190,6 +190,7 @@ public class Twokenize {
 
     static Pattern Excluded  = Pattern.compile(
             OR(     
+            		"(?=.{1})",
             		entity,
             		Hearts,
                     url,
@@ -295,7 +296,7 @@ public class Twokenize {
         for (String s : smaller){
             String strim = s.trim();
             if (strim.length() > 0)
-                master.add(strim);
+                master.add(strim.intern());
         }
         return master;
     }
@@ -372,7 +373,8 @@ public class Twokenize {
         String lines[]  = {"this \nis	samer@email.com			@samer				!	 a   #hashtag    &lt; testy",
         		"*busy* do home work ㅠㅠ",
         		"rt july better than june ) #julywish",
-        		"rt #wowfakta logizomechanophobia / cyberphobia \\ * : - orang yang takut komputer"};
+        		"rt #wowfakta logizomechanophobia / cyberphobia \\ * : - orang yang takut komputer",
+        		"This is o n e l e tt e r"};
         
     
     	for(String line : lines)

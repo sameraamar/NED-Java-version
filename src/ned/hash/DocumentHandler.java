@@ -51,7 +51,9 @@ public class DocumentHandler {
 		String created_at = jsonObj.get("created_at").getAsString();
 		long timestamp = jsonObj.get("timestamp").getAsLong();
 				
-        Document doc = new Document(id, text, timestamp); //id == "94816822100099073" is for Amy Winhouse event
+        Document doc = Document.createOrGet(id);
+        doc.init(text, timestamp);
+        
         doc.setCreatedAt(created_at);
         //Hashtable<Integer, Double> weights = doc.getWeights();
 

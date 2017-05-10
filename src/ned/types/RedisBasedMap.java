@@ -65,6 +65,11 @@ public class RedisBasedMap<K, V> extends ConcurrentHashMap<K, V> {
 		clear();
 	}
 	
+	public long redisSize()
+	{
+		return RedisAccessHelper.redisSize(jedisKey);
+	}
+	
 	public void load()
 	{
 		

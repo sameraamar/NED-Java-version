@@ -5,16 +5,16 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import ned.tools.ArrayFixedSize;
 import ned.tools.ExecutionHelper;
 
 public class DocumentClusteringHelper {
 	
 	
-	private static void determineClosest(Document doc, List<String> list)
+	private static void determineClosest(Document doc, List<String> list, Map<Integer, Double> word2idf)
 	{
 		String id = doc.getId();
 		
@@ -24,7 +24,7 @@ public class DocumentClusteringHelper {
 		    if(rightId.compareTo(id) < 0)
 		    {
 		    	Document right = GlobalData.getInstance().id2doc.get(rightId);//RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
-				doc.updateNearest(right);
+				doc.updateNearest(right, word2idf);
 		    }
 		}
 		
@@ -43,15 +43,15 @@ public class DocumentClusteringHelper {
 		*/
 	}
 	
-	public static void postLSHMapping(Document doc, List<String> set)
+	public static void postLSHMapping(Document doc, List<String> set, Map<Integer, Double> word2idf)
 	{
-		ArrayFixedSize<String> recent = GlobalData.getInstance().getRecentManager();
+		RoundRobinArray<String> recent = GlobalData.getInstance().getRecentManager();
 		if(recent!=null)
 		{
 			for(int i=0; i<recent.size(); i++)
 				set.add(recent.get(i));
 		}
-		DocumentClusteringHelper.determineClosest(doc, set);
+		DocumentClusteringHelper.determineClosest(doc, set, word2idf);
 		//DocumentClusteringHelper.determineClosest(doc, GlobalData.getInstance().getRecent());
 		//handle recent documents
 		//searchInRecentDocuments(doc);

@@ -5,18 +5,26 @@ import java.util.Hashtable;
 import java.util.Map;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
+
+import ned.main.WorkerThread;
+import ned.types.ArrayFixedSize;
 import ned.types.Document;
+import ned.types.DocumentClusteringThread;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 public class RedisAccessHelper {
 
+	private static final int TIME_OUT = 18000;
+	private static final int PORT = 6379;
 	public static final int REDIS_MAX_CONNECTIONS = 500;
 	public static  boolean ready = false;
 
 	private static JedisPool jedisPool = null;
 	private static RedisSerializer<Object> docSerializer ;
+	
+	//private static ArrayFixedSize<JedisPool> pools;
 
 	public static JedisPool createRedisConnectionPool() {
 		JedisPoolConfig config = new JedisPoolConfig();
@@ -27,38 +35,46 @@ public class RedisAccessHelper {
 		config.setTestOnBorrow(false);
 		config.setTestOnReturn(false);
 		config.setTestWhileIdle(false);
+		config.setMaxTotal(REDIS_MAX_CONNECTIONS);
 		//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
-		return new JedisPool(config,"localhost", 6379, 18000);
+		return new JedisPool(config,"localhost", PORT, TIME_OUT);
 	}
 
 	
 	synchronized public static void initRedisConnectionPool() {
-		System.out.println("Preparing jedisPool....  ");
-		if(jedisPool==null){
+		if(jedisPool != null)
+			return;
 		
-				if(jedisPool==null)
-				{	
-					jedisPool = createRedisConnectionPool();
-					System.out.println("jedisPool is Ready "+jedisPool.getNumActive());
-				}
-			}
+		System.out.println("Preparing jedisPool....  ");
+
+		jedisPool = createRedisConnectionPool();
+
+		System.out.println("jedisPool is Ready. ");
 		clearRedisKeys();
 		ready=true;
 	}
 
 	public static Jedis getRedisClient() {
 		
-		if(jedisPool==null){
+		Runnable thr = Thread.currentThread();
+		JedisPool pool = null;
+		if (thr instanceof DocumentClusteringThread) {
+			DocumentClusteringThread new_name = (DocumentClusteringThread) thr;
+			pool = new_name.jedisPool;
+		}
+		
+		if(pool==null){
 			initRedisConnectionPool();
+			pool = jedisPool;
 		}
 		Date start=new Date();
 		Jedis cn = null;
 		try {
-			if(jedisPool.getNumActive()<=REDIS_MAX_CONNECTIONS){
-				cn= jedisPool.getResource();
+			if(pool.getNumActive()<=REDIS_MAX_CONNECTIONS){
+				cn= pool.getResource();
 				
 			}else{
-				System.out.println("redisConnections=="+jedisPool.getNumActive());
+				System.out.println("redisConnections=="+pool.getNumActive());
 				System.out.println("this.parameters.REDIS_MAX_CONNECTIONS="+REDIS_MAX_CONNECTIONS);
 
 				Thread.sleep(5);
@@ -68,7 +84,7 @@ public class RedisAccessHelper {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("e="+e.getMessage());
-			System.out.println("redisConnections = "+jedisPool.getNumActive());
+			System.out.println("redisConnections = "+pool.getNumActive());
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e1) {
@@ -87,10 +103,11 @@ public class RedisAccessHelper {
 		if(rediscoontime>10)
 		{
 			System.out.println("rediscoontime==="+rediscoontime);
-		    System.out.println("redisConnections="+jedisPool.getNumActive());
+		    System.out.println("redisConnections="+pool.getNumActive());
 		 }
 		return cn;
 	}
+	
 	public static void retunRedisClient(Jedis jedis) {
 		jedis.close();
 		
@@ -262,6 +279,11 @@ public class RedisAccessHelper {
 				docSerializer= new JdkSerializationRedisSerializer();
 		}
 		return docSerializer;
+	}
+
+
+	public static int getNumActive() {
+		return jedisPool.getNumActive();
 	}
 	
 }

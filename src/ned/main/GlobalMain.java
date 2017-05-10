@@ -9,7 +9,7 @@ public class GlobalMain {
 	public static void main(String[] args) throws IOException {
 		
 		int o = 0;
-		int max = 1100_000;
+		int max = 100_000;
 		boolean resume = false;
 
 		for(int i=0; i<30; i++) 
@@ -28,7 +28,7 @@ public class GlobalMain {
 			GlobalData.release();
 			
 			System.out.println("released global data");
-			o += 1_000_000;
+			o += 100_000;
 			resume = true;
 		}
 	}

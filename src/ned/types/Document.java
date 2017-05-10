@@ -1,8 +1,9 @@
 package ned.types;
 
 import java.io.Serializable;
-import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import com.google.gson.JsonElement;
@@ -43,10 +44,32 @@ public class Document  implements Serializable{
 	private String reply_to_user_id;
 	private String quoted_user_id;
 	
-    public Document(String id, String text, long timestamp)
+	public static Document createOrGet(String id)
+	{
+		Document doc = null;
+		
+		id = id.intern();
+		synchronized (id) {
+			doc = GlobalData.getInstance().id2doc.get(id);
+			if(doc == null)
+			{
+				doc = new Document(id);
+				GlobalData.getInstance().id2doc.put(id, doc);
+			}
+			
+		}
+		
+		return doc;
+	}
+	
+	private Document(String id)
+	{
+    	this.id = id.intern();
+	}
+	
+    public void init(String text, long timestamp)
     {
     	this.isDirty = true;
-    	this.id = id;
         this.text = text;
         //this.weights = null;
         this.nearest = null;
@@ -86,13 +109,10 @@ public class Document  implements Serializable{
 		super.finalize();
 	}
 	
-    private static double Norm(ConcurrentHashMap<Integer, Double> weights) {
+    private static double Norm(Map<Integer, Double> rWeights) {
     	double res = 0;
-        Enumeration<Double> values = weights.elements();
-        
-        while(values.hasMoreElements())
+        for(Double v : rWeights.values())
         {
-			double v = values.nextElement();
             res += v * v;
         }
 
@@ -100,13 +120,13 @@ public class Document  implements Serializable{
         return res;
 	}
     
-    public double Norm()
+    /*public double Norm()
     {        
     	double res = Norm(getWeights());
         return res;
-    }
+    }*/
 
-    public static double Distance(Document left, Document right)
+    public static double Distance(Document left, Document right, Map<Integer, Double> word2idf)
     {
     	Set<Integer> commonWords = DocumentClusteringHelper.intersection(left.getWordCount(), right.getWordCount());
      	if(commonWords.isEmpty()){
@@ -120,8 +140,8 @@ public class Document  implements Serializable{
             left = tmp;
         }
         
-        ConcurrentHashMap<Integer, Double> rWeights = right.getWeights();
-        ConcurrentHashMap<Integer, Double> lWeights = left.getWeights();
+        Map<Integer, Double> rWeights = right.getWeights(word2idf);
+        Map<Integer, Double> lWeights = left.getWeights(word2idf);
         
         double res = 0;
         double norms = Norm(rWeights) * Norm(lWeights);
@@ -148,18 +168,18 @@ public class Document  implements Serializable{
 		return text;
 	}
 
-	public ConcurrentHashMap<Integer, Double> getWeights() {
+	public Map<Integer, Double> getWeights(Map<Integer, Double> word2idf) {
 		//if (weights == null) 
 		//{
 			//synchronized(this) {
 				//if (weights!=null) //some other process already handlde
 				//	return weights;
 				
-		ConcurrentHashMap<Integer, Double> tmp = new ConcurrentHashMap<Integer, Double>();
+		Hashtable<Integer, Double> tmp = new Hashtable<Integer, Double>();
 				
 				GlobalData gd = GlobalData.getInstance();
 				//gd.addDocument(this);
-				gd.calcWeights(this, tmp);
+				gd.calcWeights(this, tmp, word2idf);
 			//}
 		//}
 		return tmp;
@@ -207,14 +227,14 @@ public class Document  implements Serializable{
 		isDirty = true;
 	}
 
-	public void updateNearest(Document right) {
+	public void updateNearest(Document right, Map<Integer, Double> word2idf) {
 		if(right == null)
 			return;
 		
 		if(right.getId().compareTo(getId()) >= 0)
 			return;
 		
-		double tmp = Document.Distance(this, right);
+		double tmp = Document.Distance(this, right, word2idf);
 		if (nearest==null || tmp < nearestDist)
 		{
 			nearestDist = tmp;
@@ -222,14 +242,14 @@ public class Document  implements Serializable{
 			isDirty = true;
 		}
 	}
-	public void updateNearest(String rightId) 
+	public void updateNearest(String rightId, Map<Integer, Double> word2idf) 
 	{
 		if(rightId == null)
 			return;
 		
 		//Document right = RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
 		Document right = GlobalData.getInstance().id2doc.get(rightId);
-		updateNearest(right);
+		updateNearest(right, word2idf);
 	}
 
 	public boolean isNearestDetermined() {
@@ -271,8 +291,9 @@ public class Document  implements Serializable{
 			timestamp = 0;
 		}
 			
-
-		Document doc = new Document(id, text, timestamp); //id == "94816822100099073" is for Amy Winhouse event
+		//id == "94816822100099073" is for Amy Winhouse event
+		Document doc = Document.createOrGet(id);
+		doc.init(text, timestamp); 
 
 		
         doc.created_at = created_at;

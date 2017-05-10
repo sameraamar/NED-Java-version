@@ -3,13 +3,16 @@ package ned.types;
 import java.io.PrintStream;
 
 import ned.tools.ClusteringQueueManager;
+import ned.tools.RedisAccessHelper;
+import redis.clients.jedis.JedisPool;
 
 public class DocumentClusteringThread extends Thread {
 	private boolean stop = false;
 	private GlobalData gd;
 	private PrintStream out;
 	public int clusteredCounter;
-	
+	public JedisPool jedisPool;
+
 	public DocumentClusteringThread(PrintStream out)
 	{
 		this.out = out;
@@ -20,6 +23,7 @@ public class DocumentClusteringThread extends Thread {
 	@Override
 	public void run() 
 	{
+        this.jedisPool = RedisAccessHelper.createRedisConnectionPool();
 		while(!stop) 
 		{
 			mapToCluster();
@@ -37,14 +41,13 @@ public class DocumentClusteringThread extends Thread {
 			}
 			
 		}
-		
 		//last time
 		//wait for all other threads to finish
 		while(!mapToCluster())
 		{}
 
 		gd.flushClustersAll(out);
-
+		this.jedisPool.destroy();
 	}
 	
 	private boolean mapToCluster()

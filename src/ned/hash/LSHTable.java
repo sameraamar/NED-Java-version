@@ -3,11 +3,11 @@ package ned.hash;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import ned.tools.ArrayFixedSize;
+import java.util.Map;
 import ned.tools.HyperPlansManager;
 import ned.types.Document;
 import ned.types.GlobalData;
+import ned.types.RoundRobinArray;
 import ned.types.Session;
 
 public class LSHTable
@@ -19,13 +19,13 @@ public class LSHTable
     public  Boolean fixingDim=false;
     
     private HyperPlansManager hyperPlanes;
-    private HashMap<Long, ArrayFixedSize<String>> buckets = null;
+    private HashMap<Long, RoundRobinArray<String>> buckets = null;
     
     public LSHTable(int tableId,int hyperPlanesNumber, int dimension, int maxBucketSize)
     {
     	this.tableId=tableId;
     	this.hyperPlanesNumber = hyperPlanesNumber;
-        buckets = new HashMap<Long, ArrayFixedSize<String>>(maxBucketSize);
+        buckets = new HashMap<Long, RoundRobinArray<String>>(maxBucketSize);
         this.maxBucketSize = maxBucketSize;
 		hyperPlanes = new HyperPlansManager(hyperPlanesNumber, dimension, GlobalData.getInstance().getParams().dimension_jumps);
     }
@@ -35,14 +35,14 @@ public class LSHTable
     	hyperPlanes.init();
     }
     
-     private long GenerateHashCode(Document doc)
+     private long GenerateHashCode(Document doc, Map<Integer, Double> word2idf)
      {
      	
      	boolean[] st = new boolean [hyperPlanesNumber];
      	Session session = Session.getInstance();
      	
      	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
-     	ConcurrentHashMap<Integer, Double> weights = doc.getWeights();
+     	Map<Integer, Double> weights = doc.getWeights(word2idf);
      	hyperPlanes.fixDim(doc.getDimension());
  		
  		for (int i = 0 ; i<hyperPlanesNumber; i++)
@@ -82,6 +82,7 @@ public class LSHTable
      	
      }
 
+     /*
 	private String GenerateHashCode_orig(Document doc)
     {
     	StringBuffer st = new StringBuffer();
@@ -112,11 +113,12 @@ public class LSHTable
     	
         return st.toString();
     }
+    */
 
-    public ArrayFixedSize<String> AddDocument(Document doc)
+    public RoundRobinArray<String> AddDocument(Document doc, Map<Integer, Double> word2idf)
     {
-        long code = GenerateHashCode(doc);
-        ArrayFixedSize<String> bucket = buckets.get(code);
+        long code = GenerateHashCode(doc, word2idf);
+        RoundRobinArray<String> bucket = buckets.get(code);
         if (bucket == null)
         {
         	//Rami -- watch out this sync. How can we avoid it?
@@ -125,7 +127,7 @@ public class LSHTable
         		bucket = buckets.get(code);
         		if (bucket == null) //still null
         		{
-        			buckets.put(code, new ArrayFixedSize<String>(maxBucketSize));
+        			buckets.put(code, new RoundRobinArray<String>(maxBucketSize));
         			bucket = buckets.get(code);
         		}
         	}

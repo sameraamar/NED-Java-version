@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import com.google.gson.Gson;
@@ -50,7 +52,11 @@ public class AppMain {
 			gd.init();
 			
 			ExecutionHelper.setCommonPoolSize();
-			String threadsFileName = "c:/temp/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset+".txt";
+			
+			String folder = "../";;
+			if(getMachineName().indexOf("SAAAMA") >= 0)
+				folder  = "c:/";
+			String threadsFileName = folder + "temp/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset+".txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
 			forest = new LSHForest(gd.getParams().number_of_tables, 
@@ -83,7 +89,13 @@ public class AppMain {
 			if (threadMonitor != null) {
 				threadMonitor.shutdown();
 				while(threadMonitor.isAlive())
-					;
+				{
+					try {
+						Thread.sleep(50);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
 			}
 			
 			release();
@@ -93,12 +105,13 @@ public class AppMain {
 	public static void doMain(PrintStream out) throws IOException {
 		GlobalData gd = GlobalData.getInstance();
 		
-	String folder = "/tmp/";
-
-	folder = "c:/data/events_db/petrovic";
+	String folder = "../";
+	if(getMachineName().indexOf("SAAAMA") >= 0)
+		folder  = "c:/data/events_db/petrovic";
 	//folder = "C:\\private\\samer\\data";
 	//folder="/Users/ramidabbah/private/mandoma/samer_a/data";
-	//folder = "C:\\private\\samer\\data";
+	
+	
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
 	                    "petrovic_01000000.gz",
@@ -178,8 +191,10 @@ public class AppMain {
     	if(gd.getParams().resume_mode) 
     	{
     		gd.numberOfDocsIncludeWord.load();
+    		gd.resumeInfo.load();
     		gd.word2index.load();
     		gd.id2doc.load();
+    		//gd.word2idf.load();
     	}
     	
 
@@ -289,16 +304,15 @@ public class AppMain {
 	            if (stop || processed % (gd.getParams().print_limit* 10) == 0)
 	            {
 	            	
-	            	int oldoffset = gd.numberOfDocsIncludeWord.get(-2);
-	        		int numberOfDocuments = gd.numberOfDocsIncludeWord.get(-1);
+	            	int lastIndex = gd.resumeInfo.get(GlobalData.LAST_SEEN_IDX);
 
-	        		if(oldoffset + numberOfDocuments <= idx)
+	        		if(lastIndex <= idx)
 	        		{
 		            	System.out.println("Wait for queue to get empty!");
 		            	while(!gd.getQueue().isEmpty())
 		            	{
 		            		try {
-								Thread.sleep(10);
+								Thread.sleep(50);
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
@@ -306,6 +320,7 @@ public class AppMain {
 		            	
 		            	gd.word2index.save();
 		            	gd.id2doc.save();
+		            	//gd.word2idf.save();
 		            	gd.numberOfDocsIncludeWord.save();
 		            	
 		            	System.gc();
@@ -329,7 +344,22 @@ public class AppMain {
 		Session.getInstance().message(Session.INFO, "Summary", "Done in " + Utility.humanTime(seconds) );
 	}
 	
+	private static String getMachineName()
+	{
+		String hostname = "Unknown";
 
+		try
+		{
+		    InetAddress addr;
+		    addr = InetAddress.getLocalHost();
+		    return addr.getHostName();
+		}
+		catch (UnknownHostException ex)
+		{
+		    System.out.println("Hostname can not be resolved");
+		}		
+		return "";
+	}
 	
 	private static void printParameters(PrintStream out) 
 	{

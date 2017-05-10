@@ -9,7 +9,7 @@ import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
 
 public class ExecutionHelper {
-	private  static ExecutorService executor = Executors.newFixedThreadPool(20);
+	private  static ExecutorService executor = Executors.newFixedThreadPool(2000);
 	private  static ForkJoinPool myForkJoinPool = new ForkJoinPool(100);
 
 	public static void asyncRun(Runnable task) {

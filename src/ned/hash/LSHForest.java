@@ -1,15 +1,16 @@
 package ned.hash;
 
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
-import ned.tools.ArrayFixedSize;
 import ned.tools.GeneralHelper;
 import ned.types.Document;
+import ned.types.RoundRobinArray;
 
 public class LSHForest {
 	
@@ -44,16 +45,21 @@ public class LSHForest {
 		System.out.println("LSHForest.init: " + (System.currentTimeMillis()-base));
 	}
 	
-	public List<String> addDocument00(Document doc)
+	public List<String> addDocument00(Document doc, Map<Integer, Double> word2idf)
     {
 		ConcurrentHashMap<String, Integer> hitCounts = new ConcurrentHashMap<String, Integer>();
 
 		for (int t = 0; t<numberOfTables; t++)
 		{
-			ArrayFixedSize<String> tmpList = tables[t].AddDocument(doc);
+			RoundRobinArray<String> tmpList = tables[t].AddDocument(doc, word2idf);
 			
 			for (int k=0; k<tmpList.size(); k++) {
 				String tmp = tmpList.get(k);
+				if(tmp == null)
+				{
+					System.out.println("Something strange.. value "+ k +" is null. tmpList.len = " + tmpList.size());
+					continue;
+				}
 				String id = doc.getId();
 				if ( tmp.compareTo(id) >=0 )
 					continue;
@@ -81,17 +87,16 @@ public class LSHForest {
         List<String> res = output.subList(0, toIndex);
         return res;
     }
-	
 	/*
 	public List<String> addDocument32(Document doc)
     {
 		
-HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
+		HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 		
 		Stream<LSHTable> tablesStream = Arrays.stream(tables);
 		List<String> tmpList = tablesStream.parallel()
 				.map(table->{
-					List<String> neighbors = table.AddDocument(doc);
+					ArrayFixedSize<String> neighbors = table.AddDocument(doc);
 					return neighbors;
 					})
 				.reduce((a, b) -> {
@@ -122,8 +127,7 @@ HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 		List<String> res = tmpList.subList(0, Math.min( tmpList.size(), 3*numberOfTables) );
         return res;
     }
-	 */
-	
+	*/
 	protected List<String> findTopX(HashMap<String, Integer> hitCounts) {
 		PriorityQueue<String> pqueue = new PriorityQueue<String>(new Comparator<String> () 
         {  
@@ -159,9 +163,9 @@ HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
 	}
 	
 	
-	public List<String> addDocument(Document doc)
+	public List<String> addDocument(Document doc, Map<Integer, Double> word2idf)
     {
-		return this.addDocument00(doc);
+		return this.addDocument00(doc, word2idf);
 		/*
 		Callable <List<String>> task = () -> {
 			return this.addDocument00(doc);

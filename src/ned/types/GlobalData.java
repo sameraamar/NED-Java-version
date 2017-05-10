@@ -7,22 +7,26 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import ned.modules.Twokenize;
-import ned.tools.ArrayFixedSize;
 import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
 
 public class GlobalData {
+	public static final int LAST_DIMENSION = -3;
+	public static final int LAST_NUM_DOCS = -2;
+	public static final int LAST_SEEN_IDX = -1;
 	public static final String K_ID2DOCUMENT = "id2doc";
 	public static final String K_WORD2INDEX = "w2i";
 	public static final String K_WORD2COUNTS = "w2c";
-	//public static final String WORD2IDF = "word2idf";
-	
+	public static final String K_WORD2IDF = "w2idf";
+	public static final String K_RESUME_INFO = "resume";
+
 	public class Parameters 
 	{
 		public int monitor_timer_seconds = 5; //seconds
@@ -31,16 +35,16 @@ public class GlobalData {
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
-		public int max_documents = 30000;
+		public int max_documents = 600000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 0;
+		public int offset = 500000;
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
-		public int inital_dimension = 5000;
+		public int inital_dimension = 50000;
 		public int dimension_jumps = 50000;
-		public boolean resume_mode = false;
+		public boolean resume_mode = true;
 	}
 	
 	
@@ -64,33 +68,31 @@ public class GlobalData {
 	
 	//for calculating IDF
 	//int numberOfDocuments;
-	private ConcurrentHashMap<Integer, Double> word2idf;
+	//public RedisBasedMap<Integer, Double> word2idf;
 
 	public RedisBasedMap<Integer, Integer>   numberOfDocsIncludeWord;
+	public RedisBasedMap<Integer, Integer>   resumeInfo;
+	
 	public ConcurrentHashMap<String, DocumentCluster>  clusters;
 	public ConcurrentHashMap<String, String> id2cluster;
 	//public LRUCache<String,Document> recent;
 	
 	private ClusteringQueueManager queue;
-	private ArrayFixedSize<String> recentManager = null;
+	private RoundRobinArray<String> recentManager = null;
 
 	private Parameters parameters = new Parameters();
 	public List<String> cleanClusterQueue = null;
-	private AtomicInteger nextWord;
-	
 	
 	private GlobalData()
 	{	
 		//word2index  = new Hashtable<String , Integer>();
 		//index2word  = new Hashtable<Integer, String>();
 		//numberOfDocsIncludeWord = new ConcurrentHashMap<Integer, Integer>();
-		nextWord = new AtomicInteger (0);
 		cleanClusterQueue = new LinkedList<String>();
 		//cleanClusterQueue = (List<String>) Collections.synchronizedList(new LinkedList<String>()); //new LinkedList<Document>();
 		clusters = new ConcurrentHashMap<String, DocumentCluster>();
 		//numberOfDocuments = 0;
 		queue = new ClusteringQueueManager();
-		word2idf = new ConcurrentHashMap<Integer, Double>();
 		id2cluster = new ConcurrentHashMap<String, String>();
 	}
 	
@@ -99,17 +101,25 @@ public class GlobalData {
 		if(recentManager != null)
 			return;
 		
-		recentManager = new ArrayFixedSize<String>(parameters.search_recents);
+		recentManager = new RoundRobinArray<String>(parameters.search_recents);
 		//id2doc = new Hashtable<String, Document>();
 		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, getParams().resume_mode, new SerializeHelperStrDoc() );
 		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, getParams().resume_mode, new SerializeHelperStrInt() );
 		numberOfDocsIncludeWord = new RedisBasedMap<Integer, Integer>(GlobalData.K_WORD2COUNTS, getParams().resume_mode, new SerializeHelperIntInt() );
+		resumeInfo = new RedisBasedMap<Integer, Integer>(GlobalData.K_RESUME_INFO, getParams().resume_mode, new SerializeHelperIntInt() );
+		if(!getParams().resume_mode)
+		{
+			resumeInfo.put(LAST_SEEN_IDX, getParams().offset-1);
+			resumeInfo.put(LAST_NUM_DOCS, 0);
+			resumeInfo.put(LAST_DIMENSION, 0);
+		}
+		else
+		{
 		
-		numberOfDocsIncludeWord.put(-1, 0);
-		numberOfDocsIncludeWord.put(-2, getParams().offset);
+		}
 	}
-	
-	public ArrayFixedSize<String> getRecentManager() {
+
+	public RoundRobinArray<String> getRecentManager() {
 		return recentManager;
 	}
 
@@ -153,8 +163,10 @@ public class GlobalData {
 	
 	public double calcIDF(int word) 
 	{		
-		int numberOfDocuments = numberOfDocsIncludeWord.get(-1);
-		double numerator = (numberOfDocuments + 0.5) / numberOfDocsIncludeWord.get(word);
+		int numberOfDocuments = resumeInfo.get(LAST_NUM_DOCS);
+		
+		int appeared = numberOfDocsIncludeWord.get(word);
+		double numerator = (numberOfDocuments + 0.5) / appeared;
 		numerator = Math.log10(numerator);
 		
 		double denominator = Math.log10(numberOfDocuments + 1.0);	
@@ -162,7 +174,7 @@ public class GlobalData {
 		return numerator / denominator;
 	}
 	
-	public double getIDF(int k)
+	/*public double getIDF(int k)
 	{
 		return word2idf.get(k);
 	}
@@ -171,27 +183,26 @@ public class GlobalData {
 	public double getOrDefault(int k)
 	{
 		return word2idf.getOrDefault(k, -1.0);
-	}
+	}*/
 	
-	public void calcWeights(Document doc, ConcurrentHashMap<Integer, Double> tmp2) 
+	public void calcWeights(Document doc, Map<Integer, Double> weights, Map<Integer, Double> word2idf) 
 	{
+		 ConcurrentHashMap<Integer, Integer> wordCount = doc.getWordCount();
+		Enumeration<Integer> tmp = wordCount.keys();
 		
-			 ConcurrentHashMap<Integer, Integer> wordCount = doc.getWordCount();
-				Enumeration<Integer> tmp = wordCount.keys();
-				
-				while(tmp.hasMoreElements())
-				{
-					int k = tmp.nextElement();
-					Integer a = wordCount.get(k);
-					if (word2idf.get(k)==null)
-						{
-							double val = calcIDF(k);
-							word2idf.put(k, val);
-						}
-					Double b = word2idf.get(k);
-					
-					tmp2.put(k, a*b);
-				}
+		while(tmp.hasMoreElements())
+		{
+			int k = tmp.nextElement();
+			Integer a = wordCount.get(k);
+			Double b = word2idf.get(k);
+			if (b==null)
+			{
+				b = calcIDF(k);
+				word2idf.put(k, b);
+			}
+			
+			weights.put(k, a*b);
+		}
 	}
 	
 	public void calcWeights1(Document doc, Hashtable<Integer, Double> weights) 
@@ -199,7 +210,7 @@ public class GlobalData {
 		
 		ConcurrentHashMap<Integer, Integer> wordCount = doc.getWordCount();
 		
-		int numberOfDocuments = numberOfDocsIncludeWord.get(-1);
+		int numberOfDocuments = resumeInfo.get(LAST_NUM_DOCS);
 		int Dt_size = numberOfDocuments; //id2document.size();
 		
 		for (Integer k : wordCount.keySet()) {
@@ -243,16 +254,24 @@ public class GlobalData {
 		}
 		
 		return max;
-	}	
+	}
+	
 	private int addWord(String word)
 	{
 		int idx = word2index.getOrDefault(word, -1);
-		
 		if (idx == -1) 
 		{
-			idx = nextWord.incrementAndGet(); //word2index.size();
-			//index2word.put(idx, word);
-			word2index.put(word, idx);
+			synchronized (word2index)
+			{
+				if (word2index.getOrDefault(word, -1) == -1)
+				{
+					idx = resumeInfo.get(LAST_DIMENSION);
+					resumeInfo.put(LAST_DIMENSION, idx+1);
+					
+					//index2word.put(idx, word);
+					word2index.put(word, idx);
+				}
+			}
 		}
 		
 		return idx;
@@ -261,11 +280,10 @@ public class GlobalData {
 	public void addDocument(Document doc, int idx) 
 	{
 		int d = wordCounts( doc.getWords(), doc.getWordCount());
+		doc.setDimension ( d );
 
-		int offset = numberOfDocsIncludeWord.get(-2);
-		int numberOfDocuments = numberOfDocsIncludeWord.get(-1);
-
-		if(offset + numberOfDocuments <= idx)
+		int lastDocIndex = resumeInfo.get(LAST_SEEN_IDX); 
+		if(lastDocIndex < idx)
 		{
 			//update number of documents holding each word (for TFIDF)
 			for (int i : doc.getWordCount().keySet()) 
@@ -273,10 +291,10 @@ public class GlobalData {
 				int val = numberOfDocsIncludeWord.getOrDefault(i, 0);
 				numberOfDocsIncludeWord.put(i, val+1);					
 			}
-			numberOfDocsIncludeWord.put(-1, numberOfDocuments+1);
+			resumeInfo.put(LAST_SEEN_IDX, idx);
+			resumeInfo.put(LAST_NUM_DOCS, resumeInfo.get(LAST_NUM_DOCS)+1);
 		}
 		
-		doc.setDimension ( d );
 		id2doc.put(doc.getId(), doc);
 		//RedisHelper.setDocumentFromRedis(ID2DOCUMENT, doc.getId(), doc);
 

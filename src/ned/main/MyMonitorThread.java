@@ -2,6 +2,8 @@ package ned.main;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import ned.tools.RedisAccessHelper;
 import ned.types.GlobalData;
 import ned.types.Session;
 import ned.types.Utility;
@@ -61,8 +63,9 @@ public class MyMonitorThread extends Thread
         	//}
 
             StringBuffer msg = new StringBuffer();
-            msg.append("Elapsed time: ").append(Utility.humanTime(delta));
-            msg.append(" Worker AHT: ").append(String.format("\t%.2f",waht)).append(".\n\t");
+            msg.append("\tActive Redis Connections: ").append(RedisAccessHelper.getNumActive()).append("\n");
+            msg.append("\tElapsed time: ").append(Utility.humanTime(delta));
+            msg.append(", Worker AHT: ").append(String.format("\t%.2f",waht)).append(".\n\t");
             WorkerThread.resetCounter();
             if (executor != null)
         {
@@ -72,13 +75,11 @@ public class MyMonitorThread extends Thread
         }
         
                 try {            
-
-            /*
-            msg.append("\tidf('i')=").append(gd.getOrDefault(gd.word2index.getOrDefault("i",-1)));
-            msg.append(", idf('the')=").append(gd.getOrDefault(gd.word2index.getOrDefault("the",-1)));
-            msg.append(", idf('rt')=").append(gd.getOrDefault(gd.word2index.getOrDefault("rt",-1)));
-            msg.append(", idf('ramadan')=").append(gd.getOrDefault(gd.word2index.getOrDefault("ramadan",-1)));
-            */
+            msg.append("\tidf('i')=").append(gd.calcIDF(gd.word2index.getOrDefault("i",-1)));
+            msg.append(", idf('the')=").append(gd.calcIDF(gd.word2index.getOrDefault("the",-1)));
+            msg.append(", idf('rt')=").append(gd.calcIDF(gd.word2index.getOrDefault("rt",-1)));
+            msg.append(", idf('ramadan')=").append(gd.calcIDF(gd.word2index.getOrDefault("ramadan",-1)));
+            msg.append("\n");
             msg.append("\tQueue: ").append(gd.getQueue().size()).append(", ID=").append(gd.getQueue().peek());
             
 
