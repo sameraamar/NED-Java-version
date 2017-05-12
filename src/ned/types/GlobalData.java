@@ -211,8 +211,8 @@ public class GlobalData {
 				b = calcIDF(k);
 				word2idf.put(k, b);
 			}
-			
-			weights.put(k, a*b);
+			double r=a*b;
+			weights.put(k, r);
 		}
 		
 		
