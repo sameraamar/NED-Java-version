@@ -1,6 +1,7 @@
 package ned.types;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +23,7 @@ public class Document  implements Serializable{
     private String text ;
     private List<String> words;
     //private java.util.Hashtable<Integer, Double> weights ;
-    private ConcurrentHashMap<Integer, Integer> wordCount ;
+    private HashMap<Integer, Integer> wordCount ;
     private int dimension;
     
     public int max_idx;
@@ -197,14 +198,14 @@ public class Document  implements Serializable{
 		return dimension;
 	}
 
-	ConcurrentHashMap<Integer, Integer> getWordCount() {
+	HashMap<Integer, Integer> getWordCount() {
 		if (wordCount == null)
-			wordCount = new ConcurrentHashMap<Integer, Integer>();
+			wordCount = new HashMap<Integer, Integer>();
 		
 		return wordCount;
 	}
 
-	void setWordCount(ConcurrentHashMap<Integer, Integer> wordCount) {
+	void setWordCount(HashMap<Integer, Integer> wordCount) {
 		this.wordCount = wordCount;
 		isDirty = true;
 	}

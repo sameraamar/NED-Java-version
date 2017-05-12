@@ -3,6 +3,7 @@ package ned.types;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,16 +38,16 @@ public class GlobalData {
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
-		public int max_documents = 10_000_000;
+		public int max_documents = 50_000_000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 6130000;
+		public int offset = 0;
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
-		public int inital_dimension = 1_000_000;
+		public int inital_dimension = 1_000_00;
 		public int dimension_jumps = 50000;
-		public boolean resume_mode = true;
+		public boolean resume_mode = false;
 	}
 	
 	private static GlobalData globalData = null;
@@ -198,12 +199,11 @@ public class GlobalData {
 	
 	public void calcWeights(Document doc, Map<Integer, Double> weights, Map<Integer, Double> word2idf) 
 	{
-		 ConcurrentHashMap<Integer, Integer> wordCount = doc.getWordCount();
-		Enumeration<Integer> tmp = wordCount.keys();
+		 HashMap<Integer, Integer> wordCount = doc.getWordCount();
+		Set<Entry<Integer, Integer>> tmp = wordCount.entrySet();
 		
-		while(tmp.hasMoreElements())
-		{
-			int k = tmp.nextElement();
+		for (Entry<Integer, Integer> entry : tmp) {
+			int k =entry.getKey();
 			Integer a = wordCount.get(k);
 			Double b = word2idf.get(k);
 			if (b==null)
@@ -214,6 +214,8 @@ public class GlobalData {
 			
 			weights.put(k, a*b);
 		}
+		
+		
 	}
 	
 	/*public void calcWeights1(Document doc, Hashtable<Integer, Double> weights) 
@@ -238,16 +240,16 @@ public class GlobalData {
 		
 	}*/
 	
-	private int wordCounts(List<String> list, ConcurrentHashMap<Integer, Integer> concurrentHashMap)
+	private int wordCounts(List<String> list, HashMap<Integer, Integer> hashMap)
 	{
 		int max_idx = addWords(list);
 		
 		for (String w : list) 
 		{
 			int idx = word2index.get(w);
-			int val = concurrentHashMap.getOrDefault(idx,  0);
+			int val = hashMap.getOrDefault(idx,  0);
 			val += 1;
-			concurrentHashMap.put(idx, val);
+			hashMap.put(idx, val);
 		}
 		
 		return max_idx;
