@@ -9,7 +9,7 @@ import ned.tools.RedisAccessHelper;
 import redis.clients.jedis.Jedis;
 
 public class RedisBasedMap<K, V> implements Map<K, V> {
-	private LinkedHashMap<K, V> map;
+	private ConcurrentHashMap<K, V> map;
 	private String jedisKey;
 	
 	private SerializeHelper<K, V> s;
@@ -27,7 +27,7 @@ public class RedisBasedMap<K, V> implements Map<K, V> {
 	
 	private void init(String redisKey, boolean reset, boolean saveOnUpdate, boolean readFromRedisOnMissing, SerializeHelper<K, V> s) {
 		//super(16, (float) 0.75, true);
-		map = new LinkedHashMap<K, V>(16, (float) 0.75);
+		map = new ConcurrentHashMap<K, V>(16, (float) 0.75);
 		this.jedisKey = redisKey;
 		this.s= s;
 		this.saveOnUpdate =saveOnUpdate;
