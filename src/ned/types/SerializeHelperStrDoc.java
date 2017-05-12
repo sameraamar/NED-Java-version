@@ -1,9 +1,11 @@
 package ned.types;
 
+import java.util.Map;
+
 import ned.tools.RedisAccessHelper;
 import redis.clients.jedis.Jedis;
 
-public class SerializeHelperStrDoc implements SerializeHelper<String, Document>{
+public class SerializeHelperStrDoc extends SerializeHelper<String, Document>{
 
 	@Override
 	public void set(Jedis jedis, String jedisKey, String key, Document value) 
@@ -26,8 +28,14 @@ public class SerializeHelperStrDoc implements SerializeHelper<String, Document>{
 	}
 
 	@Override
-	public void saveMap(String jedisKey, RedisBasedMap<String, Document> redisBasedMap) {
-		RedisAccessHelper.saveStrDocMap(jedisKey, redisBasedMap);
+	protected void saveMap(String jedisKey, Map<String, Document> data) 
+	{
+		RedisAccessHelper.saveStrDocMap(jedisKey, data);
+	}
+
+	@Override
+	Document parse(String svalue) {
+		return null;
 	}
 
 }

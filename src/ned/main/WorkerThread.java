@@ -9,6 +9,7 @@ import ned.tools.RedisAccessHelper;
 import ned.types.Document;
 import ned.types.DocumentClusteringHelper;
 import ned.types.GlobalData;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 public class WorkerThread implements Runnable 
@@ -75,13 +76,18 @@ public class WorkerThread implements Runnable
 			return;
 		}
     	Map<Integer, Double> word2idf = new Hashtable<Integer, Double>();
-		
+    	
+		//JedisPool jedisPool = RedisAccessHelper.createRedisConnectionPool();
+    	//GlobalData.getInstance().thread2redis.put(Thread.currentThread().getName(), jedisPool);
+    	
     	List<String> set = forest.addDocument(this.doc, word2idf);
 
     	DocumentClusteringHelper.postLSHMapping(this.doc, set, word2idf);
     	this.doc.setNearestDetermined( true);
 
         //DocumentClusteringHelper.mapToClusterHelper(doc);
+    	//GlobalData.getInstance().thread2redis.remove(Thread.currentThread().getName());
+    	//jedisPool.destroy();
     }
 
     public Document getDocument()

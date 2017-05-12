@@ -117,6 +117,14 @@ public class DocumentCluster {
 				nDoc = GlobalData.getInstance().id2doc.get(doc.getNearest()); //RedisHelper.getDocumentFromRedis(gd.ID2DOCUMENT,doc.getNearest());
 			}
 			
+			//The following block might not be needed after fixing other sync issues
+			if(doc == null)
+			{
+				System.out.println("Document is not there : " + docId);
+				doc = GlobalData.getInstance().id2doc.get(docId);
+			}
+			//-----------
+			
 			sb.append(docId).append("\t");
 			Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
 			sb.append(time.toString()).append("\t");

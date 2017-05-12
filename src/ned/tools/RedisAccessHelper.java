@@ -10,6 +10,8 @@ import ned.main.WorkerThread;
 import ned.types.ArrayFixedSize;
 import ned.types.Document;
 import ned.types.DocumentClusteringThread;
+import ned.types.GlobalData;
+import ned.types.RedisBasedMap;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -61,7 +63,9 @@ public class RedisAccessHelper {
 		if (thr instanceof DocumentClusteringThread) {
 			DocumentClusteringThread new_name = (DocumentClusteringThread) thr;
 			pool = new_name.jedisPool;
-		}
+		} //else {
+		//	pool = GlobalData.getInstance().thread2redis.get(Thread.currentThread().getName());
+		//}
 		
 		if(pool==null){
 			initRedisConnectionPool();
@@ -141,28 +145,6 @@ public class RedisAccessHelper {
 	{		
 	}
 	
-	/*public static void saveStrIntMap(String key, Map<String, Integer> data)
-	{
-		Jedis jedis=getRedisClient();
-		
-		int count = 0;
-		int update = 0;
-		
-		for (String field : data.keySet())
-		{
-			Integer value = data.get(field);
-			if(jedis.exists(key))
-				update++;
-			else
-				count++;
-			jedis.hset(key, field, value.toString());
-		}
-		
-		System.out.println(key + ": updated " + update + " added " + count);
-		
-		retunRedisClient(jedis);
-	}*/
-	
 	public static void saveStrDocMap(String key, Map<String, Document> data)
 	{
 		Jedis jedis=getRedisClient();
@@ -195,65 +177,6 @@ public class RedisAccessHelper {
 		retunRedisClient(jedis);
 	}
 	
-	/*public static void loadStrIntMap(String key, Map<String, Integer> data)
-	{
-		Jedis jedis=getRedisClient();
-		
-		//int size = Integer.valueOf( jedis.hget(key, "-100") );
-		
-		for (String field : jedis.hkeys(key))
-		{
-			//if(field.equals("-100"))
-			//	continue;
-			
-			String value = jedis.hget(key, field);
-			data.put(field, Integer.valueOf( value ) );
-		}
-		retunRedisClient(jedis);
-	}
-
-	
-	public static void saveIntIntMap(String key, Map<Integer, Integer> data)
-	{
-		Jedis jedis=getRedisClient();
-		
-		int count = 0;
-		int update = 0;		
-		for (Integer field : data.keySet())
-		{
-			Integer value = data.get(field);
-			
-			if(jedis.exists(key))
-				update++;
-			else
-				count++;
-			
-			jedis.hset(key, field.toString(), value.toString());
-		}
-		
-		System.out.println(key + ": updated " + update + " added " + count);
-		retunRedisClient(jedis);
-	}
-	
-	public static void loadIntIntMap(String key, Map<Integer, Integer> data)
-	{
-		Jedis jedis=getRedisClient();
-		
-		//int size = Integer.valueOf( jedis.hget(key, "-100") );
-		
-		for (String sfield : jedis.hkeys(key))
-		{
-			//if(sfield.equals("-100"))
-			//	continue;
-		
-			String svalue = jedis.hget(key, sfield);
-			Integer value = Integer.valueOf(svalue);
-			Integer field = Integer.valueOf(sfield);
-			data.put(field, value );
-		}
-		retunRedisClient(jedis);
-	}*/
-
 	public static void loadStrDocMap(String key, Hashtable<String, Document> data) {
 		Jedis jedis=getRedisClient();
 		
@@ -285,5 +208,6 @@ public class RedisAccessHelper {
 	public static int getNumActive() {
 		return jedisPool.getNumActive();
 	}
+
 	
 }

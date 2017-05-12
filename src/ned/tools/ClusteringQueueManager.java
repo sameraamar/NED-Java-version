@@ -24,7 +24,7 @@ public class ClusteringQueueManager {
 	public boolean isEmpty() {
 		return queue.isEmpty();
 	}
-	public Object size() {
+	public int size() {
 		return queue.size();
 	}
 	

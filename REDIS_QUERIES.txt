@@ -1,0 +1,10 @@
+hlen w2c
+hlen w2i 
+hlen id2doc
+
+
+hget resume dimension
+hget resume doc_count
+hget resume last_idx
+
+

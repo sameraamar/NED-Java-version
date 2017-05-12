@@ -39,7 +39,7 @@ public class AppMain {
 		clustering = null;
 	}
 
-	public static void main(String[] args) throws IOException
+	public static void main(String[] args) throws Exception 
 	{
 		try {
 			GlobalData gd = GlobalData.getInstance();
@@ -49,12 +49,24 @@ public class AppMain {
 				Thread.sleep(100);
 			}
 
+			if(args.length == 3)
+			{
+			
+				int o = Integer.parseInt(args[0]);
+				int max = Integer.parseInt(args[1]);
+				boolean resume = Boolean.parseBoolean(args[2]);
+				
+				gd.getParams().offset = o ;
+				gd.getParams().max_documents = max;
+				gd.getParams().resume_mode = resume;
+				System.out.println(String.format("Run: offset %d,  max-doc %d, resume? = %b", o, max, resume));
+			}			
+			
 			gd.init();
 			
 			ExecutionHelper.setCommonPoolSize();
-			
 			String folder = "../";;
-			if(getMachineName().indexOf("SAAAMA") >= 0)
+			if(getMachineName().indexOf("saaama") >= 0)
 				folder  = "c:/";
 			String threadsFileName = folder + "temp/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset+".txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
@@ -69,7 +81,7 @@ public class AppMain {
 
 	    	Session.getInstance().message(Session.ERROR, "Reader", "Starting Monitor...");
 			int delay = gd.getParams().monitor_timer_seconds; //seconds
-			threadMonitor  = new MyMonitorThread(executer.getExecutor(), delay);
+			threadMonitor  = new MyMonitorThread(executer, delay);
 
 			doMain(out);
 			
@@ -77,6 +89,7 @@ public class AppMain {
 			
 		} catch(Exception e) {
 			e.printStackTrace();
+			throw e;
 		} finally {
 
 			if ( clustering != null )
@@ -105,13 +118,10 @@ public class AppMain {
 	public static void doMain(PrintStream out) throws IOException {
 		GlobalData gd = GlobalData.getInstance();
 		
-	String folder = "../";
-	if(getMachineName().indexOf("SAAAMA") >= 0)
-		folder  = "c:/data/events_db/petrovic";
-	//folder = "C:\\private\\samer\\data";
-	//folder="/Users/ramidabbah/private/mandoma/samer_a/data";
-	
-	
+		String folder = "../";
+		if(getMachineName().indexOf("saaama") >= 0)
+			folder  = "c:/data/events_db/petrovic";
+
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
 	                    "petrovic_01000000.gz",
@@ -194,7 +204,6 @@ public class AppMain {
     		gd.resumeInfo.load();
     		gd.word2index.load();
     		gd.id2doc.load();
-    		//gd.word2idf.load();
     	}
     	
 
@@ -253,10 +262,14 @@ public class AppMain {
 	            middle_processed++;
 	            idx++;
 	            
+	            
 	            if (processed % (gd.getParams().print_limit) == 0)
 	            {
-	        		//clustering.mapToCluster();
-	        		
+	            	if(GlobalData.getInstance().getQueue().size() > 3000)
+		            {
+		            	executer.refresh();
+		            }
+		            	        		
 	            	long currenttime = System.nanoTime();
 	        		long tmp = currenttime - middletime;
 	            	double average2 = 1.0 * TimeUnit.NANOSECONDS.toMillis(tmp) / middle_processed;
@@ -320,8 +333,8 @@ public class AppMain {
 		            	
 		            	gd.word2index.save();
 		            	gd.id2doc.save();
-		            	//gd.word2idf.save();
 		            	gd.numberOfDocsIncludeWord.save();
+		            	gd.resumeInfo.save();
 		            	
 		            	System.gc();
 	        		}
@@ -352,7 +365,7 @@ public class AppMain {
 		{
 		    InetAddress addr;
 		    addr = InetAddress.getLocalHost();
-		    return addr.getHostName();
+		    return addr.getHostName().toLowerCase();
 		}
 		catch (UnknownHostException ex)
 		{
@@ -360,7 +373,7 @@ public class AppMain {
 		}		
 		return "";
 	}
-	
+		
 	private static void printParameters(PrintStream out) 
 	{
 		GsonBuilder gson = new GsonBuilder();

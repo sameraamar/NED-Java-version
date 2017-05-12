@@ -46,12 +46,28 @@ public class RedisBasedMap<K, V> extends ConcurrentHashMap<K, V> {
 	public V put(K key, V value) {
 		V v = super.put(key, value);
 		
-		Jedis jedis = RedisAccessHelper.getRedisClient();
-		s.set(jedis, jedisKey, key, value);
-		RedisAccessHelper.retunRedisClient(jedis);
+		//Jedis jedis = RedisAccessHelper.getRedisClient();
+		//s.set(jedis, jedisKey, key, value);
+		//RedisAccessHelper.retunRedisClient(jedis);
 		
 		return v;
 	}
+//		Runnable runnable = () -> {
+//			Jedis jedis=getRedisClient();
+//			
+//			String keysArray[] = keys.split(",");
+//			byte[][]  kyesBytes = new byte[keysArray.length][] ;
+//			int index=0;
+//			for (String string : keysArray) {
+//					if(string.isEmpty()) continue;
+//					kyesBytes[index]=string.getBytes();
+//					index++;
+//			}
+//			jedis.hdel(hash.getBytes(),kyesBytes);
+//		
+//			retunRedisClient(jedis);
+//		};
+//		ExecutionHelper.asyncRun (runnable);
 
 	/*protected boolean removeEldestEntry(Map.Entry<K, V> eldest) 
 	{

@@ -1,27 +1,12 @@
 package ned.types;
 
-import redis.clients.jedis.Jedis;
-
-public class SerializeHelperIntInt implements SerializeHelper<Integer, Integer>{
+public class SerializeHelperIntInt extends SerializeHelper<Integer, Integer>{
 
 	@Override
-	public void set(Jedis jedis, String jedisKey, Integer key, Integer value) 
+	Integer parse(String svalue) 
 	{
-		jedis.hset(jedisKey, key.toString(), value.toString());
+		return Integer.parseInt(svalue);
 	}
 
-	@Override
-	public Integer get(Jedis jedis, String jedisKey, Integer key) 
-	{
-		String svalue = jedis.hget(jedisKey, key.toString());
-		if(svalue == null)
-			return null;
-		
-		return Integer.valueOf(svalue);
-	}
 
-	@Override
-	public void saveMap(String jedisKey, RedisBasedMap<Integer, Integer> redisBasedMap) {
-		//RedisAccessHelper.saveIntIntMap(jedisKey, redisBasedMap);
-	}
 }

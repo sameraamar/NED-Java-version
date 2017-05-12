@@ -10,19 +10,18 @@ import ned.types.Utility;
 
 public class MyMonitorThread extends Thread
 {
-    private ExecutorService executor;
+    private DocumentProcessorExecutor executor;
     private int seconds;
     private long starttime;
 
     private boolean stop=false;
 
-    public MyMonitorThread(ExecutorService executorService, int delay)
+    public MyMonitorThread(DocumentProcessorExecutor executorService, int delay)
     {
         this.executor = executorService;
         this.seconds=delay;
     }
     
-
     public MyMonitorThread(int delay)
     {
         this.executor = null;
@@ -68,32 +67,30 @@ public class MyMonitorThread extends Thread
             msg.append(", Worker AHT: ").append(String.format("\t%.2f",waht)).append(".\n\t");
             WorkerThread.resetCounter();
             if (executor != null)
-        {
-        String str = this.executor.toString();
-        str = str.substring(str.indexOf('[')+1, str.indexOf(']'));
-        msg.append( "[monitor]").append( "\t" + str).append("\n") ;  
-        }
-        
-                try {            
-            msg.append("\tidf('i')=").append(gd.calcIDF(gd.word2index.getOrDefault("i",-1)));
-            msg.append(", idf('the')=").append(gd.calcIDF(gd.word2index.getOrDefault("the",-1)));
-            msg.append(", idf('rt')=").append(gd.calcIDF(gd.word2index.getOrDefault("rt",-1)));
-            msg.append(", idf('ramadan')=").append(gd.calcIDF(gd.word2index.getOrDefault("ramadan",-1)));
+	        {
+	        String str = this.executor.getExecutor().toString();
+	        str = str.substring(str.indexOf('[')+1, str.indexOf(']'));
+	        msg.append( "[monitor]").append( "\t" + str).append("\n") ;  
+	        }
+	        
+	        try {            
+	            msg.append("\tidf('winehouse')=").append(gd.calcIDF(gd.word2index.getOrDefault("winehouse",-1)));
+	            msg.append(", idf('the')=").append(gd.calcIDF(gd.word2index.getOrDefault("the",-1)));
+	            msg.append(", idf('rt')=").append(gd.calcIDF(gd.word2index.getOrDefault("rt",-1)));
+	            msg.append(", idf('ramadan')=").append(gd.calcIDF(gd.word2index.getOrDefault("ramadan",-1)));
+	        } catch (NullPointerException e) {
+	        }
+	
             msg.append("\n");
             msg.append("\tQueue: ").append(gd.getQueue().size()).append(", ID=").append(gd.getQueue().peek());
-            
-
-            
-            Session.getInstance().message(Session.INFO, "[monitor]", msg.toString());
-                } catch (NullPointerException e) {
-                }
-                
-            try {
-                    Thread.sleep(seconds*1000);
-            } catch (Exception e) {
-                Session.getInstance().message(Session.INFO, "[monitor]", "Exception");
-                e.printStackTrace();
-                }
+	        Session.getInstance().message(Session.INFO, "[monitor]", msg.toString());
+	                
+	        try {
+	                Thread.sleep(seconds*1000);
+	        } catch (Exception e) {
+	            Session.getInstance().message(Session.INFO, "[monitor]", "Exception");
+	            e.printStackTrace();
+	        }
         }
 
     }

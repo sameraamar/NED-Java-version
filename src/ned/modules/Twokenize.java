@@ -190,7 +190,6 @@ public class Twokenize {
 
     static Pattern Excluded  = Pattern.compile(
             OR(     
-            		"(?=.{1})",
             		entity,
             		Hearts,
                     url,
@@ -349,6 +348,8 @@ public class Twokenize {
      */
     public static List<String> tokenizeRawTweetText(String text) {
         List<String> tokens = tokenize(normalizeTextForTagger(text));
+        tokens.removeIf(u -> u.length()<2);
+        
         return tokens;
     }
 

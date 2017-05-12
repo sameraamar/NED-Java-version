@@ -8,11 +8,13 @@ import ned.types.Document;
 
 public class DocumentProcessorExecutor {
 	private ExecutorService executor;
+	private int number_of_threads;
 	LSHForest forest;
 	
 	public DocumentProcessorExecutor(LSHForest forest, int number_of_threads)
 	{
 		this.forest = forest;
+		this.number_of_threads = number_of_threads;
 		executor = Executors.newFixedThreadPool(number_of_threads);		
 	}
 	
@@ -36,6 +38,11 @@ public class DocumentProcessorExecutor {
 	
 	public void shutdown()
 	{
+		shutdown(executor);
+	}
+	
+	private void shutdown(ExecutorService executor)
+	{
 		executor.shutdown();
         while (!executor.isTerminated()) 
         {
@@ -48,6 +55,14 @@ public class DocumentProcessorExecutor {
         System.out.println("Finished all threads");
 	}
 
+	public void refresh()
+	{
+		System.out.println("Too much in the queue... start a new executor!");
+		ExecutorService temp = executor;
+		executor = Executors.newFixedThreadPool(number_of_threads);	
+		temp.shutdown();
+	}
+	
 	public ExecutorService getExecutor() 
 	{
 		return executor;
