@@ -197,16 +197,6 @@ public class AppMain {
 
 		printParameters(out);
 
-		
-    	if(gd.getParams().resume_mode) 
-    	{
-    		gd.numberOfDocsIncludeWord.load();
-    		gd.resumeInfo.load();
-    		gd.word2index.load();
-    		gd.id2doc.load();
-    	}
-    	
-
 		//CleanupThread thread = new CleanupThread(out);
 		//threadsFileName.isDaemon(true);
 		//thread.start();

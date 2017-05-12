@@ -13,7 +13,7 @@ public class TestMain {
 		GlobalData.getInstance().init();
 		System.out.println("------------------------------------------");
 
-		Document doc = GlobalData.getInstance().id2doc.get("88323330691702784");
+		Document doc = GlobalData.getInstance().id2doc.get("86424586052308994");
 		System.out.println(doc==null ? "NULL" : doc.toString());
 	}
 

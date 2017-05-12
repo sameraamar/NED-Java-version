@@ -26,7 +26,6 @@ public class GlobalData {
 	public static final String K_ID2DOCUMENT = "id2doc";
 	public static final String K_WORD2INDEX = "w2i";
 	public static final String K_WORD2COUNTS = "w2c";
-	public static final String K_WORD2IDF = "w2idf";
 	public static final String K_RESUME_INFO = "resume";
 
 	public class Parameters 
@@ -39,14 +38,14 @@ public class GlobalData {
 		public int max_bucket_size = 2000;
 		public int max_documents = 10_000_000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 6130000;
+		public int offset = 0;//7_650_000;
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
-		public int inital_dimension = 1_000_000;
+		public int inital_dimension = 100000;//1_100_000;
 		public int dimension_jumps = 50000;
-		public boolean resume_mode = true;
+		public boolean resume_mode = false; //true;
 	}
 	
 	private static GlobalData globalData = null;
@@ -107,10 +106,10 @@ public class GlobalData {
 		
 		recentManager = new RoundRobinArray<String>(parameters.search_recents);
 		//id2doc = new Hashtable<String, Document>();
-		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, getParams().resume_mode, new SerializeHelperStrDoc() );
-		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, getParams().resume_mode, new SerializeHelperStrInt() );
-		numberOfDocsIncludeWord = new RedisBasedMap<Integer, Integer>(GlobalData.K_WORD2COUNTS, getParams().resume_mode, new SerializeHelperIntInt() );
-		resumeInfo = new RedisBasedMap<String, Integer>(GlobalData.K_RESUME_INFO, getParams().resume_mode, new SerializeHelperStrInt() );
+		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, !getParams().resume_mode, new SerializeHelperStrDoc() );
+		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, !getParams().resume_mode, new SerializeHelperStrInt() );
+		numberOfDocsIncludeWord = new RedisBasedMap<Integer, Integer>(GlobalData.K_WORD2COUNTS, !getParams().resume_mode, new SerializeHelperIntInt() );
+		resumeInfo = new RedisBasedMap<String, Integer>(GlobalData.K_RESUME_INFO, !getParams().resume_mode, new SerializeHelperStrInt() );
 		if(!getParams().resume_mode)
 		{
 			resumeInfo.put(LAST_SEEN_IDX, getParams().offset-1);
