@@ -27,13 +27,16 @@ public class DocumentProcessorExecutor {
 		executor.execute(worker);
 	}
 	
-	public void await()
+	public boolean await()
 	{
 		try {
 			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+			return false;
 		}
+		
+		return true;
 	}
 	
 	public void shutdown()

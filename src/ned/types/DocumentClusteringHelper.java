@@ -2,10 +2,12 @@ package ned.types;
 
 import java.io.PrintStream;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -166,6 +168,28 @@ public class DocumentClusteringHelper {
 					intersection.add(key);
 	            }
 	        }
+
+	        return intersection;
+	    }
+	 public static <K, V> Set<K> intersection(HashMap<K, V> left,HashMap<K, V> right) {
+		 if (left.size() > right.size())
+	        {
+			 	HashMap<K, V> tmp = right;
+				right = left;
+				left = tmp;
+	        }
+	        
+	        HashSet<K> intersection = new HashSet<K>();
+	        Set<Entry<K, V>> lkeys = left.entrySet();
+	        
+	        for (Entry<K, V> entry : lkeys) {
+	        	K k = entry.getKey();
+	        	if (right.containsKey(k))
+	            {
+					intersection.add(k);
+	            }
+			}
+	       
 
 	        return intersection;
 	    }

@@ -118,7 +118,7 @@ public class AppMain {
 	public static void doMain(PrintStream out) throws IOException {
 		GlobalData gd = GlobalData.getInstance();
 		
-		String folder = "../";
+		String folder = "../data";
 		if(getMachineName().indexOf("saaama") >= 0)
 			folder  = "c:/data/events_db/petrovic";
 

@@ -1,5 +1,6 @@
 package ned.types;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -8,7 +9,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import ned.tools.RedisAccessHelper;
 import redis.clients.jedis.Jedis;
 
-public class RedisBasedMap<K, V> implements Map<K, V> {
+public class RedisBasedMap<K, V> implements Map<K, V> , Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3648431693348300537L;
+	
 	private ConcurrentHashMap<K, V> map;
 	private String jedisKey;
 	
