@@ -121,8 +121,6 @@ public class LSHTable
         RoundRobinArray<String> bucket = buckets.get(code);
         if (bucket == null)
         {
-        	//Rami -- watch out this sync. How can we avoid it?
-        	//although i am not sure it will cause any issue since we create the bucket once per code
         	synchronized (buckets) {
         		bucket = buckets.get(code);
         		if (bucket == null) //still null
@@ -132,17 +130,8 @@ public class LSHTable
         		}
         	}
         }
-
-        List<String> list;
-        String excludeId = doc.getId();
         
-        if(bucket == null)
-        	System.out.println("************************************************************** Somethign strange (bucket is null)!");
-        
-        if(doc == null)
-        	System.out.println("************************************************************** Somethign strange (doc is null)!");
-        
-        bucket.add(doc.getId());
+        bucket.add(doc.getId().intern());
         	
         return bucket;
         	/*list = new LinkedList<String>();

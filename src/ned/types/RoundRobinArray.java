@@ -20,12 +20,18 @@ public class RoundRobinArray<T>
 		if(data.length() == 0)
 			return;
 		
-		int idx = index.updateAndGet(n -> (n >= data.length()-1) ? 0 : n + 1);
+		//synchronized (index) {
+				int newIdx = index.updateAndGet(n -> {
+					int idx = (n >= data.length()-1) ? 0 : n + 1;
+					data.set(idx, s);
+					return idx;
+				});
+				
+				//data.set(newIdx, s);
+				if(newIdx == data.length()-1)
+					isFull = true;
+		//}
 		
-		data.set(idx, s);
-
-		if(idx == data.length()-1)
-			isFull = true;
 	}
 
 	public T get(int i) {

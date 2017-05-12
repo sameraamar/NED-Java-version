@@ -4,23 +4,25 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import ned.modules.Twokenize;
 import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 public class GlobalData {
-	public static final int LAST_DIMENSION = -3;
-	public static final int LAST_NUM_DOCS = -2;
-	public static final int LAST_SEEN_IDX = -1;
+	public static final String LAST_DIMENSION = "dimension";
+	public static final String LAST_NUM_DOCS = "doc_count";
+	public static final String LAST_SEEN_IDX = "last_idx";
 	public static final String K_ID2DOCUMENT = "id2doc";
 	public static final String K_WORD2INDEX = "w2i";
 	public static final String K_WORD2COUNTS = "w2c";
@@ -35,18 +37,17 @@ public class GlobalData {
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
-		public int max_documents = 600000;
+		public int max_documents = 10_000_000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 500000;
+		public int offset = 6130000;
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
-		public int inital_dimension = 50000;
+		public int inital_dimension = 1_000_000;
 		public int dimension_jumps = 50000;
 		public boolean resume_mode = true;
 	}
-	
 	
 	private static GlobalData globalData = null;
 	public static GlobalData getInstance() 
@@ -62,6 +63,9 @@ public class GlobalData {
 	{
 		globalData = null;
 	}
+	
+	//public ConcurrentHashMap<String, JedisPool>  thread2redis = new  ConcurrentHashMap<String, JedisPool>();
+
 	//public Queue<String> queue; 
 	public RedisBasedMap<String, Integer>    word2index;
 	public RedisBasedMap<String, Document>   id2doc;
@@ -71,7 +75,7 @@ public class GlobalData {
 	//public RedisBasedMap<Integer, Double> word2idf;
 
 	public RedisBasedMap<Integer, Integer>   numberOfDocsIncludeWord;
-	public RedisBasedMap<Integer, Integer>   resumeInfo;
+	public RedisBasedMap<String, Integer>   resumeInfo;
 	
 	public ConcurrentHashMap<String, DocumentCluster>  clusters;
 	public ConcurrentHashMap<String, String> id2cluster;
@@ -96,7 +100,7 @@ public class GlobalData {
 		id2cluster = new ConcurrentHashMap<String, String>();
 	}
 	
-	synchronized public void init()
+	synchronized public void init() throws Exception
 	{
 		if(recentManager != null)
 			return;
@@ -106,7 +110,7 @@ public class GlobalData {
 		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, getParams().resume_mode, new SerializeHelperStrDoc() );
 		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, getParams().resume_mode, new SerializeHelperStrInt() );
 		numberOfDocsIncludeWord = new RedisBasedMap<Integer, Integer>(GlobalData.K_WORD2COUNTS, getParams().resume_mode, new SerializeHelperIntInt() );
-		resumeInfo = new RedisBasedMap<Integer, Integer>(GlobalData.K_RESUME_INFO, getParams().resume_mode, new SerializeHelperIntInt() );
+		resumeInfo = new RedisBasedMap<String, Integer>(GlobalData.K_RESUME_INFO, getParams().resume_mode, new SerializeHelperStrInt() );
 		if(!getParams().resume_mode)
 		{
 			resumeInfo.put(LAST_SEEN_IDX, getParams().offset-1);
@@ -115,7 +119,10 @@ public class GlobalData {
 		}
 		else
 		{
-		
+			if(word2index.redisSize() != numberOfDocsIncludeWord.redisSize())
+			{
+				throw new Exception(String.format("Mistmach in the size of word2index vs. numberOfDocsIncludeWord (%d vs. %d)", word2index.redisSize(), numberOfDocsIncludeWord.redisSize()));
+			}
 		}
 	}
 
@@ -165,7 +172,11 @@ public class GlobalData {
 	{		
 		int numberOfDocuments = resumeInfo.get(LAST_NUM_DOCS);
 		
-		int appeared = numberOfDocsIncludeWord.get(word);
+		Integer appeared = numberOfDocsIncludeWord.get(word);
+		
+		if (appeared ==null)
+			return -1;
+		
 		double numerator = (numberOfDocuments + 0.5) / appeared;
 		numerator = Math.log10(numerator);
 		
@@ -205,7 +216,7 @@ public class GlobalData {
 		}
 	}
 	
-	public void calcWeights1(Document doc, Hashtable<Integer, Double> weights) 
+	/*public void calcWeights1(Document doc, Hashtable<Integer, Double> weights) 
 	{		
 		
 		ConcurrentHashMap<Integer, Integer> wordCount = doc.getWordCount();
@@ -225,7 +236,7 @@ public class GlobalData {
 		    weights.put(k, a);
 		}
 		
-	}
+	}*/
 	
 	private int wordCounts(List<String> list, ConcurrentHashMap<Integer, Integer> concurrentHashMap)
 	{
@@ -285,11 +296,12 @@ public class GlobalData {
 		int lastDocIndex = resumeInfo.get(LAST_SEEN_IDX); 
 		if(lastDocIndex < idx)
 		{
+			Set<Entry<Integer, Integer>> keySet = doc.getWordCount().entrySet();
 			//update number of documents holding each word (for TFIDF)
-			for (int i : doc.getWordCount().keySet()) 
+			for (Entry<Integer, Integer> k : keySet) 
 			{
-				int val = numberOfDocsIncludeWord.getOrDefault(i, 0);
-				numberOfDocsIncludeWord.put(i, val+1);					
+				int val = numberOfDocsIncludeWord.getOrDefault(k.getKey(), 0);
+				numberOfDocsIncludeWord.put(k.getKey(), val+1);					
 			}
 			resumeInfo.put(LAST_SEEN_IDX, idx);
 			resumeInfo.put(LAST_NUM_DOCS, resumeInfo.get(LAST_NUM_DOCS)+1);
@@ -304,7 +316,7 @@ public class GlobalData {
 	
 	private void addToRecent(String docId) {
 		
-		this.recentManager.add(docId);
+		this.recentManager.add(docId.intern());
 	}
 	
 	//public List<String> getRecent() {		
@@ -484,18 +496,28 @@ public class GlobalData {
 	}
 
 	public String memoryGlance() {
-		System.out.println(""
-				+"Sumitted TaskCount "+ExecutionHelper.getQueuedSubmissionCount()
-				+" Total Active threads="+Thread.activeCount()+" ActiveTasks= "+ExecutionHelper.activeCount()
-				+" QueuedTaskCount "+ExecutionHelper.getQueuedTaskCount()
 		
-		);
-		return String.format("\t[monitor] Words: %d, Documents: %d, Clusters %d, Recent: %d",
+		StringBuffer msg = new StringBuffer();
+		
+		msg.append("\t[monitor] Sumitted TaskCount ").append(ExecutionHelper.getQueuedSubmissionCount());
+		msg.append(" Total Active threads=").append( Thread.activeCount());
+		msg.append(" ActiveTasks= ").append(ExecutionHelper.activeCount());
+		msg.append(" QueuedTaskCount ").append(ExecutionHelper.getQueuedTaskCount());
+		msg.append("\n");
+		
+		msg.append( String.format("\t[monitor] Documents: %d/%d, Words: %d/%d, W2Count: %d/%d, Clusters %d, Recent: %d",
+				this.id2doc.size(), 
+				-1, //this.id2doc.redisSize(), 
 				this.word2index.size(),
-				this.id2doc.size(), //RedisHelper.redisSize(ID2DOCUMENT),//this.id2document.size(),
+				-1, //this.word2index.redisSize(),
+				this.numberOfDocsIncludeWord.size(),
+				-1, //this.numberOfDocsIncludeWord.redisSize(),
 				this.clusters.size(),
 				this.recentManager.size()
-			);
+			) ).append("\n");
+		
+		
+		return msg.toString();
 	}
 
 	public void markForCleanup(String leadId) 
