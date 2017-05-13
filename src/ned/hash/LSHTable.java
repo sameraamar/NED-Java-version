@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import ned.tools.HyperPlansManager;
 import ned.types.Document;
@@ -53,7 +54,8 @@ public class LSHTable
     		//Samer: remove syncronized
     		//synchronized (weights) {
     		int j=0;
-				for (Entry<Integer, Double> entry : weights.entrySet()) 
+    		Set<Entry<Integer, Double>> es = weights.entrySet();
+				for (Entry<Integer, Double> entry : es) 
 	    		{
 					try {
 	    			tmp += entry.getValue() * hyperPlanes.get(i, entry.getKey());
