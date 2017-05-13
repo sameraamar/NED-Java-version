@@ -10,20 +10,20 @@ import java.net.URLClassLoader;
 import java.util.Scanner;
 
 import ned.types.GlobalData;
+import ned.types.Utility;
 
 public class GlobalMain {
 
 	public static void main(String[] args) throws Exception {
 		
 		Integer o;
-		int max = 1_000_000;
+		int max = 1_050_000;
+		int start_idx = 8_000_000;
 		Integer dimension;
 		
 		GlobalData.getInstance().getParams().resume_mode = false;
 		GlobalData.getInstance().init();
 		int jumps = GlobalData.getInstance().getParams().dimension_jumps;
-
-		boolean resume = false;
 
 		for(int i=0; i<20; i++) 
 		{
@@ -32,24 +32,25 @@ public class GlobalMain {
 			if(i == 0)
 			{
 				dimension = jumps;
-				o = 8_000_000;
+				o = start_idx;
 			}
 			else{
 				GlobalData.release();
 				
 				GlobalData.getInstance().getParams().resume_mode = true;
 				GlobalData.getInstance().init();
-				o = GlobalData.getInstance().resumeInfo.get(GlobalData.LAST_NUM_DOCS);
-				o -= 100000;
+				o = 1 + GlobalData.getInstance().resumeInfo.get(GlobalData.LAST_SEEN_IDX);
+				o -= 50000;
 
 				dimension = GlobalData.getInstance().resumeInfo.get(GlobalData.LAST_DIMENSION);
 				dimension = (dimension / jumps) * jumps;
 			}
 			
+			System.out.println(Utility.humanTime( System.currentTimeMillis()/1000 ));
+			boolean resume = (i>0);
 			System.out.println(String.format("Iteration %d: offset %d,  max-doc %d, resume? = %b", i+1, o, max, resume));
 			runPocess(i+1, o, max, resume, dimension);
 			
-			resume = true;
 		}
 	}
 
@@ -68,7 +69,7 @@ public class GlobalMain {
 		        }
 		      
 		       System.out.println(cp);
-			ProcessBuilder pb = new ProcessBuilder(cmd, "-cp", cp, 
+			ProcessBuilder pb = new ProcessBuilder(cmd, "-cp", cp, "-Xms30000m",
 					AppMain.class.getName(), 
 					String.valueOf(o), 
 					String.valueOf(max), 
