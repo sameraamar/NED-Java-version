@@ -1,6 +1,8 @@
 package ned.types;
 
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import ned.tools.RedisAccessHelper;
 import redis.clients.jedis.Jedis;
@@ -28,6 +30,16 @@ abstract public class SerializeHelper<K, V> {
 		
 		int count = 0;
 		int update = 0;		
+		Set<Entry<K, V>> es = data.entrySet();
+		
+		for (Entry<K, V> entry : es) {
+			if(jedis.exists(entry.getKey().toString()))
+				update++;
+			else
+				count++;
+			
+			jedis.hset(jedisKey, entry.getKey().toString(), entry.getValue().toString().toString());
+		}
 		for (K field : data.keySet())
 		{
 			V value = data.get(field);

@@ -3,6 +3,9 @@ package ned.tools;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
@@ -153,6 +156,28 @@ public class RedisAccessHelper {
 		int update = 0;
 		int skip = 0;
 		
+		Set<Entry<String, Document>> entries = data.entrySet();
+		
+		
+		for (Entry<String, Document> entry : entries) {
+			Document value=entry.getValue();
+			if(value.isDirty)
+			{
+				byte[] bytes = getDocSerializer().serialize(value);
+
+				if(jedis.exists(key))
+					update++;
+				else
+					count++;
+
+				jedis.hset(key.getBytes(), entry.getKey().getBytes(), bytes);
+				value.isDirty = false;
+			}
+			else
+				skip ++;
+			
+		}
+		/*
 		for (String field : data.keySet())
 		{
 			Document value = data.get(field);
@@ -171,7 +196,7 @@ public class RedisAccessHelper {
 			else
 				skip ++;
 		}
-		
+		*/
 		System.out.println(key + ": skipped " + skip + ", updated " + update + " added " + count);
 		
 		retunRedisClient(jedis);
