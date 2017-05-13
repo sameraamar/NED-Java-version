@@ -55,7 +55,7 @@ public class RedisAccessHelper {
 		jedisPool = createRedisConnectionPool();
 
 		System.out.println("jedisPool is Ready. ");
-		clearRedisKeys();
+
 		ready=true;
 	}
 
@@ -143,12 +143,8 @@ public class RedisAccessHelper {
 		jedis.del(key);
 		retunRedisClient(jedis);
 	 }
-	 
-	private static void clearRedisKeys()
-	{		
-	}
 	
-	public static void saveStrDocMap(String key, Map<String, Document> data)
+	public static void saveStrDocMap(String jedisKey, Map<String, Document> data)
 	{
 		Jedis jedis=getRedisClient();
 
@@ -163,6 +159,7 @@ public class RedisAccessHelper {
 			Document value=entry.getValue();
 			if(value.isDirty)
 			{
+				String key = entry.getKey();
 				byte[] bytes = getDocSerializer().serialize(value);
 
 				if(jedis.exists(key))
@@ -170,7 +167,7 @@ public class RedisAccessHelper {
 				else
 					count++;
 
-				jedis.hset(key.getBytes(), entry.getKey().getBytes(), bytes);
+				jedis.hset(jedisKey.getBytes(), key.getBytes(), bytes);
 				value.isDirty = false;
 			}
 			else
@@ -197,7 +194,7 @@ public class RedisAccessHelper {
 				skip ++;
 		}
 		*/
-		System.out.println(key + ": skipped " + skip + ", updated " + update + " added " + count);
+		System.out.println(jedisKey + ": skipped " + skip + ", updated " + update + " added " + count);
 		
 		retunRedisClient(jedis);
 	}

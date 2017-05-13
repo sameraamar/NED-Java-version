@@ -53,7 +53,6 @@ public class LSHTable
     		double tmp = 0;
     		//Samer: remove syncronized
     		//synchronized (weights) {
-    		int j=0;
     		Set<Entry<Integer, Double>> es = weights.entrySet();
 				for (Entry<Integer, Double> entry : es) 
 	    		{
@@ -64,7 +63,6 @@ public class LSHTable
 						System.out.println( "doc dimension: " + doc.getDimension() + " this.fixingDim = ");
 						throw e;
 					}
-					j++;
 	    		}
     		//}
 			session.message(Session.DEBUG, "GenerateHashCode", ""+ tmp);
