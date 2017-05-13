@@ -7,28 +7,53 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Scanner;
+
+import ned.types.GlobalData;
 
 public class GlobalMain {
 
 	public static void main(String[] args) throws Exception {
 		
-		int o = 0;
-		int max = 50_001;
+		Integer o;
+		int max = 1_000_000;
+		Integer dimension;
+		
+		GlobalData.getInstance().getParams().resume_mode = false;
+		GlobalData.getInstance().init();
+		int jumps = GlobalData.getInstance().getParams().dimension_jumps;
+
 		boolean resume = false;
 
 		for(int i=0; i<20; i++) 
 		{
 			System.out.println("------------------------------------------");
+			
+			if(i == 0)
+			{
+				dimension = jumps;
+				o = 8_000_000;
+			}
+			else{
+				GlobalData.release();
+				
+				GlobalData.getInstance().getParams().resume_mode = true;
+				GlobalData.getInstance().init();
+				o = GlobalData.getInstance().resumeInfo.get(GlobalData.LAST_NUM_DOCS);
+				o -= 100000;
+
+				dimension = GlobalData.getInstance().resumeInfo.get(GlobalData.LAST_DIMENSION);
+				dimension = (dimension / jumps) * jumps;
+			}
+			
 			System.out.println(String.format("Iteration %d: offset %d,  max-doc %d, resume? = %b", i+1, o, max, resume));
+			runPocess(i+1, o, max, resume, dimension);
 			
-			runPocess(i+1, o, max, resume);
-			
-			o += max - 2000;
 			resume = true;
 		}
 	}
 
-	private static void runPocess(int i, int o, int max, boolean resume) throws Exception {
+	private static void runPocess(int i, int o, int max, boolean resume, int dimension) throws Exception {
 		try {
 		      String cmd = "java";
 		      
@@ -47,7 +72,8 @@ public class GlobalMain {
 					AppMain.class.getName(), 
 					String.valueOf(o), 
 					String.valueOf(max), 
-					String.valueOf(resume));
+					String.valueOf(resume),
+					String.valueOf(dimension));
 			
 			System.out.println( pb.command() );
 			//ProcessBuilder pb = new ProcessBuilder("ls");
@@ -55,8 +81,8 @@ public class GlobalMain {
 		      //pb.directory(Thread.currentThread().pro)
 		      //System.out.println( pb.directory().toString() );
 		      System.out.println("Redirect output and error to file");
-		      File outputFile = new File("c:/temp/Log.txt");
-		      File errorFile = new File("c:/temp/ErrLog.txt");
+		      File outputFile = new File("c:/temp/Log_" + i + ".txt");
+		      File errorFile = new File("c:/temp/ErrLog_" + i + ".txt");
 		      pb.redirectOutput(outputFile);
 		      pb.redirectError(errorFile);
 
@@ -66,28 +92,16 @@ public class GlobalMain {
 		    	  System.out.println("There are errors in " + errorFile.getName());
 		    	  throw new Exception("There are errors in " + errorFile.getName());
 		      }
+
 		      
 		      Process childProcess = pb.start();
-		      
-		      
 		      Thread closeChildThread = new Thread() {
 		    	    public void run() {
 		    	        childProcess.destroy();
 		    	    }
-		    	};
+		      };
 
-		    	Runtime.getRuntime().addShutdownHook(closeChildThread); 
-		      
-//		      while (myProcess.isAlive())
-//		      {
-//		  		try {
-//		    	  Thread.sleep(10000);
-//		  		}
-//		  		catch (Exception err) {
-//					err.printStackTrace();
-//				}
-//		      }
-		      
+		      Runtime.getRuntime().addShutdownHook(closeChildThread); 
 		      
 		      int errCode = childProcess.waitFor();
 		      System.out.println("Command executed, any errors? " + (errCode == 0 ? "No" : "Yes"));

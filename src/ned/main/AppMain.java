@@ -49,21 +49,24 @@ public class AppMain {
 				Thread.sleep(100);
 			}
 
-			if(args.length == 3)
+			if(args.length > 0)
 			{
 			
 				int o = Integer.parseInt(args[0]);
 				int max = Integer.parseInt(args[1]);
 				boolean resume = Boolean.parseBoolean(args[2]);
+				int dimension = Integer.parseInt(args[3]);
 				
 				gd.getParams().offset = o ;
 				gd.getParams().max_documents = max;
 				gd.getParams().resume_mode = resume;
-				System.out.println(String.format("Run: offset %d,  max-doc %d, resume? = %b", o, max, resume));
+				gd.getParams().inital_dimension = dimension;
+				System.out.println(String.format("Run: offset %d,  max-doc %d, resume? = %b, dim? = %d", o, max, resume, dimension));
 			}			
 			
 			gd.init();
-			
+			printParameters(System.out);
+
 			ExecutionHelper.setCommonPoolSize();
 			String folder = "../";;
 			if(getMachineName().indexOf("saaama") >= 0)
