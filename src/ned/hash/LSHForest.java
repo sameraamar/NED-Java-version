@@ -127,7 +127,7 @@ public class LSHForest {
 		List<String> res = tmpList.subList(0, Math.min( tmpList.size(), 3*numberOfTables) );
         return res;
     }
-	*/
+	
 	protected List<String> findTopX(HashMap<String, Integer> hitCounts) {
 		PriorityQueue<String> pqueue = new PriorityQueue<String>(new Comparator<String> () 
         {  
@@ -162,7 +162,7 @@ public class LSHForest {
 	        return res;
 	}
 	
-	
+	*/
 	public List<String> addDocument(Document doc, Map<Integer, Double> word2idf)
     {
 		return this.addDocument00(doc, word2idf);

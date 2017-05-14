@@ -27,13 +27,16 @@ public class DocumentProcessorExecutor {
 		executor.execute(worker);
 	}
 	
-	public void await()
+	public boolean await()
 	{
 		try {
 			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+			return false;
 		}
+		
+		return true;
 	}
 	
 	public void shutdown()
@@ -59,8 +62,15 @@ public class DocumentProcessorExecutor {
 	{
 		System.out.println("Too much in the queue... start a new executor!");
 		ExecutorService temp = executor;
-		executor = Executors.newFixedThreadPool(number_of_threads);	
+		executor = Executors.newFixedThreadPool(number_of_threads);
 		temp.shutdown();
+		try {
+			temp.awaitTermination(1, TimeUnit.DAYS);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	
 	public ExecutorService getExecutor() 

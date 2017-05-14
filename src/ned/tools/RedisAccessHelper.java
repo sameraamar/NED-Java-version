@@ -3,6 +3,9 @@ package ned.tools;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
@@ -52,7 +55,7 @@ public class RedisAccessHelper {
 		jedisPool = createRedisConnectionPool();
 
 		System.out.println("jedisPool is Ready. ");
-		clearRedisKeys();
+
 		ready=true;
 	}
 
@@ -140,12 +143,8 @@ public class RedisAccessHelper {
 		jedis.del(key);
 		retunRedisClient(jedis);
 	 }
-	 
-	private static void clearRedisKeys()
-	{		
-	}
 	
-	public static void saveStrDocMap(String key, Map<String, Document> data)
+	public static void saveStrDocMap(String jedisKey, Map<String, Document> data)
 	{
 		Jedis jedis=getRedisClient();
 
@@ -153,6 +152,29 @@ public class RedisAccessHelper {
 		int update = 0;
 		int skip = 0;
 		
+		Set<Entry<String, Document>> entries = data.entrySet();
+		
+		
+		for (Entry<String, Document> entry : entries) {
+			Document value=entry.getValue();
+			if(value.isDirty)
+			{
+				String key = entry.getKey();
+				byte[] bytes = getDocSerializer().serialize(value);
+
+				if(jedis.exists(key))
+					update++;
+				else
+					count++;
+
+				jedis.hset(jedisKey.getBytes(), key.getBytes(), bytes);
+				value.isDirty = false;
+			}
+			else
+				skip ++;
+			
+		}
+		/*
 		for (String field : data.keySet())
 		{
 			Document value = data.get(field);
@@ -171,8 +193,8 @@ public class RedisAccessHelper {
 			else
 				skip ++;
 		}
-		
-		System.out.println(key + ": skipped " + skip + ", updated " + update + " added " + count);
+		*/
+		System.out.println(jedisKey + ": skipped " + skip + ", updated " + update + " added " + count);
 		
 		retunRedisClient(jedis);
 	}

@@ -6,7 +6,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map.Entry;
+import java.util.Set;
 
 public class DocumentCluster {
 	private List<String> idList;
@@ -183,6 +184,16 @@ public class DocumentCluster {
 		}
 		
 		double sum = 0.0;
+		Set<Entry<Integer, Integer>> es = wordcount.entrySet();
+		
+		for (Entry<Integer, Integer> entry : es) {
+			int Ni = entry.getValue();
+			double d = (double)Ni / N;
+			
+			sum -= d * Math.log10(d);
+		}
+		
+		/*
 		for (Integer i : wordcount.keySet())
 		{
 			int Ni = (int)wordcount.get(i);
@@ -190,7 +201,7 @@ public class DocumentCluster {
 			
 			sum -= d * Math.log10(d);
 		}
-		
+		*/
 		return sum;
 	}
 	

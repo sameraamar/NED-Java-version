@@ -4,6 +4,9 @@ package ned.hash;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import ned.tools.HyperPlansManager;
 import ned.types.Document;
 import ned.types.GlobalData;
@@ -50,10 +53,11 @@ public class LSHTable
     		double tmp = 0;
     		//Samer: remove syncronized
     		//synchronized (weights) {
-				for (Integer j : weights.keySet()) 
+    		Set<Entry<Integer, Double>> es = weights.entrySet();
+				for (Entry<Integer, Double> entry : es) 
 	    		{
 					try {
-	    			tmp += weights.get(j) * hyperPlanes.get(i, j);
+	    			tmp += entry.getValue() * hyperPlanes.get(i, entry.getKey());
 					} catch(ArrayIndexOutOfBoundsException e)
 					{
 						System.out.println( "doc dimension: " + doc.getDimension() + " this.fixingDim = ");

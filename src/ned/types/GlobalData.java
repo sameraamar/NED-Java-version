@@ -11,14 +11,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import ned.modules.Twokenize;
 import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 
 public class GlobalData {
 	public static final String LAST_DIMENSION = "dimension";
@@ -27,25 +24,26 @@ public class GlobalData {
 	public static final String K_ID2DOCUMENT = "id2doc";
 	public static final String K_WORD2INDEX = "w2i";
 	public static final String K_WORD2COUNTS = "w2c";
-	public static final String K_WORD2IDF = "w2idf";
 	public static final String K_RESUME_INFO = "resume";
 
 	public class Parameters 
 	{
 		public int monitor_timer_seconds = 5; //seconds
-		public int number_of_threads =10;
+		public int number_of_threads =100;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13;
 		public int max_bucket_size = 2000;
-		public int max_documents = 50_000_000;
+
+		public int max_documents = 50_000_000; //10_000_000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 0;
+		public int offset = 0; //230000;
 		public int search_recents = 2000;
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
-		public int inital_dimension = 1_000_00;
+
+		public int inital_dimension = 100000;
 		public int dimension_jumps = 50000;
 		public boolean resume_mode = false;
 	}
@@ -108,10 +106,10 @@ public class GlobalData {
 		
 		recentManager = new RoundRobinArray<String>(parameters.search_recents);
 		//id2doc = new Hashtable<String, Document>();
-		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, getParams().resume_mode, new SerializeHelperStrDoc() );
-		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, getParams().resume_mode, new SerializeHelperStrInt() );
-		numberOfDocsIncludeWord = new RedisBasedMap<Integer, Integer>(GlobalData.K_WORD2COUNTS, getParams().resume_mode, new SerializeHelperIntInt() );
-		resumeInfo = new RedisBasedMap<String, Integer>(GlobalData.K_RESUME_INFO, getParams().resume_mode, new SerializeHelperStrInt() );
+		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, !getParams().resume_mode, new SerializeHelperStrDoc() );
+		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, !getParams().resume_mode, new SerializeHelperStrInt() );
+		numberOfDocsIncludeWord = new RedisBasedMap<Integer, Integer>(GlobalData.K_WORD2COUNTS, !getParams().resume_mode, new SerializeHelperIntInt() );
+		resumeInfo = new RedisBasedMap<String, Integer>(GlobalData.K_RESUME_INFO, !getParams().resume_mode, new SerializeHelperStrInt() );
 		if(!getParams().resume_mode)
 		{
 			resumeInfo.put(LAST_SEEN_IDX, getParams().offset-1);
@@ -200,6 +198,7 @@ public class GlobalData {
 	public void calcWeights(Document doc, Map<Integer, Double> weights, Map<Integer, Double> word2idf) 
 	{
 		 HashMap<Integer, Integer> wordCount = doc.getWordCount();
+
 		Set<Entry<Integer, Integer>> tmp = wordCount.entrySet();
 		
 		for (Entry<Integer, Integer> entry : tmp) {
