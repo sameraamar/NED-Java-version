@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import ned.tools.RedisAccessHelper;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.exceptions.JedisException;
 
 public class RedisBasedMap<K, V> implements Map<K, V> , Serializable {
 	/**
@@ -48,12 +49,19 @@ public class RedisBasedMap<K, V> implements Map<K, V> , Serializable {
 	@Override
 	public V get(Object key) {
 		V value = map.get(key);
-		
+		Jedis jedis=null;
 		if (value == null && readFromRedisIfMissing)
 		{
-			Jedis jedis = RedisAccessHelper.getRedisClient();
-			value = s.get(jedis, jedisKey, (K)key);
-			RedisAccessHelper.retunRedisClient(jedis);
+			try{
+				jedis=RedisAccessHelper.getRedisClient();
+				value = s.get(jedis, jedisKey, (K)key);
+				
+			}catch (JedisException je){
+				je.printStackTrace();
+			}
+			finally{
+				RedisAccessHelper.retunRedisClient(jedis);
+			}
 			
 			if (value != null)
 				map.put((K)key, value);
@@ -68,35 +76,23 @@ public class RedisBasedMap<K, V> implements Map<K, V> , Serializable {
 		
 		if(saveOnUpdate)
 		{
-			Jedis jedis = RedisAccessHelper.getRedisClient();
-			s.set(jedis, jedisKey, key, value);
-			RedisAccessHelper.retunRedisClient(jedis);
+			Jedis jedis=null;
+			try{
+				 jedis = RedisAccessHelper.getRedisClient();
+				 s.set(jedis, jedisKey, key, value);
+				
+			}catch (JedisException je){
+				je.printStackTrace();
+				RedisAccessHelper.retunRedisClient(jedis);
+				put(key,value);
+			}
+			finally{				
+				RedisAccessHelper.retunRedisClient(jedis);
+			}		
 		}
 		
 		return v;
 	}
-//		Runnable runnable = () -> {
-//			Jedis jedis=getRedisClient();
-//			
-//			String keysArray[] = keys.split(",");
-//			byte[][]  kyesBytes = new byte[keysArray.length][] ;
-//			int index=0;
-//			for (String string : keysArray) {
-//					if(string.isEmpty()) continue;
-//					kyesBytes[index]=string.getBytes();
-//					index++;
-//			}
-//			jedis.hdel(hash.getBytes(),kyesBytes);
-//		
-//			retunRedisClient(jedis);
-//		};
-//		ExecutionHelper.asyncRun (runnable);
-
-	/*protected boolean removeEldestEntry(Map.Entry<K, V> eldest) 
-	{
-		System.out.println(">>>>>>>>>>> removeEldestEntry");
-		return size() >= cacheSize;
-	}*/
 	
 	public void save()
 	{

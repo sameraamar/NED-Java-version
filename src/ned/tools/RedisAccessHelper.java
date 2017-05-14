@@ -18,6 +18,7 @@ import ned.types.RedisBasedMap;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.exceptions.JedisException;
 
 public class RedisAccessHelper {
 
@@ -116,25 +117,27 @@ public class RedisAccessHelper {
 	}
 	
 	public static void retunRedisClient(Jedis jedis) {
+		if(jedis!=null && jedis.isConnected())
+		//	jedis.disconnect();
 		jedis.close();
 		
 	}
 
 	public static long redisSize(String hash) 
-	{
-		
-		Date start=new Date();
-		Jedis jdis=getRedisClient();
-		long len = jdis.hlen(hash);
-		Date finish=new Date();
-		long rediscoontime=start.getTime()-finish.getTime();
-		if(rediscoontime>10)
-		{
-			System.out.println("rediscoontime==="+rediscoontime);
-		    System.out.println("redisConnections="+jedisPool.getNumActive());
+	{	
+		Jedis jedis=null;		
+		try{
+			jedis=getRedisClient();
+			long len = jedis.hlen(hash);
+			return len;
 		}
-		jdis.close();
-		return len;
+		catch(JedisException je){
+			je.printStackTrace();
+		}
+		finally{
+			retunRedisClient(jedis);
+		}		
+		return 0;		
 	}
 
 	 public static void resetKey(String key)
