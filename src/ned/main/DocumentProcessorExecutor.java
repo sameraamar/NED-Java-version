@@ -64,12 +64,12 @@ public class DocumentProcessorExecutor {
 		ExecutorService temp = executor;
 		executor = Executors.newFixedThreadPool(number_of_threads);
 		temp.shutdown();
-		try {
-			temp.awaitTermination(1, TimeUnit.DAYS);
-		} catch (InterruptedException e) {
+		//try {
+		//	temp.awaitTermination(1, TimeUnit.DAYS);
+		//} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		//	e.printStackTrace();
+		//}
 		
 	}
 	

@@ -258,7 +258,7 @@ public class AppMain {
 	            
 	            if (processed % (gd.getParams().print_limit) == 0)
 	            {
-	            	if(GlobalData.getInstance().getQueue().size() > 3000)
+	            	if(GlobalData.getInstance().getQueue().size() > 15000)
 		            {
 		            	executer.refresh();
 		            }
