@@ -258,7 +258,7 @@ public class AppMain {
 	            
 	            if (processed % (gd.getParams().print_limit) == 0)
 	            {
-	            	if(GlobalData.getInstance().getQueue().size() > 15000)
+	            	if(GlobalData.getInstance().getQueue().size() > 25000)
 		            {
 		            	executer.refresh();
 		            }
@@ -307,7 +307,7 @@ public class AppMain {
 	            	stop = true;
 	            
 	            
-	            if (stop || processed % (gd.getParams().print_limit* 10) == 0)
+	            if (stop || processed % (gd.getParams().print_limit* 20) == 0)
 	            {
 	            	
 	            	int lastIndex = gd.resumeInfo.get(GlobalData.LAST_SEEN_IDX);
