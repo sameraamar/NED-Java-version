@@ -47,12 +47,6 @@ public class DocumentCluster {
 		return leadId.hashCode();
 	}
 	
-	@Override
-	protected void finalize() throws Throwable {
-		//System.out.println("DocumentCluster - finalize");
-		super.finalize();
-	}
-	
 	public void addDocument(Document doc, Document myNeighbor, Double distance) 
 	{
 		this.idList.add(doc.getId());

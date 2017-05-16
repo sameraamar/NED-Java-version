@@ -46,8 +46,17 @@ public class RedisAccessHelper {
 		return new JedisPool(config,"localhost", PORT, TIME_OUT);
 	}
 
-	
 	synchronized public static void initRedisConnectionPool() {
+		initRedisConnectionPool(false);
+	}
+	
+	synchronized public static void initRedisConnectionPool(boolean force) {
+		if(force && jedisPool != null)
+		{
+			jedisPool.destroy();
+			jedisPool = null;
+		}
+		
 		if(jedisPool != null)
 			return;
 		
@@ -64,10 +73,14 @@ public class RedisAccessHelper {
 		
 		Runnable thr = Thread.currentThread();
 		JedisPool pool = null;
-		if (thr instanceof DocumentClusteringThread) {
+		
+		if (thr.getClass().getName().equals( DocumentClusteringThread.class.getName() ) ) {
 			DocumentClusteringThread new_name = (DocumentClusteringThread) thr;
 			pool = new_name.jedisPool;
-		} //else {
+		} //else if (thr.getClass().getName().equals( MyMonitorThread.class.getName() ) ) {
+		//	MyMonitorThread new_name = (MyMonitorThread) thr;
+		//	pool = new_name.jedisPool;
+		//} else {
 		//	pool = GlobalData.getInstance().thread2redis.get(Thread.currentThread().getName());
 		//}
 		
@@ -147,6 +160,41 @@ public class RedisAccessHelper {
 		retunRedisClient(jedis);
 	 }
 	
+	 public static void saveStrSerializableMap(String jedisKey, Map<String, Map<Integer, Integer>> data)
+		{
+			Jedis jedis=getRedisClient();
+
+			int count = 0;
+			int update = 0;
+			int skip = 0;
+			
+			Set<Entry<String, Map<Integer, Integer>>> entries = data.entrySet();
+			
+			
+			for (Entry<String, Map<Integer, Integer>> entry : entries) {
+				Map<Integer, Integer> value=entry.getValue();
+				//if(value.isDirty)
+				{
+					String key = entry.getKey();
+					byte[] bytes = getDocSerializer().serialize(value);
+
+					if(jedis.exists(key))
+						update++;
+					else
+						count++;
+
+					jedis.hset(jedisKey.getBytes(), key.getBytes(), bytes);
+					//value.isDirty = false;
+				}
+				//else
+				//	skip ++;
+				
+			}
+			System.out.println(jedisKey + ": skipped " + skip + ", updated " + update + " added " + count);
+			
+			retunRedisClient(jedis);
+		}
+	 
 	public static void saveStrDocMap(String jedisKey, Map<String, Document> data)
 	{
 		Jedis jedis=getRedisClient();

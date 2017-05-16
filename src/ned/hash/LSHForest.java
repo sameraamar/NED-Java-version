@@ -8,7 +8,11 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+
 import ned.tools.GeneralHelper;
+import ned.types.ArrayFixedSize;
 import ned.types.Document;
 import ned.types.RoundRobinArray;
 
@@ -47,7 +51,8 @@ public class LSHForest {
 	
 	public List<String> addDocument00(Document doc, Map<Integer, Double> word2idf)
     {
-		ConcurrentHashMap<String, Integer> hitCounts = new ConcurrentHashMap<String, Integer>();
+		//AtomicIntegerArray hitCount1 = new AtomicIntegerArray(length)
+		HashMap<String, AtomicInteger> hitCounts = new HashMap<String, AtomicInteger>();
 
 		for (int t = 0; t<numberOfTables; t++)
 		{
@@ -64,8 +69,19 @@ public class LSHForest {
 				if ( tmp.compareTo(id) >=0 )
 					continue;
 				
-				Integer c = hitCounts.getOrDefault(tmp, 0);
-				hitCounts.put(tmp, c+1);
+				AtomicInteger ai = null;
+				if(!hitCounts.containsKey(tmp))
+				{
+					ai = new AtomicInteger(0);
+					synchronized (hitCounts) {
+						if(!hitCounts.containsKey(tmp))
+							hitCounts.put(tmp, ai);
+					}
+					
+				}
+				if(ai == null)
+					ai = hitCounts.get(tmp);
+				ai.incrementAndGet();
 			}
 		}
 
@@ -76,7 +92,7 @@ public class LSHForest {
 					        {  
 					            @Override  
 					            public int compare(String left, String right){  
-					                 return hitCounts.get(right) - hitCounts.get(left) ;  //Descending  
+					                 return hitCounts.get(right).get() - hitCounts.get(left).get() ;  //Descending  
 					            }  
 					            
 					        }

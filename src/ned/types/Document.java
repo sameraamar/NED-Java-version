@@ -104,12 +104,6 @@ public class Document  implements Serializable{
 		return id.hashCode();
 	}
 	
-	@Override
-	protected void finalize() throws Throwable {
-		//System.out.println("Document - finalize");
-		super.finalize();
-	}
-	
     private static double Norm(Map<Integer, Double> rWeights) {
     	double res = 0;
         for(Double v : rWeights.values())

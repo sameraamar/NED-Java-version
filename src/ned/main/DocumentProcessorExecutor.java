@@ -64,34 +64,10 @@ public class DocumentProcessorExecutor {
 		ExecutorService temp = executor;
 		executor = Executors.newFixedThreadPool(number_of_threads);
 		temp.shutdown();
-		//try {
-		//	temp.awaitTermination(1, TimeUnit.DAYS);
-		//} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-		//	e.printStackTrace();
-		//}
-		
 	}
 	
 	public ExecutorService getExecutor() 
 	{
 		return executor;
 	}
-
-	
-	/*GlobalData gd = GlobalData.getInstance();
-	gd.getParams().number_of_threads
-	public static void main(String[] args) {
-        ExecutorService executor = Executors.newFixedThreadPool(5);
-        for (int i = 0; i < 10; i++) {
-            Runnable worker = new WorkerThread("" + i);
-            executor.execute(worker);
-          }
-        executor.shutdown();
-        while (!executor.isTerminated()) {
-        }
-        System.out.println("Finished all threads");
-        
-    }*/
-
 }

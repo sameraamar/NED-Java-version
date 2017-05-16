@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -22,9 +23,11 @@ public class GlobalData {
 	public static final String LAST_NUM_DOCS = "doc_count";
 	public static final String LAST_SEEN_IDX = "last_idx";
 	public static final String K_ID2DOCUMENT = "id2doc";
+	public static final String K_ID2WORD_COUNT = "id2words";
 	public static final String K_WORD2INDEX = "w2i";
 	public static final String K_WORD2COUNTS = "w2c";
 	public static final String K_RESUME_INFO = "resume";
+	public static final String K_ID2CLUSTR_INFO = "id2cluster";
 
 	public class Parameters 
 	{
@@ -36,9 +39,9 @@ public class GlobalData {
 		public int max_bucket_size = 2000;
 		public int max_documents = 50_000_000; //10_000_000;
 		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 0; //230000;
+		public int offset = 0; //7000000; //230000;
 		public int search_recents = 2000;
-		public double threshold = 0.6;
+		public double threshold = 0.5;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
 		public int inital_dimension = 100000;
@@ -66,6 +69,8 @@ public class GlobalData {
 	//public Queue<String> queue; 
 	public RedisBasedMap<String, Integer>    word2index;
 	public RedisBasedMap<String, Document>   id2doc;
+	public RedisBasedMap<String, Map<Integer, Integer>>   id2wcounts;
+	public Hashtable<String, String> cluster2replacement;
 	
 	//for calculating IDF
 	//int numberOfDocuments;
@@ -75,7 +80,7 @@ public class GlobalData {
 	public RedisBasedMap<String, Integer>   resumeInfo;
 	
 	public ConcurrentHashMap<String, DocumentCluster>  clusters;
-	public ConcurrentHashMap<String, String> id2cluster;
+	public RedisBasedMap<String, String> id2cluster;
 	//public LRUCache<String,Document> recent;
 	
 	private ClusteringQueueManager queue;
@@ -94,7 +99,8 @@ public class GlobalData {
 		clusters = new ConcurrentHashMap<String, DocumentCluster>();
 		//numberOfDocuments = 0;
 		queue = new ClusteringQueueManager();
-		id2cluster = new ConcurrentHashMap<String, String>();
+		
+		cluster2replacement = new Hashtable<String, String> ();
 	}
 	
 	synchronized public void init() throws Exception
@@ -108,6 +114,7 @@ public class GlobalData {
 		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, !getParams().resume_mode, new SerializeHelperStrInt() );
 		numberOfDocsIncludeWord = new RedisBasedMap<Integer, Integer>(GlobalData.K_WORD2COUNTS, !getParams().resume_mode, new SerializeHelperIntInt() );
 		resumeInfo = new RedisBasedMap<String, Integer>(GlobalData.K_RESUME_INFO, !getParams().resume_mode, new SerializeHelperStrInt() );
+		id2cluster = new RedisBasedMap<String, String>(GlobalData.K_ID2CLUSTR_INFO, !getParams().resume_mode, true, true, new SerializeHelperStrStr() );
 		if(!getParams().resume_mode)
 		{
 			resumeInfo.put(LAST_SEEN_IDX, getParams().offset-1);
@@ -137,6 +144,9 @@ public class GlobalData {
 
 	public DocumentCluster clusterByDoc(String id)
 	{
+		if(id == null)
+			return null;
+		
 		String leadId = id2cluster.get(id);
 		if (leadId == null)
 			return null;
@@ -195,8 +205,7 @@ public class GlobalData {
 	
 	public void calcWeights(Document doc, Map<Integer, Double> weights, Map<Integer, Double> word2idf) 
 	{
-		 HashMap<Integer, Integer> wordCount = doc.getWordCount();
-
+		HashMap<Integer, Integer> wordCount = doc.getWordCount();
 		Set<Entry<Integer, Integer>> tmp = wordCount.entrySet();
 		
 		for (Entry<Integer, Integer> entry : tmp) {
@@ -211,8 +220,6 @@ public class GlobalData {
 			double r=a*b;
 			weights.put(k, r);
 		}
-		
-		
 	}
 	
 	/*public void calcWeights1(Document doc, Hashtable<Integer, Double> weights) 
@@ -363,7 +370,6 @@ public class GlobalData {
 	
 	public void flushClusters(PrintStream out)
 	{
-		//System.out.println("flushClusters");
 		flushClusters(out, null);
 	}
 	
@@ -433,7 +439,7 @@ public class GlobalData {
 		return words;
 	}
 
-	public ConcurrentHashMap<String, String> getId2Cluster() {
+	public Map<String, String> getId2Cluster() {
 		return id2cluster;
 	}
 

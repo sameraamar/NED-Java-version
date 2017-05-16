@@ -86,7 +86,7 @@ public class DocumentClusteringHelper {
 		Double distance = null;
 		if (doc.getNearest() != null)
 		{
-			nearest = GlobalData.getInstance().id2doc.get(doc.getNearest());
+			nearest = GlobalData.getInstance().id2doc.get(doc.getNearest());//RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getNearest()); // data.id2document.get(doc.getNearest());
 			distance = doc.getNearestDist();
 		}
 		
@@ -97,56 +97,29 @@ public class DocumentClusteringHelper {
 	
 		else if (distance > data.getParams().threshold)
 				createNewThread = true;
-					
-		String targetCluster = null;
+
+			
 		if (!createNewThread) 
 		{
-			targetCluster = lookForCluster(doc, nearest.getId());
-			
-			if (targetCluster == null)
+			DocumentCluster cluster = data.clusterByDoc(nearest.getId());
+			if (cluster != null && cluster.isOpen(doc))
+			{
+				cluster.addDocument(doc, nearest, distance);
+				data.mapToCluster(cluster.leadId, doc);
+				
+				//int idx = data.clusterIndexByDoc(nearest.getId());
+				//data.getId2Cluster().put(doc.getId(), idx);
+			}
+			else 
+			{
 				createNewThread = true;
+			}
 		}
-
-		if(createNewThread)
+		
+		if (createNewThread)
 		{
 			data.createCluster(doc);
 		}
-		else
-		{
-			assert(targetCluster != null);
-			DocumentCluster cluster = data.clusterByDoc(targetCluster);
-			cluster.addDocument(doc, nearest, distance);
-			data.mapToCluster(cluster.leadId, doc);
-		}
-	}
-	
-	private static String lookForCluster(Document doc, String nearest) {
-		
-		if(nearest == null)
-		{
-			return null;
-		}
-		
-		if(nearest.equals("93663673746341888") && doc.getId().equals("93664328040972288"))
-		{
-			System.out.println("93664328040972288	->	93663673746341888");
-		}
-		
-		GlobalData gd = GlobalData.getInstance();
-		String joinClusterId = gd.id2cluster.get(nearest);
-		DocumentCluster cluster = gd.clusterByDoc(joinClusterId);
-		if (cluster != null && cluster.isOpen(doc))
-		{
-			return cluster.leadId;
-		}
-		String replacement = gd.cluster2replacement.get(joinClusterId);
-		if(replacement == null)
-		{
-			gd.cluster2replacement.put(joinClusterId, doc.getId());
-			return null;
-		}
-
-		return lookForCluster(doc, replacement);
 	}
 	
 	public static void pprint(PrintStream out)

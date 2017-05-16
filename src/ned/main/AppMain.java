@@ -329,6 +329,9 @@ public class AppMain {
 		            	gd.numberOfDocsIncludeWord.save();
 		            	gd.resumeInfo.save();
 		            	
+		            	//if (stop || processed % (gd.getParams().print_limit* 20) == 0)
+		            	//	RedisAccessHelper.initRedisConnectionPool(true);
+		            	
 		            	System.gc();
 	        		}
 	            }
