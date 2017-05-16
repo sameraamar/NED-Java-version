@@ -24,6 +24,18 @@ public class DocumentClusteringThread extends Thread {
 	public void run() 
 	{
         this.jedisPool = RedisAccessHelper.createRedisConnectionPool();
+        try {
+			doRun();
+			
+		} finally {
+			JedisPool temp = this.jedisPool;
+			this.jedisPool = null;
+			temp.destroy();
+		}
+		
+	}
+	
+	private void doRun() {
 		while(!stop) 
 		{
 			mapToCluster();
@@ -47,9 +59,8 @@ public class DocumentClusteringThread extends Thread {
 		{}
 
 		gd.flushClustersAll(out);
-		this.jedisPool.destroy();
 	}
-	
+
 	private boolean mapToCluster()
 	{
 		Document doc = next();
