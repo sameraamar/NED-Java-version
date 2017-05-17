@@ -40,14 +40,14 @@ public class GlobalData {
 		public int max_bucket_size = 2000;
 		public int max_documents = 50_000_000;
 		public int max_thread_delta_time = 4*3600; //seconds
-		public int offset = 0;
+		public int offset = 200000;
 		public int search_recents = 2000;
 		public double threshold = 0.5;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
 		public int inital_dimension = 100000;
 		public int dimension_jumps = 50000;
-		public boolean resume_mode = false;
+		public boolean resume_mode = true;
 	}
 	
 	private static GlobalData globalData = null;
@@ -190,16 +190,16 @@ public class GlobalData {
 		}
 	}
 	
-	private int wordCounts(List<String> list, HashMap<Integer, Integer> hashMap)
+	private int wordCounts(List<String> list, Map<Integer, Integer> map)
 	{
 		int max_idx = addWords(list);
 		
 		for (String w : list) 
 		{
 			int idx = word2index.get(w);
-			int val = hashMap.getOrDefault(idx,  0);
+			int val = map.getOrDefault(idx,  0);
 			val += 1;
-			hashMap.put(idx, val);
+			map.put(idx, val);
 		}
 		
 		return max_idx;
@@ -242,24 +242,25 @@ public class GlobalData {
 	
 	public void addDocument(Document doc, int idx) 
 	{
-		HashMap<Integer, Integer> wordCount = doc.getWordCount1();
-		int d = wordCounts( doc.getWords(), wordCount);
-		doc.setDimension ( d );
-
-		DocumentWordCounts dwc = id2wc.get(doc.getId());
+		
+		DocumentWordCounts dwc = doc.bringWordCount();
 		if(dwc == null)
 		{
 			String id = doc.getId().intern();
 			synchronized (id) {
-				dwc = id2wc.getOrDefault( doc.getId(), new DocumentWordCounts(id, wordCount) );
+				dwc = id2wc.getOrDefault( doc.getId(), new DocumentWordCounts(id, new HashMap<Integer, Integer>()) );
 				id2wc.put(id,  dwc);
 			}
 		}
 		
+		int d = wordCounts( doc.getWords(), dwc.getWordCount() );
+		doc.setDimension ( d );
+
+		
 		int lastDocIndex = resumeInfo.get(LAST_SEEN_IDX); 
 		if(lastDocIndex < idx)
 		{
-			Set<Entry<Integer, Integer>> keySet = wordCount.entrySet();
+			Set<Entry<Integer, Integer>> keySet = dwc.getWordCount().entrySet();
 			//update number of documents holding each word (for TFIDF)
 			for (Entry<Integer, Integer> k : keySet) 
 			{

@@ -21,8 +21,6 @@ public class Document  implements Serializable, DirtyBit {
 	private String id;
     private String text ;
     private List<String> words;
-    //private java.util.Hashtable<Integer, Double> weights ;
-    private HashMap<Integer, Integer> wordCount ;
     private int dimension;
     
     public int max_idx;
@@ -81,7 +79,6 @@ public class Document  implements Serializable, DirtyBit {
     	this.retweet_count = 0;
     	this.favouritesCount = -1;
     	this.reply_to = null;
-        this.wordCount = null;
         this.words = GlobalData.getInstance().identifyWords(text);
         this.cleanText = String.join(" ", words);
     }
@@ -171,19 +168,8 @@ public class Document  implements Serializable, DirtyBit {
 	
 	DocumentWordCounts bringWordCount()
 	{
-		return GlobalData.getInstance().id2wc.get(id);
-	}
-
-	HashMap<Integer, Integer> getWordCount1() {
-		if (wordCount == null)
-			wordCount = new HashMap<Integer, Integer>();
-		
+		DocumentWordCounts wordCount = GlobalData.getInstance().id2wc.get(id);
 		return wordCount;
-	}
-
-	void setWordCount(HashMap<Integer, Integer> wordCount) {
-		this.wordCount = wordCount;
-		dirtyOn();
 	}
 
 	void setDimension(int dimension) {

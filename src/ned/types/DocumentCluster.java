@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -154,7 +155,7 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		{
 			Document doc = GlobalData.getInstance().id2doc.get(id);// RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
 			if(doc!=null){
-				HashMap<Integer, Integer> tmp = doc.getWordCount1();
+				Map<Integer, Integer> tmp = doc.bringWordCount().getWordCount();
 				for (Integer i : tmp.keySet())
 				{
 					int count = wordcount.getOrDefault(i, 0); 
