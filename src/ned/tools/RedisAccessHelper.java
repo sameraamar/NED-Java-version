@@ -11,8 +11,11 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 
 import ned.main.WorkerThread;
 import ned.types.ArrayFixedSize;
+import ned.types.DirtyBit;
 import ned.types.Document;
+import ned.types.DocumentCluster;
 import ned.types.DocumentClusteringThread;
+import ned.types.DocumentWordCounts;
 import ned.types.GlobalData;
 import ned.types.RedisBasedMap;
 import redis.clients.jedis.Jedis;
@@ -178,7 +181,7 @@ public class RedisAccessHelper {
 					String key = entry.getKey();
 					byte[] bytes = getDocSerializer().serialize(value);
 
-					if(jedis.exists(key))
+					if(jedis.hexists(jedisKey, key))
 						update++;
 					else
 						count++;
@@ -190,6 +193,42 @@ public class RedisAccessHelper {
 				//	skip ++;
 				
 			}
+			System.out.println(jedisKey + ": skipped " + skip + ", updated " + update + " added " + count);
+			
+			retunRedisClient(jedis);
+		}
+	 
+		public static void saveStrMap(String jedisKey, Map<String, DocumentCluster> data)
+		{
+			Jedis jedis=getRedisClient();
+
+			int count = 0;
+			int update = 0;
+			int skip = 0;
+			
+			Set<Entry<String, DocumentCluster>> entries = data.entrySet();
+			
+			
+			for (Entry<String, DocumentCluster> entry : entries) {
+				DocumentCluster value=entry.getValue();
+				if(value.isDirty())
+				{
+					String key = entry.getKey();
+					byte[] bytes = getDocSerializer().serialize(value);
+
+					if(jedis.hexists(jedisKey, key))
+						update++;
+					else
+						count++;
+
+					jedis.hset(jedisKey.getBytes(), key.getBytes(), bytes);
+					value.dirtyOff();;
+				}
+				else
+					skip ++;
+				
+			}
+
 			System.out.println(jedisKey + ": skipped " + skip + ", updated " + update + " added " + count);
 			
 			retunRedisClient(jedis);
@@ -208,43 +247,24 @@ public class RedisAccessHelper {
 		
 		for (Entry<String, Document> entry : entries) {
 			Document value=entry.getValue();
-			if(value.isDirty)
+			if(value.isDirty())
 			{
 				String key = entry.getKey();
 				byte[] bytes = getDocSerializer().serialize(value);
 
-				if(jedis.exists(key))
+				if(jedis.hexists(jedisKey, key))
 					update++;
 				else
 					count++;
 
 				jedis.hset(jedisKey.getBytes(), key.getBytes(), bytes);
-				value.isDirty = false;
+				value.dirtyOff();;
 			}
 			else
 				skip ++;
 			
 		}
-		/*
-		for (String field : data.keySet())
-		{
-			Document value = data.get(field);
-			if(value.isDirty)
-			{
-				byte[] bytes = getDocSerializer().serialize(value);
 
-				if(jedis.exists(key))
-					update++;
-				else
-					count++;
-
-				jedis.hset(key.getBytes(), field.getBytes(), bytes);
-				value.isDirty = false;
-			}
-			else
-				skip ++;
-		}
-		*/
 		System.out.println(jedisKey + ": skipped " + skip + ", updated " + update + " added " + count);
 		
 		retunRedisClient(jedis);
@@ -282,5 +302,40 @@ public class RedisAccessHelper {
 		return jedisPool.getNumActive();
 	}
 
+	public static void saveStrDocWC(String jedisKey, Map<String, DocumentWordCounts> data) 
+	{
+		Jedis jedis=getRedisClient();
+
+		int count = 0;
+		int update = 0;
+		int skip = 0;
+		
+		Set<Entry<String, DocumentWordCounts>> entries = data.entrySet();
+		
+		
+		for (Entry<String, DocumentWordCounts> entry : entries) {
+			DocumentWordCounts value=entry.getValue();
+			if(value.isDirty())
+			{
+				String key = entry.getKey();
+				byte[] bytes = getDocSerializer().serialize(value);
+
+				if(jedis.hexists(jedisKey, key))
+					update++;
+				else
+					count++;
+
+				jedis.hset(jedisKey.getBytes(), key.getBytes(), bytes);
+				value.dirtyOff();;
+			}
+			else
+				skip ++;
+			
+		}
+
+		System.out.println(jedisKey + ": skipped " + skip + ", updated " + update + " added " + count);
+		
+		retunRedisClient(jedis);
+	}
 	
 }

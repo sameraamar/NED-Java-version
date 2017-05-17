@@ -34,7 +34,7 @@ abstract public class SerializeHelper<K, V> {
 		
 		for (Entry<K, V> entry : es) {
 			String skey = entry.getKey().toString();
-			if(jedis.exists(skey))
+			if(jedis.hexists(jedisKey, skey))
 				update++;
 			else
 				count++;

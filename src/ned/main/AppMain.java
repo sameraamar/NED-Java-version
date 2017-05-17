@@ -324,10 +324,7 @@ public class AppMain {
 							}
 		            	}
 		            	
-		            	gd.word2index.save();
-		            	gd.id2doc.save();
-		            	gd.numberOfDocsIncludeWord.save();
-		            	gd.resumeInfo.save();
+		            	gd.save();
 		            	
 		            	//if (stop || processed % (gd.getParams().print_limit* 20) == 0)
 		            	//	RedisAccessHelper.initRedisConnectionPool(true);

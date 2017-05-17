@@ -6,18 +6,17 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-public class Document  implements Serializable{
+public class Document  implements Serializable, DirtyBit {
     /**
 	 * 
 	 */
 	private static final long serialVersionUID = 4575371423244913253L;
 	
-	public boolean isDirty;
+	public boolean isDirtyBit;
 	
 	private String id;
     private String text ;
@@ -70,7 +69,7 @@ public class Document  implements Serializable{
 	
     public void init(String text, long timestamp)
     {
-    	this.isDirty = true;
+    	dirtyOn();
         this.text = text;
         //this.weights = null;
         this.nearest = null;
@@ -115,22 +114,16 @@ public class Document  implements Serializable{
         return res;
 	}
     
-    /*public double Norm()
-    {        
-    	double res = Norm(getWeights());
-        return res;
-    }*/
-
-    public static double Distance(Document left, Document right, Map<Integer, Double> word2idf)
+    public static double Distance(DocumentWordCounts left, DocumentWordCounts right, Map<Integer, Double> word2idf)
     {
     	Set<Integer> commonWords = DocumentClusteringHelper.intersection(left.getWordCount(), right.getWordCount());
      	if(commonWords.isEmpty()){
      		return 1;
      	}
 
-        if (left.getWords().size() > right.getWords().size())
+        if (left.getWordCount().size() > right.getWordCount().size())
         {
-            Document tmp = right;
+            DocumentWordCounts tmp = right;
             right = left;
             left = tmp;
         }
@@ -163,23 +156,6 @@ public class Document  implements Serializable{
 		return text;
 	}
 
-	public Map<Integer, Double> getWeights(Map<Integer, Double> word2idf) {
-		//if (weights == null) 
-		//{
-			//synchronized(this) {
-				//if (weights!=null) //some other process already handlde
-				//	return weights;
-				
-		Hashtable<Integer, Double> tmp = new Hashtable<Integer, Double>();
-				
-				GlobalData gd = GlobalData.getInstance();
-				//gd.addDocument(this);
-				gd.calcWeights(this, tmp, word2idf);
-			//}
-		//}
-		return tmp;
-	}
-
 	public List<String> getWords() {
 		return words;
 	}
@@ -188,11 +164,17 @@ public class Document  implements Serializable{
 		return id;
 	}
 
-	public int getDimension() {
+	public int getDimension() 
+	{
 		return dimension;
 	}
+	
+	DocumentWordCounts bringWordCount()
+	{
+		return GlobalData.getInstance().id2wc.get(id);
+	}
 
-	HashMap<Integer, Integer> getWordCount() {
+	HashMap<Integer, Integer> getWordCount1() {
 		if (wordCount == null)
 			wordCount = new HashMap<Integer, Integer>();
 		
@@ -201,12 +183,12 @@ public class Document  implements Serializable{
 
 	void setWordCount(HashMap<Integer, Integer> wordCount) {
 		this.wordCount = wordCount;
-		isDirty = true;
+		dirtyOn();
 	}
 
 	void setDimension(int dimension) {
 		this.dimension = dimension;
-		isDirty = true;
+		dirtyOn();
 	}
 
 	public long getTimestamp() {
@@ -219,22 +201,24 @@ public class Document  implements Serializable{
 
 	public void setCreatedAt(String created_at) {
 		this.created_at = created_at;
-		isDirty = true;
+		dirtyOn();
 	}
 
-	public void updateNearest(Document right, Map<Integer, Double> word2idf) {
-		if(right == null)
+	public void updateNearest(DocumentWordCounts rWordCount, Map<Integer, Double> word2idf) {
+		if(rWordCount == null)
 			return;
 		
-		if(right.getId().compareTo(getId()) >= 0)
+		if(rWordCount.getId().compareTo(getId()) >= 0)
 			return;
 		
-		double tmp = Document.Distance(this, right, word2idf);
+		DocumentWordCounts myWC = GlobalData.getInstance().id2wc.get( getId() );
+				
+		double tmp = Document.Distance(myWC, rWordCount, word2idf);
 		if (nearest==null || tmp < nearestDist)
 		{
 			nearestDist = tmp;
-			nearest = right.getId();
-			isDirty = true;
+			nearest = rWordCount.getId();
+			dirtyOn();
 		}
 	}
 	public void updateNearest(String rightId, Map<Integer, Double> word2idf) 
@@ -243,7 +227,7 @@ public class Document  implements Serializable{
 			return;
 		
 		//Document right = RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
-		Document right = GlobalData.getInstance().id2doc.get(rightId);
+		DocumentWordCounts right = GlobalData.getInstance().id2wc.get(rightId);
 		updateNearest(right, word2idf);
 	}
 
@@ -253,7 +237,7 @@ public class Document  implements Serializable{
 
 	public void setNearestDetermined(boolean nearestDetermined) {
 		this.nearestDetermined = nearestDetermined;
-		isDirty = true;
+		dirtyOn();
 	}
 
 	public double getNearestDist() {
@@ -376,5 +360,20 @@ public class Document  implements Serializable{
 	
 	public String getReplyToUserId() {
 		return reply_to_user_id;
+	}
+
+	@Override
+	public boolean isDirty() {
+		return isDirtyBit;
+	}
+
+	@Override
+	public void dirtyOff() {
+		isDirtyBit = false;
+	}
+
+	@Override
+	public void dirtyOn() {
+		isDirtyBit = true;
 	}
 }

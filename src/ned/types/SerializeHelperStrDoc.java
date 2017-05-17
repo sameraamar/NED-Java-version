@@ -12,7 +12,7 @@ public class SerializeHelperStrDoc extends SerializeHelper<String, Document>{
 	{
 		byte[] svalue = RedisAccessHelper.getDocSerializer().serialize(value);
 		jedis.hset(jedisKey.getBytes(), key.getBytes(), svalue);
-		value.isDirty = false;
+		value.dirtyOff();
 	}
 
 	@Override
@@ -23,7 +23,7 @@ public class SerializeHelperStrDoc extends SerializeHelper<String, Document>{
 			return null;
 		
 		Document doc = (Document) RedisAccessHelper.getDocSerializer().deserialize(svalue);
-		doc.isDirty = false;
+		doc.dirtyOff();;
 		return doc;
 	}
 

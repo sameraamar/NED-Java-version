@@ -1,5 +1,6 @@
 package ned.types;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,7 +10,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-public class DocumentCluster {
+public class DocumentCluster implements Serializable, DirtyBit {
 	private List<String> idList;
 	//private List<String> neighbor;
 	//private List<Double> distance;
@@ -17,6 +18,7 @@ public class DocumentCluster {
 	private long starttime;
 	private long lasttime;
 	private double entropy;
+	private boolean isDirtyBit;
 	
 	public DocumentCluster(Document leadDocument)
 	{
@@ -62,7 +64,7 @@ public class DocumentCluster {
 //		
 		//this.neighbor.add(id);
 		//this.distance.add(distance);
-		
+		dirtyOn();
 		entropy = -1;
 	}
 	
@@ -74,17 +76,6 @@ public class DocumentCluster {
 				
 		return true;
 	}
-
-	/*public boolean canAdd(Document doc) {
-		long timestamp = doc.getTimestamp();
-		
-		long delta = timestamp - this.starttime ;
-		
-		if (delta > GlobalData.getInstance().getParams().max_thread_delta_time)
-			return false;
-				
-		return true;
-	}*/
 	
 	public String toString()
 	{
@@ -163,7 +154,7 @@ public class DocumentCluster {
 		{
 			Document doc = GlobalData.getInstance().id2doc.get(id);// RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
 			if(doc!=null){
-				HashMap<Integer, Integer> tmp = doc.getWordCount();
+				HashMap<Integer, Integer> tmp = doc.getWordCount1();
 				for (Integer i : tmp.keySet())
 				{
 					int count = wordcount.getOrDefault(i, 0); 
@@ -187,15 +178,6 @@ public class DocumentCluster {
 			sum -= d * Math.log10(d);
 		}
 		
-		/*
-		for (Integer i : wordcount.keySet())
-		{
-			int Ni = (int)wordcount.get(i);
-			double d = (double)Ni / N;
-			
-			sum -= d * Math.log10(d);
-		}
-		*/
 		return sum;
 	}
 	
@@ -222,11 +204,19 @@ public class DocumentCluster {
 		return idList;
 	}
 	
-//	public static void main(String[] args) throws IOException
-//	{
-//		DateTimeFormatter df = DateTimeFormatter.ofPattern("E MMM dd HH:mm:ss X yyyy");
-//		LocalDateTime dateTime = LocalDateTime.parse("Thu Jun 30 10:45:00 +0000 2011", df);
-//		
-//		System.out.println(dateTime.toString());
-//	}
+
+	@Override
+	public boolean isDirty() {
+		return isDirtyBit;
+	}
+
+	@Override
+	public void dirtyOff() {
+		isDirtyBit = false;
+	}
+
+	@Override
+	public void dirtyOn() {
+		isDirtyBit = true;
+	}
 }
