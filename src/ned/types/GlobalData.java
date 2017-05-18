@@ -272,9 +272,7 @@ public class GlobalData {
 		}
 		
 		id2doc.put(doc.getId(), doc);
-		//RedisHelper.setDocumentFromRedis(ID2DOCUMENT, doc.getId(), doc);
 
-		//numberOfDocuments++;
 		addToRecent(doc.getId());
 	}
 	

@@ -12,6 +12,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 public class DocumentCluster implements Serializable, DirtyBit {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3760238718822776447L;
+	
 	private List<String> idList;
 	//private List<String> neighbor;
 	//private List<Double> distance;
@@ -30,7 +35,7 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		this.starttime = leadDocument.getTimestamp();
 		this.lasttime  = leadDocument.getTimestamp();
 		entropy = -1;
-		addDocument(leadDocument, null, null); //Double.MAX_VALUE);
+		addDocument(leadDocument);
 	}
 	
 	@Override
@@ -50,21 +55,11 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		return leadId.hashCode();
 	}
 	
-	public void addDocument(Document doc, Document myNeighbor, Double distance) 
+	public void addDocument(Document doc) 
 	{
 		this.idList.add(doc.getId());
 		this.lasttime = doc.getTimestamp();
 		
-//		String id = null;
-//		if (myNeighbor != null)
-//		{
-//			id = myNeighbor.getId();
-//		}
-//		else
-//			distance = null;
-//		
-		//this.neighbor.add(id);
-		//this.distance.add(distance);
 		dirtyOn();
 		entropy = -1;
 	}
@@ -82,7 +77,7 @@ public class DocumentCluster implements Serializable, DirtyBit {
 	{
 		StringBuffer sb = new StringBuffer();
 		GlobalData gd = GlobalData.getInstance();
-		
+
 		double ent = entropy();
 		if(ent > 3.5)
 			sb.append("**3**");
@@ -97,18 +92,18 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		for (int i =0; i<this.idList.size(); i++)
 		{
 			String docId = idList.get(i);
-			Document doc = GlobalData.getInstance().id2doc.get(docId); //RedisHelper.getDocumentFromRedis(gd.ID2DOCUMENT,docId);
+			Document doc = gd.id2doc.get(docId); //RedisHelper.getDocumentFromRedis(gd.ID2DOCUMENT,docId);
 			
 			Document nDoc = null;
 			if(i>0) { //this is placeholder for the lead - skip
-				nDoc = GlobalData.getInstance().id2doc.get(doc.getNearest()); //RedisHelper.getDocumentFromRedis(gd.ID2DOCUMENT,doc.getNearest());
+				nDoc = gd.id2doc.get(doc.getNearest()); //RedisHelper.getDocumentFromRedis(gd.ID2DOCUMENT,doc.getNearest());
 			}
 			
 			//The following block might not be needed after fixing other sync issues
 			if(doc == null)
 			{
 				System.out.println("Document is not there : " + docId);
-				doc = GlobalData.getInstance().id2doc.get(docId);
+				doc = gd.id2doc.get(docId);
 			}
 			//-----------
 			
@@ -153,9 +148,9 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		
 		for(String id : tmpList)
 		{
-			Document doc = GlobalData.getInstance().id2doc.get(id);// RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
+			DocumentWordCounts doc = GlobalData.getInstance().id2wc.get(id);
 			if(doc!=null){
-				Map<Integer, Integer> tmp = doc.bringWordCount().getWordCount();
+				Map<Integer, Integer> tmp = doc.getWordCount();
 				for (Integer i : tmp.keySet())
 				{
 					int count = wordcount.getOrDefault(i, 0); 
@@ -190,7 +185,7 @@ public class DocumentCluster implements Serializable, DirtyBit {
 			return 0;
 		
 		String id = this.idList.get(s-1);
-		Document doc = GlobalData.getInstance().id2doc.get(id); //RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT,id);
+		Document doc = GlobalData.getInstance().id2doc.get(id);
 		long lasttime = doc.getTimestamp();
 		
 		return (lasttime-starttime); //check if we need to divide by 1000?

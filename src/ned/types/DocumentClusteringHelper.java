@@ -86,11 +86,11 @@ public class DocumentClusteringHelper {
 		{
 			System.out.println("mapToClusterHelper: " + doc.getId());
 		}
-		Document nearest = null;
+		String nearest = null;
 		Double distance = null;
 		if (doc.getNearest() != null)
 		{
-			nearest = GlobalData.getInstance().id2doc.get(doc.getNearest());
+			nearest = doc.getNearest();
 			distance = doc.getNearestDist();
 		}
 		
@@ -105,17 +105,7 @@ public class DocumentClusteringHelper {
 		String targetCluster = null;
 		if (!createNewThread) 
 		{
-			if(nearest.getId().equals("86453128286846976"))
-			{
-				String temp = GlobalData.getInstance().id2cluster.get(nearest.getId());
-				
-				if(temp == null)
-					System.out.println("Very strange. Where did it disappear?!");
-				else
-					System.out.println("cluster of " + nearest.getId() + " is " + temp);
-			}
-			
-			targetCluster = lookForCluster(doc, nearest.getId());
+			targetCluster = lookForCluster(doc, nearest);
 			
 			if (targetCluster == null)
 				createNewThread = true;
@@ -129,7 +119,7 @@ public class DocumentClusteringHelper {
 		{
 			assert(targetCluster != null);
 			DocumentCluster cluster = data.clusterByDoc(targetCluster); 
-			cluster.addDocument(doc, nearest, distance);
+			cluster.addDocument(doc);
 			data.mapToCluster(cluster.leadId, doc);
 		}
 	}
