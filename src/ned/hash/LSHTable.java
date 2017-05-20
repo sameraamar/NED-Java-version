@@ -9,6 +9,7 @@ import java.util.Set;
 
 import ned.tools.HyperPlansManager;
 import ned.types.Document;
+import ned.types.DocumentWordCounts;
 import ned.types.GlobalData;
 import ned.types.RoundRobinArray;
 import ned.types.Session;
@@ -45,7 +46,8 @@ public class LSHTable
      	Session session = Session.getInstance();
      	
      	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
-     	Map<Integer, Double> weights = doc.getWeights(word2idf);
+     	DocumentWordCounts dwc = GlobalData.getInstance().id2wc.get( doc.getId() );
+     	Map<Integer, Double> weights = dwc.getWeights(word2idf);
      	hyperPlanes.fixDim(doc.getDimension());
  		
  		for (int i = 0 ; i<hyperPlanesNumber; i++)

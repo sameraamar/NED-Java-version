@@ -34,26 +34,13 @@ abstract public class SerializeHelper<K, V> {
 		
 		for (Entry<K, V> entry : es) {
 			String skey = entry.getKey().toString();
-			if(jedis.exists(skey))
+			if(jedis.hexists(jedisKey, skey))
 				update++;
 			else
 				count++;
 			
 			jedis.hset(jedisKey, skey, entry.getValue().toString());
 		}
-				
-		//for (K field : data.keySet())
-		//{
-		//	V value = data.get(field);
-		//	
-		//	String key = field.toString();
-		//	if(jedis.exists(key))
-		//		update++;
-		//	else
-		//		count++;
-		//	
-		//	jedis.hset(jedisKey, key, value.toString());
-		//}
 		
 		System.out.println(jedisKey + ": updated " + update + " added " + count);
 		

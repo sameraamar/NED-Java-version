@@ -85,8 +85,6 @@ public class DocumentClusteringThread extends Thread {
 		GlobalData gd = GlobalData.getInstance();
 		ClusteringQueueManager queue = gd.getQueue();
 		
-		
-		
 		String id = queue.peek();
 		if (id == null)
 			return null;

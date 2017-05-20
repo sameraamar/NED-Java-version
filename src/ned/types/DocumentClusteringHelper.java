@@ -25,7 +25,7 @@ public class DocumentClusteringHelper {
 			String rightId = iter.next();
 		    if(rightId.compareTo(id) < 0)
 		    {
-		    	Document right = GlobalData.getInstance().id2doc.get(rightId);//RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
+		    	DocumentWordCounts right = GlobalData.getInstance().id2wc.get(rightId);
 				doc.updateNearest(right, word2idf);
 		    }
 		}
@@ -50,7 +50,8 @@ public class DocumentClusteringHelper {
 		RoundRobinArray<String> recent = GlobalData.getInstance().getRecentManager();
 		if(recent!=null)
 		{
-			for(int i=0; i<recent.size(); i++)
+			int s = recent.size();
+			for(int i=0; i< s;i++)
 				set.add(recent.get(i));
 		}
 		DocumentClusteringHelper.determineClosest(doc, set, word2idf);
@@ -78,15 +79,19 @@ public class DocumentClusteringHelper {
 		
 	}*/
 	
+
 	public static void mapToClusterHelper(Document doc)
 	{
 		GlobalData data = GlobalData.getInstance();
-		
-		Document nearest = null;
+		if(doc.getId().equals(doc.getId().equals("86453128286846976")))
+		{
+			System.out.println("mapToClusterHelper: " + doc.getId());
+		}
+		String nearest = null;
 		Double distance = null;
 		if (doc.getNearest() != null)
 		{
-			nearest = GlobalData.getInstance().id2doc.get(doc.getNearest());
+			nearest = doc.getNearest();
 			distance = doc.getNearestDist();
 		}
 		
@@ -101,7 +106,7 @@ public class DocumentClusteringHelper {
 		String targetCluster = null;
 		if (!createNewThread) 
 		{
-			targetCluster = lookForCluster(doc, nearest.getId());
+			targetCluster = lookForCluster(doc, nearest);
 			
 			if (targetCluster == null)
 				createNewThread = true;
@@ -114,47 +119,57 @@ public class DocumentClusteringHelper {
 		else
 		{
 			assert(targetCluster != null);
-			DocumentCluster cluster = data.clusterByDoc(targetCluster);
-			cluster.addDocument(doc, nearest, distance);
+			DocumentCluster cluster = data.clusterByDoc(targetCluster); 
+			cluster.addDocument(doc);
 			data.mapToCluster(cluster.leadId, doc);
 		}
 	}
-	
-	private static String lookForCluster(Document doc, String nearest) {
-		
-		if(nearest == null)
-		{
-			return null;
-		}
-		
-		if(nearest.equals("93663673746341888") && doc.getId().equals("93664328040972288"))
-		{
-			System.out.println("93664328040972288	->	93663673746341888");
-		}
-		
-		GlobalData gd = GlobalData.getInstance();
-		String joinClusterId = gd.id2cluster.get(nearest);
-		DocumentCluster cluster = gd.clusterByDoc(joinClusterId);
-		if (cluster != null && cluster.isOpen(doc))
-		{
-			return cluster.leadId;
-		}
-		String replacement = gd.cluster2replacement.get(joinClusterId);
-		if(replacement == null)
-		{
-			gd.cluster2replacement.put(joinClusterId, doc.getId());
-			return null;
-		}
 
-		return lookForCluster(doc, replacement);
-	}
+	private static String lookForCluster(Document doc, String nearest) {
+		String original = nearest;
+		StringBuffer sb = new StringBuffer("look for cluster for " + doc.getId() + ": ");
+		while(true) 
+		{
+			sb.append(" -> " + nearest);
+			if(doc.getId().equals("86414020575367169") || doc.getId().equals("86453128286846976"))
+			{
+				System.out.println(sb.toString());
+			}
+			if(nearest == null)
+			{
+				return null;
+			}
+			
+			GlobalData gd = GlobalData.getInstance();
+			String joinClusterId = gd.id2cluster.get(nearest);
+			
+			if(joinClusterId==null)
+			{
+				System.out.println("joinClusterId==null : " + nearest);
+			}
+			
+			DocumentCluster cluster = gd.clusterByDoc(joinClusterId);
+			if (cluster != null && cluster.isOpen(doc))
+			{
+				return cluster.leadId;
+			}
+			String replacement = gd.cluster2replacement.get(joinClusterId);
+			if(replacement == null || replacement.equals(joinClusterId)) 
+			{
+				gd.cluster2replacement.put(joinClusterId, doc.getId());
+				return null;
+			}
 	
+			nearest = replacement;
+		}		
+	}
+		
 	public static void pprint(PrintStream out)
 	{
 		Runnable task=()->{
 		GlobalData gd = GlobalData.getInstance();
 		
-		for (String leadId : gd.getId2Cluster().keySet())
+		for (String leadId : gd.id2cluster.keySet())
 		{
 			DocumentCluster c = gd.clusterByDoc(leadId);
 			if (c.size() > 1)
@@ -177,27 +192,28 @@ public class DocumentClusteringHelper {
 //	        return list;
 //	}
 	
-	 public static <K, V> Set<K> intersection(ConcurrentHashMap<K, V> left, ConcurrentHashMap<K, V> right) {
+	 public static <K, V> Set<K> intersection(Map<K, V> left, Map<K, V> right) 
+	 {
 		 if (left.size() > right.size())
-	        {
-			 ConcurrentHashMap<K, V> tmp = right;
-				right = left;
-				left = tmp;
-	        }
-	        
-	        HashSet<K> intersection = new HashSet<K>();
-	        Enumeration<K> lkeys = left.keys();
-	        while( lkeys.hasMoreElements() )
-	        {
-	        	K key = lkeys.nextElement();
-				if (right.containsKey(key))
-	            {
-					intersection.add(key);
-	            }
-	        }
+		 {
+			 Map<K, V> tmp = right;
+			 right = left;
+			 left = tmp;
+		 }
+        
+		 HashSet<K> intersection = new HashSet<K>();
+		 Set<K> lkeys = left.keySet();
+		 for (K key : lkeys) 
+		 {
+			 if (right.containsKey(key))
+			 {
+				 intersection.add(key);
+			 }
+		 }
 
-	        return intersection;
-	    }
+		 return intersection;
+	 }
+	 
 	 public static <K, V> Set<K> intersection(HashMap<K, V> left,HashMap<K, V> right) {
 		 if (left.size() > right.size())
 	        {

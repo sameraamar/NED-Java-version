@@ -57,12 +57,12 @@ public class LSHForest {
 		for (int t = 0; t<numberOfTables; t++)
 		{
 			RoundRobinArray<String> tmpList = tables[t].AddDocument(doc, word2idf);
-			
-			for (int k=0; k<tmpList.size(); k++) {
+			int s = tmpList.size();
+			for (int k=0; k<s; k++) {
 				String tmp = tmpList.get(k);
 				if(tmp == null)
 				{
-					System.out.println("Something strange.. value "+ k +" is null. tmpList.len = " + tmpList.size());
+					System.out.println("Something strange.. value "+ k +" is null. tmpList.len = " + s);
 					continue;
 				}
 				String id = doc.getId();
