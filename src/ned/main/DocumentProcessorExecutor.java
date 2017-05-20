@@ -60,7 +60,7 @@ public class DocumentProcessorExecutor {
 
 	public void refresh()
 	{
-		System.out.println("Too much in the queue... start a new executor!");
+		System.out.println("Refresh the thread-executor manager!");
 		ExecutorService temp = executor;
 		executor = Executors.newFixedThreadPool(number_of_threads);
 		temp.shutdown();
