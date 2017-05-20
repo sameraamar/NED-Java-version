@@ -36,7 +36,7 @@ public class GlobalData {
 		public int number_of_threads =100;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
-		public int hyperplanes = 13;
+		public int hyperplanes = 9;
 		public int max_bucket_size = 2000;
 		public int max_documents = 50_000_000;
 		public int max_thread_delta_time = 4*3600; //seconds
@@ -45,7 +45,7 @@ public class GlobalData {
 		public double threshold = 0.5;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
-		public int inital_dimension = 100000;
+		public int inital_dimension = 50000;
 		public int dimension_jumps = 50000;
 		public boolean resume_mode = false;
 	}
@@ -120,6 +120,7 @@ public class GlobalData {
 
 	public void save()
 	{
+		System.out.println("Save to Redis...");
 		id2wc.save();
 		word2index.save();
     	id2doc.save();

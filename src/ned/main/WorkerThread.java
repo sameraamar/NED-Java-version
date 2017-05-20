@@ -16,7 +16,8 @@ public class WorkerThread implements Runnable
 {
 	private static Boolean locker = true;
 	private static long time = 0;
-	private static int counter = 0;
+	public static int counter = 0;
+	public static int counter_all = 0;
 	private int idx;
 	
 	private Document doc;
@@ -36,14 +37,16 @@ public class WorkerThread implements Runnable
     	synchronized(locker)
     	{
     		counter++;
+    		counter_all++;
     		time+=ms;
     	}
     }
     
-    public static double avegTime()
+    public static String glance()
     {
     	synchronized (locker) {
-			return (1.0*time/counter);
+    		String msg = String.format("Total Processed: %d, AHT: %.2f, Group count: %d", counter_all, (1.0*time/counter), counter); 
+			return msg; //(1.0*time/counter);
 		}
     }
     

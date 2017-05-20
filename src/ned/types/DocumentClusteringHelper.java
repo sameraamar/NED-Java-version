@@ -127,14 +127,8 @@ public class DocumentClusteringHelper {
 
 	private static String lookForCluster(Document doc, String nearest) {
 		String original = nearest;
-		StringBuffer sb = new StringBuffer("look for cluster for " + doc.getId() + ": ");
 		while(true) 
 		{
-			sb.append(" -> " + nearest);
-			if(doc.getId().equals("86414020575367169") || doc.getId().equals("86453128286846976"))
-			{
-				System.out.println(sb.toString());
-			}
 			if(nearest == null)
 			{
 				return null;

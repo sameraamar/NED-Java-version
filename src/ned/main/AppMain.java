@@ -68,10 +68,10 @@ public class AppMain {
 			printParameters(System.out);
 
 			ExecutionHelper.setCommonPoolSize();
-			String folder = "../";;
-			if(getMachineName().indexOf("saaama") >= 0)
-				folder  = "c:/";
-			String threadsFileName = folder + "temp/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset+".txt";
+			String folder = "../temp";
+			if(Session.getMachineName().indexOf("saaama") >= 0)
+				folder  = "c:/temp";
+			String threadsFileName = folder + "/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset+".txt";
 			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
 			
 			forest = new LSHForest(gd.getParams().number_of_tables, 
@@ -122,7 +122,7 @@ public class AppMain {
 		GlobalData gd = GlobalData.getInstance();
 		
 		String folder = "../data";
-		if(getMachineName().indexOf("saaama") >= 0)
+		if(Session.getMachineName().indexOf("saaama") >= 0)
 			folder  = "c:/data/events_db/petrovic";
 
 		String[] files = {"petrovic_00000000.gz",
@@ -325,12 +325,23 @@ public class AppMain {
 							}
 		            	}
 		            	
+		            	System.out.println("clear memory of id2doc to redis...");
+		            	gd.id2doc.save();
+	        		}
+	        	}
+	            
+	            if (stop || processed % (gd.getParams().print_limit * 20) == 0)
+	            {
+	            	int lastIndex = gd.resumeInfo.get(GlobalData.LAST_SEEN_IDX);
+
+	            	if(lastIndex <= idx)
+	        		{
 		            	gd.save();
 		            	
 		            	//if (stop || processed % (gd.getParams().print_limit* 20) == 0)
 		            	//	RedisAccessHelper.initRedisConnectionPool(true);
 		            	
-		            	System.gc();
+		            	//System.gc();
 	        		}
 	            }
 	            
@@ -349,23 +360,6 @@ public class AppMain {
 		long current = System.nanoTime();
 		long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);
 		Session.getInstance().message(Session.INFO, "Summary", "Done in " + Utility.humanTime(seconds) );
-	}
-	
-	private static String getMachineName()
-	{
-		String hostname = "Unknown";
-
-		try
-		{
-		    InetAddress addr;
-		    addr = InetAddress.getLocalHost();
-		    return addr.getHostName().toLowerCase();
-		}
-		catch (UnknownHostException ex)
-		{
-		    System.out.println("Hostname can not be resolved");
-		}		
-		return "";
 	}
 		
 	private static void printParameters(PrintStream out) 

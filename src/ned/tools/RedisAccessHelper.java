@@ -18,6 +18,7 @@ import ned.types.DocumentClusteringThread;
 import ned.types.DocumentWordCounts;
 import ned.types.GlobalData;
 import ned.types.RedisBasedMap;
+import ned.types.Session;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -45,9 +46,12 @@ public class RedisAccessHelper {
 		config.setTestOnReturn(false);
 		config.setTestWhileIdle(false);
 		config.setMaxTotal(REDIS_MAX_CONNECTIONS);
-		//jedisPool = new JedisPool(config,"redis-10253.c1.eu-west-1-3.ec2.cloud.redislabs.com", 10253, 10000);
-		// 
-		return new JedisPool(config,"localhost", PORT, TIME_OUT);
+	
+		String redisHost = "localhost";
+		if(Session.getMachineName().indexOf("saaama") >= 0)
+			redisHost = "localhost";
+		
+		return new JedisPool(config, redisHost, PORT, TIME_OUT);
 	}
 
 	synchronized public static void initRedisConnectionPool() {

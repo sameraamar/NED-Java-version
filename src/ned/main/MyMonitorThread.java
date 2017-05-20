@@ -55,7 +55,7 @@ public class MyMonitorThread extends Thread
     				
         	long delta =  System.nanoTime()-starttime;
         	delta = TimeUnit.NANOSECONDS.toSeconds(delta);
-        	double waht= WorkerThread.avegTime();
+        	String waht = WorkerThread.glance();
         	//if(waht>500){
         	//	System.out.println("GC Run");
         	//	System.gc();
@@ -64,7 +64,7 @@ public class MyMonitorThread extends Thread
             StringBuffer msg = new StringBuffer();
             msg.append("\tActive Redis Connections: ").append(RedisAccessHelper.getNumActive()).append("\n");
             msg.append("\tElapsed time: ").append(Utility.humanTime(delta));
-            msg.append(", Worker AHT: ").append(String.format("\t%.2f",waht)).append(".\n\t");
+            msg.append(", Worker AHT: ").append(waht).append("\n\t");
             WorkerThread.resetCounter();
             if (executor != null)
 	        {
