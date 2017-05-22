@@ -68,8 +68,12 @@ public class DocumentClusteringThread extends Thread {
 		Document last = doc;
 		while(doc!=null)
 		{
-	        DocumentClusteringHelper.mapToClusterHelper(doc);
-			clusteredCounter++;
+			if(!GlobalData.getInstance().getParams().scan_mode_only)
+			{
+				DocumentClusteringHelper.mapToClusterHelper(doc);
+				clusteredCounter++;
+			}
+			
 	        last = doc;
 			doc = next();
 		}
@@ -94,7 +98,7 @@ public class DocumentClusteringThread extends Thread {
 			return null;
 		
 
-		if(doc.isNearestDetermined())
+		if(doc.isNearestDetermined() || GlobalData.getInstance().getParams().scan_mode_only)
 		{
 			queue.poll();
 			return doc;

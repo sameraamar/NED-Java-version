@@ -18,17 +18,18 @@ import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
 
 public class GlobalData {
+	private static final String V = "_1";
 	public static final String LAST_DIMENSION = "dimension";
 	public static final String LAST_NUM_DOCS = "doc_count";
 	public static final String LAST_SEEN_IDX = "last_idx";
 	
-	private static final String K_ID2DOCUMENT = "id2doc";
-	private static final String K_ID2WORD_COUNT = "id2word_counts";
-	private static final String K_WORD2INDEX = "w2i";
-	private static final String K_WORD2COUNTS = "w2c";
-	private static final String K_RESUME_INFO = "resume";
-	private static final String K_ID2CLUSTR_INFO = "id2cluster";
-	private static final String K_CLUSTR2REPLCMENT = "replacement";
+	private static final String K_ID2DOCUMENT = "id2doc" + V;
+	private static final String K_ID2WORD_COUNT = "id2word_counts" + V;
+	private static final String K_WORD2INDEX = "w2i" + V;
+	private static final String K_WORD2COUNTS = "w2c" + V;
+	private static final String K_RESUME_INFO = "resume" + V;
+	private static final String K_ID2CLUSTR_INFO = "id2cluster" + V;
+	private static final String K_CLUSTR2REPLCMENT = "replacement" + V;
 
 	public class Parameters 
 	{
@@ -36,18 +37,19 @@ public class GlobalData {
 		public int number_of_threads =100;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
-		public int hyperplanes = 9;
+		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
 		public int max_bucket_size = 2000;
-		public int max_documents = 50_000_000;
+		public int max_documents = 100_000;
 		public int max_thread_delta_time = 4*3600; //seconds
 		public int offset = 0;
 		public int search_recents = 2000;
 		public double threshold = 0.5;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
-		public int inital_dimension = 50000;
+		public int inital_dimension = 100000;
 		public int dimension_jumps = 50000;
 		public boolean resume_mode = false;
+		public boolean scan_mode_only = true; //keep this false unless you only wants to be in scan mode
 	}
 	
 	private static GlobalData globalData = null;
@@ -81,6 +83,14 @@ public class GlobalData {
 
 	private Parameters parameters = new Parameters();
 	public List<String> cleanClusterQueue = null;
+	public static ConcurrentHashMap<String, Double> id2nearestDist;
+	public static ConcurrentHashMap<String, Boolean> id2nearestOk;
+	public static ConcurrentHashMap<String, String> id2nearestId;
+	
+	
+	
+
+	
 	
 	private GlobalData()
 	{	
@@ -102,6 +112,9 @@ public class GlobalData {
 		resumeInfo = new RedisBasedMap<String, Integer>(GlobalData.K_RESUME_INFO, !getParams().resume_mode, new SerializeHelperStrInt() );
 		id2cluster = new RedisBasedMap<String, String>(GlobalData.K_ID2CLUSTR_INFO, true, new SerializeHelperStrStr() );
 		cluster2replacement = new RedisBasedMap<String, String>(GlobalData.K_CLUSTR2REPLCMENT, true, new SerializeHelperStrStr() );
+		id2nearestDist = new ConcurrentHashMap<String, Double>();
+		id2nearestOk = new ConcurrentHashMap<String, Boolean>();
+		id2nearestId = new ConcurrentHashMap<String, String>();
 		
 		if(!getParams().resume_mode)
 		{
@@ -369,7 +382,6 @@ public class GlobalData {
 			countDocs++;
 		}*/
 		
-		
 		if (counter>0)
 			Session.getInstance().message(Session.DEBUG, "cleanClusters", "released "+counter+" clusters (" + countDocs + " docs)" );
 	}
@@ -458,7 +470,7 @@ public class GlobalData {
 		msg.append("\n");
 		
 		msg.append( String.format("\t[monitor] Documents: %d/%d, Document-WordCounts: %d/%d, Words: %d/%d, "
-				+ "\n\tW2Count: %d/%d, Clusters %d, clust2replcmnt: %d, id2cluster: %d, Recent: %d",
+				+ "\n\tW2Count: %d/%d, Clusters %d, clust2replcmnt: %d, id2cluster: %d",
 				this.id2doc.size(), 
 				-1, //this.id2doc.redisSize(), 
 				this.id2wc.size(), 
@@ -469,8 +481,7 @@ public class GlobalData {
 				-1, //this.numberOfDocsIncludeWord.redisSize(),
 				this.clusters.size(),
 				this.cluster2replacement.size(),
-				this.id2cluster.size(),
-				-1/*this.recentManager.size()*/
+				this.id2cluster.size()
 			) ).append("\n");
 		
 		
@@ -481,5 +492,46 @@ public class GlobalData {
 	{
 		cleanClusterQueue.add(leadId);
 	}
+	
+	public static Double  getId2nearestDist(String key) {
+		Double res = id2nearestDist.get(key);
+		if(res==null)res=1.0;
+		return res;
+	}
+
+	public static   Double setId2nearestDist(String key, Double value) {
+		if(id2nearestDist==null){
+			id2nearestDist= new ConcurrentHashMap<String, Double>();
+		}
+		Double res = id2nearestDist.put(key, value);
+		if(res==null) return 0.0;
+		return res;
+	}
+
+	public static  Boolean getId2nearestOk(String key) {
+		Boolean res = id2nearestOk.get(key);
+		if(res==null)res=false;
+		return res;
+		
+	}
+
+	public static  void setId2nearestOk(String key, boolean value) {
+		if(id2nearestOk==null){
+			id2nearestOk= new ConcurrentHashMap<String, Boolean>();
+		}
+		id2nearestOk.put(key, value);
+	}
+
+	public static  String getId2nearestId(String key) {
+		return id2nearestId.get(key);
+	}
+
+	public static String setId2nearestId(String key, String value) {
+		if(id2nearestId==null){
+			id2nearestId= new ConcurrentHashMap<String, String>();
+		}
+		return id2nearestId.put(key, value);
+	}
+
 	
 }

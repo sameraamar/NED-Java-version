@@ -83,15 +83,12 @@ public class DocumentClusteringHelper {
 	public static void mapToClusterHelper(Document doc)
 	{
 		GlobalData data = GlobalData.getInstance();
-		if(doc.getId().equals(doc.getId().equals("86453128286846976")))
-		{
-			System.out.println("mapToClusterHelper: " + doc.getId());
-		}
+
 		String nearest = null;
 		Double distance = null;
-		if (doc.getNearest() != null)
+		if (doc.getNearestId() != null)
 		{
-			nearest = doc.getNearest();
+			nearest = doc.getNearestId();
 			distance = doc.getNearestDist();
 		}
 		

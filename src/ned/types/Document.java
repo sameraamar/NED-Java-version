@@ -32,9 +32,9 @@ public class Document  implements Serializable, DirtyBit {
 	private int retweet_count;
 	private String reply_to;
 	
-	private String nearest;
-	private double nearestDist;
-	private boolean nearestDetermined;
+	//private String nearest;
+	//private double nearestDist;
+	//private boolean nearestDetermined;
 	private int favouritesCount;
 	private String user_id;
 	private String retweeted_user_id;
@@ -70,9 +70,9 @@ public class Document  implements Serializable, DirtyBit {
     	dirtyOn();
         this.text = text;
         //this.weights = null;
-        this.nearest = null;
-    	this.nearestDist = 1.0;
-    	this.nearestDetermined = false;
+        //this.nearest = null;
+    	//this.nearestDist = 1.0;
+    	//this.nearestDetermined = false;
         this.timestamp = timestamp;
         this.created_at = null;
     	this.retweeted_id = null;
@@ -200,10 +200,16 @@ public class Document  implements Serializable, DirtyBit {
 		DocumentWordCounts myWC = GlobalData.getInstance().id2wc.get( getId() );
 				
 		double tmp = Document.Distance(myWC, rWordCount, word2idf);
-		if (nearest==null || tmp < nearestDist)
+		if (getNearestId()==null || tmp < getNearestDist())
 		{
-			nearestDist = tmp;
-			nearest = rWordCount.getId();
+			//try {
+				setNearestDist(tmp);
+			//} catch (NullPointerException ne)
+			//{
+			//	System.out.println("Failed on NullPointerException... don't know why!?");
+			//	setNearestDist(tmp);
+			//}
+			setNearestId( rWordCount.getId() );
 			dirtyOn();
 		}
 	}
@@ -218,20 +224,29 @@ public class Document  implements Serializable, DirtyBit {
 	}
 
 	public boolean isNearestDetermined() {
-		return nearestDetermined;
+		return GlobalData.getId2nearestOk(id);
 	}
 
 	public void setNearestDetermined(boolean nearestDetermined) {
-		this.nearestDetermined = nearestDetermined;
-		dirtyOn();
+		GlobalData.setId2nearestOk(id,  nearestDetermined);
+		//dirtyOn();
 	}
 
 	public double getNearestDist() {
-		return nearestDist;
+		return GlobalData.getId2nearestDist(id);
 	}
 
-	public String getNearest() {
-		return nearest;
+	private double setNearestDist(double d) {
+		Double res=GlobalData.setId2nearestDist(id, d);
+		return res;
+	}
+
+	public String getNearestId() {
+		return GlobalData.getId2nearestId(id);
+	} 
+	
+	public String setNearestId(String n) {
+		return GlobalData.setId2nearestId(id, n);
 	} 
 	
 	//**************************************************************

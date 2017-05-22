@@ -258,10 +258,10 @@ public class AppMain {
 	            
 	            if (processed % (gd.getParams().print_limit) == 0)
 	            {
-	            	if(GlobalData.getInstance().getQueue().size() > 25000)
-		            {
-		            	executer.refresh();
-		            }
+	            	//if(GlobalData.getInstance().getQueue().size() > 25000)
+		            //{
+		            //	executer.refresh();
+		            //}
 		            	        		
 	            	long currenttime = System.nanoTime();
 	        		long tmp = currenttime - middletime;
@@ -306,13 +306,9 @@ public class AppMain {
 	            if (processed == gd.getParams().max_documents)
 	            	stop = true;
 	            
-	            
 	            if (stop || processed % (gd.getParams().print_limit* 20) == 0)
-
 	            {
-	            	
 	            	int lastIndex = gd.resumeInfo.get(GlobalData.LAST_SEEN_IDX);
-
 	        		if(lastIndex <= idx)
 	        		{
 		            	System.out.println("Wait for queue to get empty!");
@@ -325,23 +321,11 @@ public class AppMain {
 							}
 		            	}
 		            	
-		            	System.out.println("clear memory of id2doc to redis...");
-		            	gd.id2doc.save();
-	        		}
-	        	}
-	            
-	            if (stop || processed % (gd.getParams().print_limit * 20) == 0)
-	            {
-	            	int lastIndex = gd.resumeInfo.get(GlobalData.LAST_SEEN_IDX);
-
-	            	if(lastIndex <= idx)
-	        		{
+		            	System.out.println("clear memory to redis...");
 		            	gd.save();
 		            	
 		            	//if (stop || processed % (gd.getParams().print_limit* 20) == 0)
 		            	//	RedisAccessHelper.initRedisConnectionPool(true);
-		            	
-		            	//System.gc();
 	        		}
 	            }
 	            

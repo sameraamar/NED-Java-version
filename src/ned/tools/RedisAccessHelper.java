@@ -46,7 +46,7 @@ public class RedisAccessHelper {
 		config.setTestOnReturn(false);
 		config.setTestWhileIdle(false);
 		config.setMaxTotal(REDIS_MAX_CONNECTIONS);
-	
+		//String redisHost = "ec2-54-245-53-209.us-west-2.compute.amazonaws.com";	
 		String redisHost = "localhost";
 		if(Session.getMachineName().indexOf("saaama") >= 0)
 			redisHost = "localhost";
