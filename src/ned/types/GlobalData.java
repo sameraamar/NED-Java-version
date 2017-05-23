@@ -18,7 +18,7 @@ import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
 
 public class GlobalData {
-	private static final String V = "_1";
+	private static final String V = "";
 	public static final String LAST_DIMENSION = "dimension";
 	public static final String LAST_NUM_DOCS = "doc_count";
 	public static final String LAST_SEEN_IDX = "last_idx";
@@ -39,7 +39,7 @@ public class GlobalData {
 		public int number_of_tables = 70;
 		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
 		public int max_bucket_size = 2000;
-		public int max_documents = 100_000;
+		public int max_documents = 50_000_000;
 		public int max_thread_delta_time = 4*3600; //seconds
 		public int offset = 0;
 		public int search_recents = 2000;
@@ -49,7 +49,7 @@ public class GlobalData {
 		public int inital_dimension = 100000;
 		public int dimension_jumps = 50000;
 		public boolean resume_mode = false;
-		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
+		public boolean scan_mode_only = true; //keep this false unless you only wants to be in scan mode
 	}
 	
 	private static GlobalData globalData = null;
