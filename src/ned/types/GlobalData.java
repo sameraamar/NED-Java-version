@@ -46,10 +46,10 @@ public class GlobalData {
 		public double threshold = 0.5;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
-		public int inital_dimension = 100000;
+		public int inital_dimension = 50_000;
 		public int dimension_jumps = 50000;
 		public boolean resume_mode = false;
-		public boolean scan_mode_only = true; //keep this false unless you only wants to be in scan mode
+		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
 	}
 	
 	private static GlobalData globalData = null;
