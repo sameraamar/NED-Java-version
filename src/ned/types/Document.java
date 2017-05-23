@@ -229,24 +229,22 @@ public class Document  implements Serializable, DirtyBit {
 
 	public void setNearestDetermined(boolean nearestDetermined) {
 		GlobalData.setId2nearestOk(id,  nearestDetermined);
-		//dirtyOn();
 	}
 
 	public double getNearestDist() {
 		return GlobalData.getId2nearestDist(id);
 	}
 
-	private double setNearestDist(double d) {
-		Double res=GlobalData.setId2nearestDist(id, d);
-		return res;
+	private void setNearestDist(double d) {
+		GlobalData.setId2nearestDist(id, d);
 	}
 
 	public String getNearestId() {
 		return GlobalData.getId2nearestId(id);
 	} 
 	
-	public String setNearestId(String n) {
-		return GlobalData.setId2nearestId(id, n);
+	public void setNearestId(String n) {
+		GlobalData.setId2nearestId(id, n);
 	} 
 	
 	//**************************************************************

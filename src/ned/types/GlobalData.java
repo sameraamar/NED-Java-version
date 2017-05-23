@@ -495,43 +495,33 @@ public class GlobalData {
 	
 	public static Double  getId2nearestDist(String key) {
 		Double res = id2nearestDist.get(key);
-		if(res==null)res=1.0;
+		if(res==null)
+			res=1.0;
 		return res;
 	}
 
-	public static   Double setId2nearestDist(String key, Double value) {
-		if(id2nearestDist==null){
-			id2nearestDist= new ConcurrentHashMap<String, Double>();
-		}
-		Double res = id2nearestDist.put(key, value);
-		if(res==null) return 0.0;
-		return res;
+	public static void setId2nearestDist(String key, Double value) {
+		id2nearestDist.put(key, value);
 	}
 
-	public static  Boolean getId2nearestOk(String key) {
+	public static Boolean getId2nearestOk(String key) {
 		Boolean res = id2nearestOk.get(key);
-		if(res==null)res=false;
+		if(res==null)
+			res=false;
 		return res;
 		
 	}
 
 	public static  void setId2nearestOk(String key, boolean value) {
-		if(id2nearestOk==null){
-			id2nearestOk= new ConcurrentHashMap<String, Boolean>();
-		}
 		id2nearestOk.put(key, value);
 	}
 
-	public static  String getId2nearestId(String key) {
+	public static String getId2nearestId(String key) {
 		return id2nearestId.get(key);
 	}
 
-	public static String setId2nearestId(String key, String value) {
-		if(id2nearestId==null){
-			id2nearestId= new ConcurrentHashMap<String, String>();
-		}
-		return id2nearestId.put(key, value);
+	public static void setId2nearestId(String key, String value) {
+		id2nearestId.put(key, value);
 	}
-
 	
 }
