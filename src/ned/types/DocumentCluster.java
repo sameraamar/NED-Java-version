@@ -88,53 +88,39 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		
 		return text.toString();
 	}*/
-	
-	public String toString()
+
+public String toString()
 	{
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		GlobalData gd = GlobalData.getInstance();
 
 		double ent = entropy();
 		
-		sb.append("LEAD: ").append(leadId).append(" SIZE: ").append(this.idList.size());
+		/*sb.append("LEAD: ").append(leadId).append(" SIZE: ").append(this.idList.size());
 		sb.append(" Entropy: ").append(ent);
-		sb.append(" Age: ").append(this.age2()).append(" (s)\n");;
-		
+		sb.append(" Age: ").append(a).append(" (s)\n");;
+		*/
 		long a = this.age2();
 		
-		sb.append("id\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\tnearest_text\n");
+		//sb.append("id\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\tnearest_text\n");
 		int s = size();
 		for (int i =0; i<s; i++)
 		{
 			String docId = idList.get(i);
-			Document doc = gd.id2doc.get(docId); //RedisHelper.getDocumentFromRedis(gd.ID2DOCUMENT,docId);
+			Document doc = gd.id2doc.get(docId);
 			
 			Document nDoc = null;
-			if(i>0) { //this is placeholder for the lead - skip
-				nDoc = gd.id2doc.get(doc.getNearestId()); //RedisHelper.getDocumentFromRedis(gd.ID2DOCUMENT,doc.getNearest());
-			}
-			
-			//The following block might not be needed after fixing other sync issues
-			if(doc == null)
-			{
-				System.out.println("Document is not there : " + docId);
-				doc = gd.id2doc.get(docId);
-			}
-			//-----------
+			String nearestId = doc.getNearestId();
+			if(nearestId != null)
+				nDoc = gd.id2doc.get(nearestId);
 			
 			sb.append(docId).append("\t");
 			Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
 			sb.append(time.toString()).append("\t");
 			
-			//sb.append(doc.getCreatedAt()).append("\t");
-			//DateTimeFormatter df = DateTimeFormatter.ofPattern("DDD MMM dd HH:mm:ss X yyyy");
-			//LocalDateTime dateTime = LocalDateTime.parse(doc.getCreatedAt(), df);
-			//sb.append(time.toString()).append("\t");
-			
 			sb.append(doc.getTimestamp()).append("\t");
-			//sb.append(doc.getNearest()).append(String.format("\t%.7f", doc.getNearestDist()));
-			sb.append(doc.getNearestId()).append("\t");
-			sb.append( String.format("%.7f", doc.getNearestDist() )).append("\t");
+			sb.append(nearestId).append("\t");
+			sb.append(String.format("%.7f\t", doc.getNearestDist()));
 			
 			sb.append( ent ).append("\t");
 			sb.append( s ).append("\t");
@@ -142,10 +128,10 @@ public class DocumentCluster implements Serializable, DirtyBit {
 			
 			sb.append( doc.getCleanText() );
 
-			String text = nDoc == null ? "NA" : nDoc.getCleanText();
-			sb.append("\t").append(text);
+			//String text = nDoc == null ? "NA" : nDoc.getCleanText();
+			//sb.append("\t").append(text);
 			
-			if(doc.getNearestId()!=null && doc.getNearestId().compareTo(doc.getId()) >= 0)
+			if(nearestId!=null && nearestId.compareTo(doc.getId()) >= 0)
 			{
 				sb.append("\t!!!!! bad nearest choice...");
 			}
@@ -153,7 +139,6 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		}
 		return sb.toString();
 	}
-	
 
 	
 	public double entropy() 

@@ -49,7 +49,7 @@ public class GlobalData {
 		public int inital_dimension = 100000;
 		public int dimension_jumps = 50000;
 		public boolean resume_mode = false;
-		public boolean scan_mode_only = true; //keep this false unless you only wants to be in scan mode
+		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
 	}
 	
 	private static GlobalData globalData = null;
@@ -334,7 +334,7 @@ public class GlobalData {
 				print = false;
 			
 			if (print)
-				out.println(c.toString());
+				out.print(c.toString());
 		} 
 	}
 	
@@ -366,7 +366,7 @@ public class GlobalData {
 				print = false;
 			
 			if (print)
-				out.println(cluster.toString());
+				out.print(cluster.toString());
 
 			counter+=1;
 			
