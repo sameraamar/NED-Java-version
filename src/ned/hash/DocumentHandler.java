@@ -57,8 +57,13 @@ public class DocumentHandler {
         doc.setCreatedAt(created_at);
         //Hashtable<Integer, Double> weights = doc.getWeights();
 
-        
-		return doc;
+        if(doc.getUserId() == null)
+        {
+        	JsonObject userObj = jsonObj.get("user").getAsJsonObject();
+            doc.setUserId( userObj.get("id_str").getAsString() );			
+        }
+		
+    	return doc;
 	}
 	
 //	public static boolean process(LSHForest forest, Document doc)

@@ -275,13 +275,12 @@ public class Document  implements Serializable, DirtyBit {
 
 		
         doc.created_at = created_at;
-
+        JsonObject userObj = jsonObj.get("user").getAsJsonObject();
+    	doc.user_id = userObj.get("id_str").getAsString();			
+		
         if(!isBasicOnly)
 		{
-        	JsonObject userObj = jsonObj.get("user").getAsJsonObject();
-        	doc.user_id = userObj.get("id_str").getAsString();			
-			
-			//String retweeted_status = jsonObj.get("retweeted_status").getAsString();
+        	//String retweeted_status = jsonObj.get("retweeted_status").getAsString();
 			
         	element = jsonObj.get("in_reply_to_status_id_str");
 			if(!element.isJsonNull())
@@ -374,5 +373,10 @@ public class Document  implements Serializable, DirtyBit {
 	@Override
 	public void dirtyOn() {
 		isDirtyBit = true;
+	}
+
+	public void setUserId(String asString) {
+		user_id = asString;
+		dirtyOn();
 	}
 }

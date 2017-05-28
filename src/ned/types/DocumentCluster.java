@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -20,6 +21,7 @@ public class DocumentCluster implements Serializable, DirtyBit {
 	private List<String> idList;
 	//private List<String> neighbor;
 	//private List<Double> distance;
+	private HashSet<String> users;
 	String leadId;
 	private long starttime;
 	private long lasttime;
@@ -35,7 +37,9 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		this.starttime = leadDocument.getTimestamp();
 		this.lasttime  = leadDocument.getTimestamp();
 		entropy = -1;
+		users = new HashSet<String>() ;
 		addDocument(leadDocument);
+		
 	}
 	
 	@Override
@@ -59,6 +63,7 @@ public class DocumentCluster implements Serializable, DirtyBit {
 	{
 		this.idList.add(doc.getId());
 		this.lasttime = doc.getTimestamp();
+		users.add(doc.getUserId());
 		
 		dirtyOn();
 		entropy = -1;
@@ -102,8 +107,9 @@ public String toString()
 		*/
 		long a = this.age2();
 		
-		//sb.append("id\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\tnearest_text\n");
+		//sb.append("leadId\tid\tuser\t# users\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\n");
 		int s = size();
+		int numOfUsers = users.size();
 		for (int i =0; i<s; i++)
 		{
 			String docId = idList.get(i);
@@ -114,7 +120,9 @@ public String toString()
 			if(nearestId != null)
 				nDoc = gd.id2doc.get(nearestId);
 			
+			sb.append(leadId).append("\t");
 			sb.append(docId).append("\t");
+			sb.append(doc.getUserId()).append("\t");
 			Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
 			sb.append(time.toString()).append("\t");
 			
@@ -123,18 +131,16 @@ public String toString()
 			sb.append(String.format("%.7f\t", doc.getNearestDist()));
 			
 			sb.append( ent ).append("\t");
+			sb.append(numOfUsers).append("\t");
 			sb.append( s ).append("\t");
 			sb.append( a ).append("\t");
 			
-			sb.append( doc.getCleanText() );
+			sb.append( doc.getText().replaceAll("\\p{javaSpaceChar}{2,}" , " ").replaceAll("\n", " ") );
 
 			//String text = nDoc == null ? "NA" : nDoc.getCleanText();
 			//sb.append("\t").append(text);
 			
-			if(nearestId!=null && nearestId.compareTo(doc.getId()) >= 0)
-			{
-				sb.append("\t!!!!! bad nearest choice...");
-			}
+			
 			sb.append("\n");
 		}
 		return sb.toString();

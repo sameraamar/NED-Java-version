@@ -36,7 +36,7 @@ public class DocumentClusteringThread extends Thread {
 	}
 	
 	private void doRun() {
-		out.print("id\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\tnearest_text\n");
+		out.print("leadId\tid\tuser\tcreated\ttimestamp\tnearest\tdistance\tentropy\t#users\tsize\tage\ttext\n");
 		while(!stop) 
 		{
 			mapToCluster();
