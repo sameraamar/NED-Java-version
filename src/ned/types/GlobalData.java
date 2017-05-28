@@ -45,7 +45,7 @@ public class GlobalData {
 		public int max_thread_delta_time = 4*3600; //seconds
 		public int offset = 0;
 		public int search_recents = 2000;
-		public double threshold = 0.5;
+		public double threshold = 0.65;
 		public double min_cluster_entropy = 1.2;
 		public double min_cluster_size = 3;
 		public int inital_dimension = 100000;
