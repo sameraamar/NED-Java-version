@@ -124,6 +124,10 @@ public class AppMain {
 		String folder = "../data";
 		if(Session.getMachineName().indexOf("saaama") >= 0)
 			folder  = "c:/data/events_db/petrovic";
+		
+		
+		String inputfile = folder + "/relevance_judgments_00000000";
+		gd.labeled = LabeledDocuments.loadLabeledData(inputfile);
 
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",

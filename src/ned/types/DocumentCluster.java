@@ -111,10 +111,10 @@ public class DocumentCluster implements Serializable, DirtyBit {
 
 public String toString()
 	{
-		StringBuilder sb = new StringBuilder();
 		GlobalData gd = GlobalData.getInstance();
 
-		double ent = entropy();
+		String ent =String.format("%.7f",  entropy());
+		String scoreAsStr = String.format("%.7f", score);
 		
 		/*sb.append("LEAD: ").append(leadId).append(" SIZE: ").append(this.idList.size());
 		sb.append(" Entropy: ").append(ent);
@@ -126,8 +126,18 @@ public String toString()
 		Pattern whitespace = Pattern.compile("\\s");
 		Pattern whitespace2 = Pattern.compile("\\s\\s");
 		int s = size();
-		
 		int numOfUsers = users.size();
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append( ent ).append("\t");
+		sb.append(numOfUsers).append("\t");
+		sb.append( s ).append("\t");
+		sb.append( a ).append("\t");
+		sb.append( scoreAsStr ).append("\t");
+		String block = sb.toString();
+		
+		sb = new StringBuilder();
+
 		for (int i =0; i<s; i++)
 		{
 			String docId = idList.get(i);
@@ -148,11 +158,11 @@ public String toString()
 			sb.append(nearestId).append("\t");
 			sb.append(String.format("%.7f\t", doc.getNearestDist()));
 			
-			sb.append( ent ).append("\t");
-			sb.append(numOfUsers).append("\t");
-			sb.append( s ).append("\t");
-			sb.append( a ).append("\t");
-			sb.append( score ).append("\t");
+			sb.append(block);
+			
+			String lbl = gd.labeled.positive.get(docId);
+			lbl = lbl == null ? "" : "t_" + lbl;
+			sb.append( lbl ).append("\t");
 			
 			Matcher matcher = whitespace.matcher(doc.getText());
 			String result = matcher.replaceAll(" ");

@@ -13,6 +13,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import ned.main.LabeledDocuments;
 import ned.modules.Twokenize;
 import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
@@ -46,8 +48,8 @@ public class GlobalData {
 		public double threshold = 0.5;
 		public double min_cluster_entropy = 1.2;
 		public double min_cluster_size = 3;
-		public int inital_dimension = 50_000;
-		public int dimension_jumps = 50000;
+		public int inital_dimension = 100000;
+		public int dimension_jumps = 100000;
 		public boolean resume_mode = false;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
 	}
@@ -83,6 +85,7 @@ public class GlobalData {
 
 	private Parameters parameters = new Parameters();
 	public List<String> cleanClusterQueue = null;
+	public LabeledDocuments labeled;
 	public static ConcurrentHashMap<String, Double> id2nearestDist;
 	public static ConcurrentHashMap<String, Boolean> id2nearestOk;
 	public static ConcurrentHashMap<String, String> id2nearestId;
