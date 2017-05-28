@@ -29,7 +29,16 @@ public class DocumentCluster implements Serializable, DirtyBit {
 	private long lasttime;
 	private double entropy;
 	private boolean isDirtyBit;
+	private double score;
 	
+	public double getScore() {
+		return score;
+	}
+
+	public void setScore(double score) {
+		this.score = score;
+	}
+
 	public DocumentCluster(Document leadDocument)
 	{
 		this.idList = (List<String>) Collections.synchronizedList(new ArrayList<String>()); //new ArrayList<String>();
@@ -41,6 +50,7 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		entropy = -1;
 		users = new HashSet<String>() ;
 		addDocument(leadDocument);
+		score=0;
 		
 	}
 	
@@ -66,6 +76,9 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		this.idList.add(doc.getId());
 		this.lasttime = doc.getTimestamp();
 		users.add(doc.getUserId());
+		if(this.lasttime-this.starttime>0){
+			score = Double.valueOf(2.0)/(this.lasttime-this.starttime);
+		}
 		
 		dirtyOn();
 		entropy = -1;
@@ -113,6 +126,7 @@ public String toString()
 		Pattern whitespace = Pattern.compile("\\s");
 		Pattern whitespace2 = Pattern.compile("\\s\\s");
 		int s = size();
+		
 		int numOfUsers = users.size();
 		for (int i =0; i<s; i++)
 		{
@@ -138,6 +152,7 @@ public String toString()
 			sb.append(numOfUsers).append("\t");
 			sb.append( s ).append("\t");
 			sb.append( a ).append("\t");
+			sb.append( score ).append("\t");
 			
 			Matcher matcher = whitespace.matcher(doc.getText());
 			String result = matcher.replaceAll(" ");

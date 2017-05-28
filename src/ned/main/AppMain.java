@@ -61,7 +61,7 @@ public class AppMain {
 				gd.getParams().max_documents = max;
 				gd.getParams().resume_mode = resume;
 				gd.getParams().inital_dimension = dimension;
-				System.out.println(String.format("Run: offset %d,  max-doc %d, resume? = %b, dim? = %d", o, max, resume, dimension));
+				//System.out.println(String.format("Run: offset %d,  max-doc %d, resume? = %b, dim? = %d", o, max, resume, dimension));
 			}			
 			
 			gd.init();

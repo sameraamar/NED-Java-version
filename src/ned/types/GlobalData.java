@@ -48,7 +48,7 @@ public class GlobalData {
 		public double min_cluster_size = 3;
 		public int inital_dimension = 50_000;
 		public int dimension_jumps = 50000;
-		public boolean resume_mode = true;
+		public boolean resume_mode = false;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
 	}
 	
