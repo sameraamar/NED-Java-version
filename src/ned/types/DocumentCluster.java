@@ -27,7 +27,16 @@ public class DocumentCluster implements Serializable, DirtyBit {
 	private long lasttime;
 	private double entropy;
 	private boolean isDirtyBit;
+	private double score;
 	
+	public double getScore() {
+		return score;
+	}
+
+	public void setScore(double score) {
+		this.score = score;
+	}
+
 	public DocumentCluster(Document leadDocument)
 	{
 		this.idList = (List<String>) Collections.synchronizedList(new ArrayList<String>()); //new ArrayList<String>();
@@ -39,6 +48,7 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		entropy = -1;
 		users = new HashSet<String>() ;
 		addDocument(leadDocument);
+		score=0;
 		
 	}
 	
@@ -64,6 +74,9 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		this.idList.add(doc.getId());
 		this.lasttime = doc.getTimestamp();
 		users.add(doc.getUserId());
+		if(this.lasttime-this.starttime>0){
+			score = Double.valueOf(2.0)/(this.lasttime-this.starttime);
+		}
 		
 		dirtyOn();
 		entropy = -1;
@@ -109,6 +122,7 @@ public String toString()
 		
 		//sb.append("leadId\tid\tuser\t# users\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\n");
 		int s = size();
+		
 		int numOfUsers = users.size();
 		for (int i =0; i<s; i++)
 		{
@@ -134,6 +148,7 @@ public String toString()
 			sb.append(numOfUsers).append("\t");
 			sb.append( s ).append("\t");
 			sb.append( a ).append("\t");
+			sb.append( score ).append("\t");
 			
 			sb.append( doc.getText().replaceAll("\\p{javaSpaceChar}{2,}" , " ").replaceAll("\n", " ") );
 
