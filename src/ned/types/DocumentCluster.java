@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DocumentCluster implements Serializable, DirtyBit {
 	/**
@@ -108,6 +110,8 @@ public String toString()
 		long a = this.age2();
 		
 		//sb.append("leadId\tid\tuser\t# users\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\n");
+		Pattern whitespace = Pattern.compile("\\s");
+		Pattern whitespace2 = Pattern.compile("\\s\\s");
 		int s = size();
 		int numOfUsers = users.size();
 		for (int i =0; i<s; i++)
@@ -122,7 +126,7 @@ public String toString()
 			
 			sb.append(leadId).append("\t");
 			sb.append(docId).append("\t");
-			sb.append(doc.getUserId()).append("\t");
+			//sb.append(doc.getUserId()).append("\t");
 			Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
 			sb.append(time.toString()).append("\t");
 			
@@ -135,7 +139,12 @@ public String toString()
 			sb.append( s ).append("\t");
 			sb.append( a ).append("\t");
 			
-			sb.append( doc.getText().replaceAll("\\p{javaSpaceChar}{2,}" , " ").replaceAll("\n", " ") );
+			Matcher matcher = whitespace.matcher(doc.getText());
+			String result = matcher.replaceAll(" ");
+			
+			matcher = whitespace2.matcher(result);
+			result = matcher.replaceAll(" ");
+			sb.append( result );
 
 			//String text = nDoc == null ? "NA" : nDoc.getCleanText();
 			//sb.append("\t").append(text);
