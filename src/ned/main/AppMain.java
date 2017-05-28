@@ -198,7 +198,7 @@ public class AppMain {
 		long firstdoc = 0;
 		long lastdoc;
 
-		printParameters(out);
+	//	printParameters(out);
 
 		//CleanupThread thread = new CleanupThread(out);
 		//threadsFileName.isDaemon(true);
