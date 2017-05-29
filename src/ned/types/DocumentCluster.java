@@ -113,7 +113,7 @@ public class DocumentCluster implements Serializable, DirtyBit {
 public String toString()
 	{
 		GlobalData gd = GlobalData.getInstance();
-
+		String dil=GlobalData.dilimitter;
 		String ent =String.format("%.7f",  entropy());
 		String scoreAsStr = String.format("%.7f", score);
 		
@@ -130,15 +130,56 @@ public String toString()
 		int numOfUsers = users.size();
 		
 		StringBuilder sb = new StringBuilder();
-		sb.append( ent ).append("\t");
-		sb.append(numOfUsers).append("\t");
-		sb.append( s ).append("\t");
-		sb.append( a ).append("\t");
-		sb.append( scoreAsStr ).append("\t");
+		sb.append( ent ).append(dil);
+		sb.append(numOfUsers).append(dil);
+		sb.append( s ).append(dil);
+		sb.append( a ).append(dil);
+		sb.append( scoreAsStr ).append(dil);
 		String block = sb.toString();
 		
 		sb = new StringBuilder();
 		
+		
+			String docId = idList.get(0);
+			Document doc = gd.id2doc.get(docId);
+			
+			Document nDoc = null;
+			String nearestId = doc.getNearestId();
+			if(nearestId != null){
+				nDoc = gd.id2doc.get(nearestId);
+			}
+				
+			
+			sb.append(leadId).append(dil);
+			
+			//sb.append(doc.getUserId()).append("\t");
+			Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
+			sb.append(time.toString()).append(dil);
+			
+			//sb.append(doc.getTimestamp()).append(dil);
+			sb.append(nearestId).append(dil);
+			sb.append(String.format("%.7f", doc.getNearestDist()));
+			sb.append(dil);
+			sb.append(block);
+			
+			String lbl = gd.labeled.positive.get(docId);
+			lbl = lbl == null ? "" : "t_" + lbl;
+			sb.append( lbl ).append(dil);
+			
+			Matcher matcher = whitespace.matcher(doc.getText());
+			String result = matcher.replaceAll(" ");
+			
+			matcher = whitespace2.matcher(result);
+			result = matcher.replaceAll(" ");
+			sb.append( result );
+
+			//String text = nDoc == null ? "NA" : nDoc.getCleanText();
+			//sb.append("\t").append(text);
+			
+			
+			sb.append("\n");
+		
+		/*
 		for (int i =0; i<1; i++)
 		{
 			String docId = idList.get(i);
@@ -178,6 +219,8 @@ public String toString()
 			
 			sb.append("\n");
 		}
+		
+		*/
 		return sb.toString();
 	}
 

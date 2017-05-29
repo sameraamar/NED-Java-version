@@ -25,6 +25,8 @@ public class GlobalData {
 	public static final String LAST_NUM_DOCS = "doc_count";
 	public static final String LAST_SEEN_IDX = "last_idx";
 	
+	public static final String dilimitter = "|";
+
 	private static final String K_ID2DOCUMENT = "id2doc" + V;
 	private static final String K_ID2WORD_COUNT = "id2word_counts" + V;
 	private static final String K_WORD2INDEX = "w2i" + V;

@@ -36,7 +36,8 @@ public class DocumentClusteringThread extends Thread {
 	}
 	
 	private void doRun() {
-		out.print("leadId\tid\tcreated\ttimestamp\tnearest\tdistance\tentropy\t#users\tsize\tage\tscore\ttopic\ttext\t score\n");
+		String dil=GlobalData.dilimitter;
+		out.print("leadId"+dil+"id"+dil+"created"+dil+"timestamp"+dil+"nearest"+dil+"distance"+dil+"entropy"+dil+"#users"+dil+"size"+dil+"age"+dil+"score"+dil+"topic"+dil+"text"+dil+" score"+dil+"\n");
 		while(!stop) 
 		{
 			mapToCluster();
