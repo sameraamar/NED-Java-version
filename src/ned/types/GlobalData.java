@@ -42,7 +42,7 @@ public class GlobalData {
 		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
 		public int max_bucket_size = 2000;
 		public int max_documents = 50_000_000;
-		public int max_thread_delta_time = 3600; //seconds
+		public int max_thread_delta_time = 4*3600; //seconds
 		public int offset = 0;
 		public int search_recents = 2000;
 		public double threshold = 0.65;
@@ -52,6 +52,7 @@ public class GlobalData {
 		public int dimension_jumps = 100000;
 		public boolean resume_mode = false;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
+		public boolean is_prod_mode = true;
 	}
 	
 	private static GlobalData globalData = null;
