@@ -85,11 +85,11 @@ public class DocumentClusteringThread extends Thread {
 		boolean stop=gd.getQueue().isEmpty();
 		
 		if(!stop) return stop;
-		int retry=5;
+		int retry=10;
 		while(stop && retry>0){
 			System.out.println("Is is Empty");
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(2000);
 				stop=gd.getQueue().isEmpty();
 				retry--;
 			} catch (InterruptedException e) {
@@ -97,7 +97,7 @@ public class DocumentClusteringThread extends Thread {
 				e.printStackTrace();
 			}
 		}
-
+		
 		return stop;
 	}
 	
