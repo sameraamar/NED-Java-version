@@ -139,44 +139,45 @@ public String toString()
 		
 		sb = new StringBuilder();
 		
-		for (int i =0; i<1; i++)
+		for (int i =0; i<s; i++)
 		{
 			String docId = idList.get(i);
 			Document doc = gd.id2doc.get(docId);
+			if(i == 0)
+			{
+				Document nDoc = null;
+				String nearestId = doc.getNearestId();
+				if(nearestId != null)
+					nDoc = gd.id2doc.get(nearestId);
+				
+				sb.append(docId).append("\t");
+
+				Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
+				sb.append(time.toString()).append("\t");
+				
+				sb.append(doc.getTimestamp()).append("\t");
+				sb.append(nearestId).append("\t");
+				sb.append(String.format("%.7f\t", doc.getNearestDist()));
+				
+				sb.append(block);
+				
+				String lbl = gd.labeled.positive.get(docId);
+				lbl = lbl == null ? "" : "t_" + lbl;
+				sb.append( lbl ).append("\t");
+				
+				//String text = doc.getCleanText();
+				//sb.append("\t").append(text);
+			}
 			
-			Document nDoc = null;
-			String nearestId = doc.getNearestId();
-			if(nearestId != null)
-				nDoc = gd.id2doc.get(nearestId);
-			
-			sb.append(leadId).append("\t");
-			sb.append(docId).append("\t");
-			//sb.append(doc.getUserId()).append("\t");
-			Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
-			sb.append(time.toString()).append("\t");
-			
-			sb.append(doc.getTimestamp()).append("\t");
-			sb.append(nearestId).append("\t");
-			sb.append(String.format("%.7f\t", doc.getNearestDist()));
-			
-			sb.append(block);
-			
-			String lbl = gd.labeled.positive.get(docId);
-			lbl = lbl == null ? "" : "t_" + lbl;
-			sb.append( lbl ).append("\t");
-			
-			Matcher matcher = whitespace.matcher(doc.getText());
+			Matcher matcher = whitespace.matcher(doc.getCleanText());
 			String result = matcher.replaceAll(" ");
 			
 			matcher = whitespace2.matcher(result);
 			result = matcher.replaceAll(" ");
-			sb.append( result );
-
-			//String text = nDoc == null ? "NA" : nDoc.getCleanText();
-			//sb.append("\t").append(text);
+			sb.append("<").append(docId).append("> ").append( result ).append(" ");
 			
-			
-			sb.append("\n");
+			if (i == s-1)
+				sb.append("\n");
 		}
 		return sb.toString();
 	}
