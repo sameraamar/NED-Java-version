@@ -74,11 +74,12 @@ public class DocumentCluster implements Serializable, DirtyBit {
 	public void addDocument(Document doc) 
 	{
 		this.idList.add(doc.getId());
+		if(this.lasttime-this.starttime>0){
+			score = Double.valueOf(2.0)/(doc.getTimestamp()-this.lasttime);
+		}		
 		this.lasttime = doc.getTimestamp();
 		users.add(doc.getUserId());
-		if(this.lasttime-this.starttime>0){
-			score = Double.valueOf(2.0)/(this.lasttime-this.starttime);
-		}
+		
 		
 		dirtyOn();
 		entropy = -1;
@@ -137,7 +138,46 @@ public String toString()
 		String block = sb.toString();
 		
 		sb = new StringBuilder();
+		int i=0;
+		
+		String docId = idList.get(i);
+		Document doc = gd.id2doc.get(docId);
+		
+		Document nDoc = null;
+		String nearestId = doc.getNearestId();
+		if(nearestId != null)
+			nDoc = gd.id2doc.get(nearestId);
+		
+		sb.append(leadId).append("\t");
+		sb.append(docId).append("\t");
+		//sb.append(doc.getUserId()).append("\t");
+		Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
+		sb.append(time.toString()).append("\t");
+		
+		sb.append(doc.getTimestamp()).append("\t");
+		sb.append(nearestId).append("\t");
+		sb.append(String.format("%.7f\t", doc.getNearestDist()));
+		
+		sb.append(block);
+		
+		String lbl = gd.labeled.positive.get(docId);
+		lbl = lbl == null ? "" : "t_" + lbl;
+		sb.append( lbl ).append("\t");
+		
+		Matcher matcher = whitespace.matcher(doc.getText());
+		String result = matcher.replaceAll(" ");
+		
+		matcher = whitespace2.matcher(result);
+		result = matcher.replaceAll(" ");
+		sb.append( result );
 
+		//String text = nDoc == null ? "NA" : nDoc.getCleanText();
+		//sb.append("\t").append(text);
+		
+		
+		sb.append("\n");
+
+		/*
 		for (int i =0; i<s; i++)
 		{
 			String docId = idList.get(i);
@@ -177,6 +217,7 @@ public String toString()
 			
 			sb.append("\n");
 		}
+		*/
 		return sb.toString();
 	}
 
