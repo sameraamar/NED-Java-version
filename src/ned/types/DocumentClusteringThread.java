@@ -82,8 +82,23 @@ public class DocumentClusteringThread extends Thread {
 		
 		if(last != null)
 			gd.markOldClusters(last);
+		boolean stop=gd.getQueue().isEmpty();
+		
+		if(!stop) return stop;
+		int retry=5;
+		while(stop && retry>0){
+			System.out.println("Is is Empty");
+			try {
+				Thread.sleep(1000);
+				stop=gd.getQueue().isEmpty();
+				retry--;
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 
-		return gd.getQueue().isEmpty();
+		return stop;
 	}
 	
 	private Document next()
