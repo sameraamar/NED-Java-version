@@ -38,7 +38,7 @@ public class GlobalData {
 	public class Parameters 
 	{
 		public int monitor_timer_seconds = 5; //seconds
-		public int number_of_threads =50;
+		public int number_of_threads =150;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
