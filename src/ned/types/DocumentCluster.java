@@ -181,8 +181,10 @@ public String toStringNonProd()
 			
 			matcher = whitespace2.matcher(result);
 			result = matcher.replaceAll(" ");
-			sb.append( result );
-
+			sb.append( result ).append(dil);;
+			
+			
+			sb.append( score ).append(dil);;
 			//String text = nDoc == null ? "NA" : nDoc.getCleanText();
 			//sb.append("\t").append(text);
 			
@@ -240,7 +242,7 @@ public String toStringNonProd()
 public String toStringProd()
 	{
 		GlobalData gd = GlobalData.getInstance();
-
+		String dil=GlobalData.dilimitter;
 		String ent =String.format("%.7f",  entropy());
 		String scoreAsStr = String.format("%.7f", score);
 		
@@ -257,11 +259,11 @@ public String toStringProd()
 		int numOfUsers = users.size();
 		
 		StringBuilder sb = new StringBuilder();
-		sb.append( ent ).append("\t");
-		sb.append(numOfUsers).append("\t");
-		sb.append( s ).append("\t");
-		sb.append( a ).append("\t");
-		sb.append( scoreAsStr ).append("\t");
+		sb.append( ent ).append(dil);
+		sb.append(numOfUsers).append(dil);
+		sb.append( s ).append(dil);
+		sb.append( a ).append(dil);
+		sb.append( scoreAsStr ).append(dil);
 		String block = sb.toString();
 		
 		sb = new StringBuilder();
@@ -277,20 +279,21 @@ public String toStringProd()
 				if(nearestId != null)
 					nDoc = gd.id2doc.get(nearestId);
 				
-				sb.append(docId).append("\t");
+				sb.append(docId).append(dil);
 
 				Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
-				sb.append(time.toString()).append("\t");
+				sb.append(time.toString()).append(dil);
 				
-				sb.append(doc.getTimestamp()).append("\t");
-				sb.append(nearestId).append("\t");
-				sb.append(String.format("%.7f\t", doc.getNearestDist()));
-				
+				sb.append(doc.getTimestamp()).append(dil);
+				sb.append(nearestId).append(dil);
+				sb.append(String.format("%.7f\t", doc.getNearestDist())).append(dil);				
 				sb.append(block);
 				
 				String lbl = gd.labeled.positive.get(docId);
 				lbl = lbl == null ? "" : "t_" + lbl;
-				sb.append( lbl ).append("\t");
+				sb.append( lbl ).append(dil);
+				sb.append( score ).append(dil);;
+				
 				
 				//String text = doc.getCleanText();
 				//sb.append("\t").append(text);

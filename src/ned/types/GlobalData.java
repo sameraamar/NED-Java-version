@@ -25,7 +25,7 @@ public class GlobalData {
 	public static final String LAST_NUM_DOCS = "doc_count";
 	public static final String LAST_SEEN_IDX = "last_idx";
 	
-	public static final String dilimitter = "|";
+	public static final String dilimitter = " ||| ";
 
 	private static final String K_ID2DOCUMENT = "id2doc" + V;
 	private static final String K_ID2WORD_COUNT = "id2word_counts" + V;
@@ -38,7 +38,7 @@ public class GlobalData {
 	public class Parameters 
 	{
 		public int monitor_timer_seconds = 5; //seconds
-		public int number_of_threads =50;
+		public int number_of_threads =150;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
@@ -54,7 +54,7 @@ public class GlobalData {
 		public int dimension_jumps = 100000;
 		public boolean resume_mode = false;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
-		public boolean is_prod_mode = true;
+		public boolean is_prod_mode = false;
 	}
 	
 	private static GlobalData globalData = null;
