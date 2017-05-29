@@ -126,8 +126,8 @@ public class AppMain {
 			folder  = "c:/data/events_db/petrovic";
 		
 		
-		//String inputfile = folder + "/relevance_judgments_00000000";
-		//gd.labeled = LabeledDocuments.loadLabeledData(inputfile);
+		String inputfile = folder + "/relevance_judgments_00000000";
+		gd.labeled = LabeledDocuments.loadLabeledData(inputfile);
 
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
