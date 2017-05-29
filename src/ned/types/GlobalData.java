@@ -54,6 +54,7 @@ public class GlobalData {
 		public int dimension_jumps = 100000;
 		public boolean resume_mode = false;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
+		public boolean is_prod_mode = true;
 	}
 	
 	private static GlobalData globalData = null;

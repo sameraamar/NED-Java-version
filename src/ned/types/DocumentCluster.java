@@ -95,7 +95,15 @@ public class DocumentCluster implements Serializable, DirtyBit {
 	}
 
 	@Override
-	/*public String toString() {
+	public String toString() {
+		if(GlobalData.getInstance().getParams().is_prod_mode)
+			return toStringProd();
+		
+		return toStringNonProd();
+	}
+			
+	/*
+	public String toString() {
 		StringBuffer text = new StringBuffer();
 		
 		text.append("LeadId\tDocId\tSize\n");
@@ -108,9 +116,11 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		}
 		
 		return text.toString();
-	}*/
+	}
+	*/
+	
 
-public String toString()
+public String toStringNonProd()
 	{
 		GlobalData gd = GlobalData.getInstance();
 		String dil=GlobalData.dilimitter;
@@ -181,6 +191,7 @@ public String toString()
 		
 		/*
 		for (int i =0; i<1; i++)
+
 		{
 			String docId = idList.get(i);
 			Document doc = gd.id2doc.get(docId);
@@ -221,6 +232,80 @@ public String toString()
 		}
 		
 		*/
+		return sb.toString();
+	}
+
+
+
+public String toStringProd()
+	{
+		GlobalData gd = GlobalData.getInstance();
+
+		String ent =String.format("%.7f",  entropy());
+		String scoreAsStr = String.format("%.7f", score);
+		
+		/*sb.append("LEAD: ").append(leadId).append(" SIZE: ").append(this.idList.size());
+		sb.append(" Entropy: ").append(ent);
+		sb.append(" Age: ").append(a).append(" (s)\n");;
+		*/
+		long a = this.age2();
+		
+		//sb.append("leadId\tid\tuser\t# users\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\n");
+		Pattern whitespace = Pattern.compile("\\s");
+		Pattern whitespace2 = Pattern.compile("\\s\\s");
+		int s = size();
+		int numOfUsers = users.size();
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append( ent ).append("\t");
+		sb.append(numOfUsers).append("\t");
+		sb.append( s ).append("\t");
+		sb.append( a ).append("\t");
+		sb.append( scoreAsStr ).append("\t");
+		String block = sb.toString();
+		
+		sb = new StringBuilder();
+		
+		for (int i =0; i<s; i++)
+		{
+			String docId = idList.get(i);
+			Document doc = gd.id2doc.get(docId);
+			if(i == 0)
+			{
+				Document nDoc = null;
+				String nearestId = doc.getNearestId();
+				if(nearestId != null)
+					nDoc = gd.id2doc.get(nearestId);
+				
+				sb.append(docId).append("\t");
+
+				Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
+				sb.append(time.toString()).append("\t");
+				
+				sb.append(doc.getTimestamp()).append("\t");
+				sb.append(nearestId).append("\t");
+				sb.append(String.format("%.7f\t", doc.getNearestDist()));
+				
+				sb.append(block);
+				
+				String lbl = gd.labeled.positive.get(docId);
+				lbl = lbl == null ? "" : "t_" + lbl;
+				sb.append( lbl ).append("\t");
+				
+				//String text = doc.getCleanText();
+				//sb.append("\t").append(text);
+			}
+			
+			Matcher matcher = whitespace.matcher(doc.getCleanText());
+			String result = matcher.replaceAll(" ");
+			
+			matcher = whitespace2.matcher(result);
+			result = matcher.replaceAll(" ");
+			sb.append("<").append(docId).append("> ").append( result ).append(" ");
+			
+			if (i == s-1)
+				sb.append("\n");
+		}
 		return sb.toString();
 	}
 
