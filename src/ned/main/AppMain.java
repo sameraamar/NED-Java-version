@@ -310,7 +310,7 @@ public class AppMain {
 	            if (processed == gd.getParams().max_documents)
 	            	stop = true;
 	            
-	            if (stop || processed % (gd.getParams().print_limit *10) == 0)
+	            if (stop || processed % (gd.getParams().print_limit /2) == 0)
 	            {
 	            	int lastIndex = gd.resumeInfo.get(GlobalData.LAST_SEEN_IDX);
 	        		if(lastIndex <= idx)
@@ -319,14 +319,7 @@ public class AppMain {
 		            	while(!gd.getQueue().isEmpty())
 		            	{
 		            		try {
-		            			if(clustering.isStop()){
-		            				System.out.println("Stopped by mistake resume clustering ....");
-		            				DocumentClusteringThread temp = clustering;
-		            		    	clustering = new DocumentClusteringThread(out);
-		            		    	clustering.start();
-		            				temp.setStop(false);
-		            				temp.shutdown();
-		            			}
+		            			clustering.run();
 								Thread.sleep(50);
 							} catch (InterruptedException e) {
 								e.printStackTrace();

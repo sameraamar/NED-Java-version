@@ -92,7 +92,7 @@ public class DocumentClusteringThread extends Thread {
 			System.out.println("Is is Empty");
 			try {
 				Thread.sleep(2000);
-				stop=gd.getQueue().isEmpty();
+				stop=mapToCluster();
 				retry--;
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
