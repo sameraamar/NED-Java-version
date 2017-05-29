@@ -4,6 +4,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import ned.hash.LSHForest;
+import ned.tools.ExecutionHelper;
 import ned.types.Document;
 import ned.types.GlobalData;
 
@@ -23,12 +24,12 @@ public class DocumentProcessorExecutor {
 	{
 		WorkerThread worker = new WorkerThread(forest, doc, idx);
 		worker.preRun();
-		//ExecutionHelper.asyncRun(worker);
+		
 		
 		if(!GlobalData.getInstance().getParams().scan_mode_only)
 		{	
-			//worker.run();
-			executor.execute(worker);
+			ExecutionHelper.asyncRun(worker);
+			//executor.execute(worker);
 		}
 	}
 	

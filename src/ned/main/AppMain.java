@@ -321,7 +321,11 @@ public class AppMain {
 		            		try {
 		            			if(clustering.isStop()){
 		            				System.out.println("Stopped by mistake resume clustering ....");
-		            				clustering.setStop(false);
+		            				DocumentClusteringThread temp = clustering;
+		            		    	clustering = new DocumentClusteringThread(out);
+		            		    	clustering.start();
+		            				temp.setStop(false);
+		            				temp.shutdown();
 		            			}
 								Thread.sleep(50);
 							} catch (InterruptedException e) {
