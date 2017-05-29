@@ -28,8 +28,8 @@ public class DocumentProcessorExecutor {
 		
 		if(!GlobalData.getInstance().getParams().scan_mode_only)
 		{	
-			ExecutionHelper.asyncRun(worker);
-			//executor.execute(worker);
+			//ExecutionHelper.asyncRun(worker);
+			executor.execute(worker);
 		}
 	}
 	
