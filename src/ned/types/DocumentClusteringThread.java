@@ -8,6 +8,8 @@ import redis.clients.jedis.JedisPool;
 
 public class DocumentClusteringThread extends Thread {
 	private boolean stop = false;
+	
+
 	private GlobalData gd;
 	private PrintStream out;
 	public int clusteredCounter;
@@ -82,7 +84,7 @@ public class DocumentClusteringThread extends Thread {
 		
 		if(last != null)
 			gd.markOldClusters(last);
-		boolean stop=gd.getQueue().isEmpty();
+		stop=gd.getQueue().isEmpty();
 		
 		if(!stop) return stop;
 		int retry=10;
@@ -130,6 +132,13 @@ public class DocumentClusteringThread extends Thread {
 		{
 		}
 		stop = true;
+	}
+	public boolean isStop() {
+		return stop;
+	}
+
+	public void setStop(boolean stop) {
+		this.stop = stop;
 	}
 		
 }
