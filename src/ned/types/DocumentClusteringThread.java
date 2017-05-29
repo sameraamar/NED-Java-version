@@ -36,7 +36,14 @@ public class DocumentClusteringThread extends Thread {
 	}
 	
 	private void doRun() {
-		out.print("leadId\tcreated\ttimestamp\tnearest\tdistance\tentropy\t#users\tsize\tage\tscore\ttopic\tclean-text\ttext\n");
+		
+		String header = "leadId";
+		if(! gd.getParams().is_prod_mode)
+			header += "\tid";
+
+		header += "\tcreated\ttimestamp\tnearest\tdistance\tentropy\t#users\tsize\tage\tscore\ttopic\ttext\n";
+		out.print(header);
+		
 		while(!stop) 
 		{
 			mapToCluster();
