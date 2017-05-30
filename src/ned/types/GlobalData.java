@@ -25,8 +25,6 @@ public class GlobalData {
 	public static final String LAST_NUM_DOCS = "doc_count";
 	public static final String LAST_SEEN_IDX = "last_idx";
 	
-	public static final String dilimitter = " ||| ";
-
 	private static final String K_ID2DOCUMENT = "id2doc" + V;
 	private static final String K_ID2WORD_COUNT = "id2word_counts" + V;
 	private static final String K_WORD2INDEX = "w2i" + V;
@@ -38,14 +36,14 @@ public class GlobalData {
 	public class Parameters 
 	{
 		public int monitor_timer_seconds = 5; //seconds
-		public int number_of_threads =150;
+		public int number_of_threads =50;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
 		public int max_bucket_size = 2000;
 		public int max_documents = 50_000_000;
 		public int max_thread_delta_time = 4*3600; //seconds
-		public int offset = 0;
+		public int offset = 10000;
 		public int search_recents = 2000;
 		public double threshold = 0.65;
 		public double min_cluster_entropy = 1.2;
@@ -54,7 +52,7 @@ public class GlobalData {
 		public int dimension_jumps = 100000;
 		public boolean resume_mode = false;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
-		public boolean is_prod_mode = false;
+		public boolean is_prod_mode = true;
 	}
 	
 	private static GlobalData globalData = null;
