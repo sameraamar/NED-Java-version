@@ -12,7 +12,7 @@ public class DocumentClusteringThread extends Thread {
 	private PrintStream out;
 	public int clusteredCounter;
 	public JedisPool jedisPool;
-
+	private String dil=" ||| ";
 	public DocumentClusteringThread(PrintStream out)
 	{
 		this.out = out;
@@ -39,9 +39,9 @@ public class DocumentClusteringThread extends Thread {
 		
 		String header = "leadId";
 		if(! gd.getParams().is_prod_mode)
-			header += "\tid";
+			header += dil+"id";
 
-		header += "\tentropy\t#users\tsize\ttext\n";
+		header += dil+"entropy"+dil+"#users"+dil+"size"+dil+"text\n";
 		out.print(header);
 		
 		while(!stop) 
