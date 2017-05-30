@@ -8,15 +8,13 @@ import redis.clients.jedis.JedisPool;
 
 public class DocumentClusteringThread extends Thread {
 	private boolean stop = false;
-	private GlobalData gd;
 	private PrintStream out;
 	public int clusteredCounter;
 	public JedisPool jedisPool;
-	private String dil=" ||| ";
+
 	public DocumentClusteringThread(PrintStream out)
 	{
 		this.out = out;
-		gd = GlobalData.getInstance();
 		clusteredCounter = 0;
 	}
 	
@@ -36,12 +34,42 @@ public class DocumentClusteringThread extends Thread {
 	}
 	
 	private void doRun() {
-		
-		String header = "leadId";
-		if(! gd.getParams().is_prod_mode)
-			header += dil+"id";
+		GlobalData gd = GlobalData.getInstance();
 
-		header += dil+"entropy"+dil+"#users"+dil+"size"+dil+"text\n";
+		StringBuilder header = new StringBuilder("leadId");
+		
+		if(! gd.getParams().is_prod_mode)
+		{
+			header .append( gd.getParams().DELIMITER );
+			header.append( "id" );
+			
+			header .append( gd.getParams().DELIMITER );
+			header.append( "entropy" );
+
+			header .append( gd.getParams().DELIMITER );
+			header.append( "#users" );
+
+			header .append( gd.getParams().DELIMITER );
+			header.append( "size" );
+
+			header .append( gd.getParams().DELIMITER );
+			header.append( "text" );		}
+		else
+		{
+			header .append( gd.getParams().DELIMITER );
+			header.append( "entropy" );
+
+			header .append( gd.getParams().DELIMITER );
+			header.append( "#users" );
+
+			header .append( gd.getParams().DELIMITER );
+			header.append( "size" );
+
+			header .append( gd.getParams().DELIMITER );
+			header.append( "text" );
+		}
+		header.append("\n");
+		
 		out.print(header);
 		
 		while(!stop) 
@@ -71,12 +99,13 @@ public class DocumentClusteringThread extends Thread {
 
 	private boolean mapToCluster()
 	{
+		GlobalData gd = GlobalData.getInstance();
+
 		Document doc = next();
-		
 		Document last = doc;
 		while(doc!=null)
 		{
-			if(!GlobalData.getInstance().getParams().scan_mode_only)
+			if(!gd.getParams().scan_mode_only)
 			{
 				DocumentClusteringHelper.mapToClusterHelper(doc);
 				clusteredCounter++;
@@ -117,7 +146,7 @@ public class DocumentClusteringThread extends Thread {
 
 	public void shutdown() 
 	{
-		while (!gd.getQueue().isEmpty())
+		while (!GlobalData.getInstance().getQueue().isEmpty())
 		{
 		}
 		stop = true;
