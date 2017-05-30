@@ -265,7 +265,7 @@ public String toStringProd1()
 public String toStringProd2()
 {
 	GlobalData gd = GlobalData.getInstance();
-
+	String dil=" ||| ";
 	String ent =String.format("%.7f",  entropy());
 	
 	Pattern whitespace = Pattern.compile("\\s");
@@ -274,34 +274,37 @@ public String toStringProd2()
 	int numOfUsers = users.size();
 	
 	StringBuilder sb = new StringBuilder();
-	sb.append( ent ).append("\t");
-	sb.append(numOfUsers).append("\t");
-	sb.append( s ).append("\t");
+	sb.append( ent ).append(dil);
+	sb.append(numOfUsers).append(dil);
+	sb.append( s ).append(dil);
 	String block = sb.toString();
 	
 	sb = new StringBuilder();
 
-	s = s < 100 ? s : 100;
-	for (int i =0; i<s; i++)
+	for (int i =0; i<1; i++)
 	{
 		String docId = idList.get(i);
 		Document doc = gd.id2doc.get(docId);
 		if(i == 0)
 		{
-			sb.append(docId).append("\t");
+			sb.append(docId).append(dil);
 
 			sb.append(block);
 			
 		}
 		
-		Matcher matcher = whitespace.matcher(doc.getCleanText());
+		Matcher matcher = whitespace.matcher(doc.getText());
 		String result = matcher.replaceAll(" ");
 		
 		matcher = whitespace2.matcher(result);
 		result = matcher.replaceAll(" ");
-		sb.append("<").append(docId).append("> ").append( result ).append(" ");
+		//sb.append("<").append(docId).append("> ");
 		
-		if (i == s-1)
+		result.replaceAll(dil," ");
+		sb.append( result );
+		//sb.append(" ");
+		
+		//if (i == s-1)
 			sb.append("\n");
 	}
 	return sb.toString();
