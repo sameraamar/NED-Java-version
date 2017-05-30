@@ -39,7 +39,7 @@ public class LSHTable
     	hyperPlanes.init();
     }
     
-     private long GenerateHashCode(Document doc, Map<Integer, Double> word2idf)
+     private long GenerateHashCode(Document doc, int dim, Map<Integer, Double> word2idf)
      {
      	
      	boolean[] st = new boolean [hyperPlanesNumber];
@@ -48,25 +48,22 @@ public class LSHTable
      	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
      	DocumentWordCounts dwc = GlobalData.getInstance().id2wc.get( doc.getId() );
      	Map<Integer, Double> weights = dwc.getWeights(word2idf);
-     	hyperPlanes.fixDim(doc.getDimension());
+     	hyperPlanes.fixDim(dim);
  		
  		for (int i = 0 ; i<hyperPlanesNumber; i++)
     	{
     		double tmp = 0;
-    		//Samer: remove syncronized
-    		//synchronized (weights) {
     		Set<Entry<Integer, Double>> es = weights.entrySet();
-				for (Entry<Integer, Double> entry : es) 
-	    		{
-					try {
-	    			tmp += entry.getValue() * hyperPlanes.get(i, entry.getKey());
-					} catch(ArrayIndexOutOfBoundsException e)
-					{
-						System.out.println( "doc dimension: " + doc.getDimension() + " this.fixingDim = ");
-						throw e;
-					}
-	    		}
-    		//}
+			for (Entry<Integer, Double> entry : es) 
+    		{
+				try {
+    			tmp += entry.getValue() * hyperPlanes.get(i, entry.getKey());
+				} catch(ArrayIndexOutOfBoundsException e)
+				{
+					System.out.println( "doc dimension: " + dim + " this.fixingDim = ");
+					throw e;
+				}
+    		}
 			session.message(Session.DEBUG, "GenerateHashCode", ""+ tmp);
 
 			st[i]=( tmp>=0 ? true : false );
@@ -121,9 +118,9 @@ public class LSHTable
     }
     */
 
-    public RoundRobinArray<String> AddDocument(Document doc, Map<Integer, Double> word2idf)
+    public RoundRobinArray<String> AddDocument(Document doc, int dim, Map<Integer, Double> word2idf)
     {
-        long code = GenerateHashCode(doc, word2idf);
+        long code = GenerateHashCode(doc, dim, word2idf);
         RoundRobinArray<String> bucket = buckets.get(code);
         if (bucket == null)
         {

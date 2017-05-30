@@ -148,10 +148,7 @@ public String toStringFull()
 			String docId = idList.get(i);
 			Document doc = gd.id2doc.get(docId);
 			
-			Document nDoc = null;
 			String nearestId = doc.getNearestId();
-			if(nearestId != null)
-				nDoc = gd.id2doc.get(nearestId);
 			
 			sb.append(leadId).append(delimiter);
 			sb.append(docId).append(delimiter);
@@ -174,11 +171,7 @@ public String toStringFull()
 			
 			matcher = whitespace2.matcher(result);
 			result = matcher.replaceAll(" ");
-			sb.append( result );
-
-			//String text = nDoc == null ? "NA" : nDoc.getCleanText();
-			//sb.append(delimiter).append(text);
-			
+			sb.append( result );			
 			
 			sb.append("\n");
 		}
@@ -223,10 +216,7 @@ public String toStringProd1()
 			Document doc = gd.id2doc.get(docId);
 			if(i == 0)
 			{
-				Document nDoc = null;
 				String nearestId = doc.getNearestId();
-				if(nearestId != null)
-					nDoc = gd.id2doc.get(nearestId);
 				
 				sb.append(docId).append(delimiter);
 
@@ -240,7 +230,7 @@ public String toStringProd1()
 				sb.append(block);
 				
 				String lbl = gd.labeled.positive.get(docId);
-				lbl = lbl == null ? "" : "t_" + lbl;
+				lbl = lbl == null ? "" : "t:" + lbl;
 				sb.append( lbl ).append(delimiter);
 			}
 			

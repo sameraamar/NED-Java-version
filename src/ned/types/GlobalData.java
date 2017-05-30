@@ -51,7 +51,7 @@ public class GlobalData {
 		public double min_cluster_size = 3;
 		public int inital_dimension = 100000;
 		public int dimension_jumps = 100000;
-		public boolean resume_mode = false;
+		public boolean resume_mode = true;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
 	}
 	
@@ -90,11 +90,6 @@ public class GlobalData {
 	public static ConcurrentHashMap<String, Double> id2nearestDist;
 	public static ConcurrentHashMap<String, Boolean> id2nearestOk;
 	public static ConcurrentHashMap<String, String> id2nearestId;
-	
-	
-	
-
-	
 	
 	private GlobalData()
 	{	
@@ -135,15 +130,19 @@ public class GlobalData {
 		}
 	}
 
-	public void save()
+	public void save(boolean force)
 	{
 		System.out.println("Save to Redis...");
-		id2wc.save();
-		word2index.save();
-    	id2doc.save();
+		if(force || !getParams().resume_mode)
+		{
+			id2wc.save();
+			word2index.save();
+	    	numberOfDocsIncludeWord.save();
+	    	resumeInfo.save();
+		}
+		
+		id2doc.save();
     	id2cluster.save();
-    	numberOfDocsIncludeWord.save();
-    	resumeInfo.save();
     	cluster2replacement.save();
 	}
 	
@@ -258,7 +257,7 @@ public class GlobalData {
 		return idx;
 	}
 	
-	public void addDocument(Document doc, int idx) 
+	public int addDocument(Document doc, int idx) 
 	{
 		
 		DocumentWordCounts dwc = doc.bringWordCount();
@@ -272,7 +271,7 @@ public class GlobalData {
 		}
 		
 		int d = wordCounts( doc.getWords(), dwc.getWordCount() );
-		doc.setDimension ( d );
+		//doc.setDimension ( d );
 
 		
 		int lastDocIndex = resumeInfo.get(LAST_SEEN_IDX); 
@@ -292,6 +291,8 @@ public class GlobalData {
 		id2doc.put(doc.getId(), doc);
 
 		addToRecent(doc.getId());
+		
+		return d;
 	}
 	
 	private void addToRecent(String docId) {

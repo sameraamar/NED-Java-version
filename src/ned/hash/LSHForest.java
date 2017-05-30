@@ -52,14 +52,14 @@ public class LSHForest {
 
 		System.out.println("LSHForest.init: " + (System.currentTimeMillis()-base));
 	}
-	public List<String> addDocument00(Document doc, Map<Integer, Double> word2idf)
+	public List<String> addDocument00(Document doc, int dim, Map<Integer, Double> word2idf)
     {
 		//AtomicIntegerArray hitCount1 = new AtomicIntegerArray(length)
 		HashMap<String, AtomicInteger> hitCounts = new HashMap<String, AtomicInteger>();
 
 		for (int t = 0; t<numberOfTables; t++)
 		{
-			RoundRobinArray<String> tmpList = tables[t].AddDocument(doc, word2idf);
+			RoundRobinArray<String> tmpList = tables[t].AddDocument(doc, dim, word2idf);
 			int s = tmpList.size();
 			for (int k=0; k<s; k++) {
 				String tmp = tmpList.get(k);
@@ -106,14 +106,14 @@ public class LSHForest {
         List<String> res = output.subList(0, toIndex);
         return res;
     }
-	public List<String> addDocument01(Document doc, Map<Integer, Double> word2idf)
+	public List<String> addDocument01(Document doc, int dim, Map<Integer, Double> word2idf)
     {
 		HashMap<String, AtomicInteger> hitCounts = new HashMap<String, AtomicInteger>();
 		
 		Stream<LSHTable> stream = Arrays.stream(tables);
 		
 		 stream.map(table->{
-			return table.AddDocument(doc,word2idf);
+			return table.AddDocument(doc, dim, word2idf);
 		}).forEach(tmpList->{
 			int s = tmpList.size();
 			for (int k=0; k<s; k++) {
@@ -191,9 +191,9 @@ public class LSHForest {
 		return output;
     }
 
-	public List<String> addDocument(Document doc, Map<Integer, Double> word2idf)
+	public List<String> addDocument(Document doc, int dim, Map<Integer, Double> word2idf)
     {
-		return this.addDocument01(doc, word2idf);
+		return this.addDocument01(doc, dim, word2idf);
 		/*
 		Callable <List<String>> task = () -> {
 			return this.addDocument00(doc);

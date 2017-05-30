@@ -7,13 +7,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import ned.hash.DocumentHandler;
 import ned.hash.LSHForest;
 import ned.tools.ExecutionHelper;
 import ned.tools.RedisAccessHelper;
@@ -252,7 +249,7 @@ public class AppMain {
 					continue;
 				}
 				
-				Document doc = DocumentHandler.preprocessor(line);
+				Document doc = Document.createOrGetDocument(line);
 				GlobalData.getInstance().getQueue().add(doc.getId());
 				
 	            int idx = gd.getParams().offset+processed;
@@ -313,27 +310,25 @@ public class AppMain {
 	            if (processed == gd.getParams().max_documents)
 	            	stop = true;
 	            
-	            if (stop || processed % (gd.getParams().print_limit *10) == 0)
+	            if (stop || (processed % (gd.getParams().print_limit *10) == 0))
 	            {
 	            	int lastIndex = gd.resumeInfo.get(GlobalData.LAST_SEEN_IDX);
-	        		if(lastIndex <= idx)
-	        		{
-		            	System.out.println("Wait for queue to get empty!");
-		            	while(!gd.getQueue().isEmpty())
-		            	{
-		            		try {
-								Thread.sleep(50);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-		            	}
-		            	
-		            	System.out.println("clear memory to redis...");
-		            	gd.save();
-		            	
-		            	//if (stop || processed % (gd.getParams().print_limit* 20) == 0)
-		            	//	RedisAccessHelper.initRedisConnectionPool(true);
-	        		}
+
+	            	System.out.println("Wait for queue to get empty!");
+	            	while(!gd.getQueue().isEmpty())
+	            	{
+	            		try {
+							Thread.sleep(50);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+	            	}
+	            	
+	            	System.out.println("clear memory to redis...");
+	            	gd.save(lastIndex <= idx);
+	            	
+	            	//if (stop || processed % (gd.getParams().print_limit* 20) == 0)
+	            	//	RedisAccessHelper.initRedisConnectionPool(true);
 	            }
 	            
 	            line=buffered.readLine();

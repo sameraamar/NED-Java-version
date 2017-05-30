@@ -23,6 +23,7 @@ public class WorkerThread implements Runnable
 	private Document doc;
 	private LSHForest forest;
 	public JedisPool jedisPool;
+	private int dimension;
 	
     public WorkerThread(LSHForest forest, Document doc, int idx)
     {
@@ -83,7 +84,7 @@ public class WorkerThread implements Runnable
 		//JedisPool jedisPool = RedisAccessHelper.createRedisConnectionPool();
     	//GlobalData.getInstance().thread2redis.put(Thread.currentThread().getName(), jedisPool);
     	
-    	List<String> set = forest.addDocument(this.doc, word2idf);
+    	List<String> set = forest.addDocument(this.doc, this.dimension, word2idf);
 
     	DocumentClusteringHelper.postLSHMapping(this.doc, set, word2idf);
     	this.doc.setNearestDetermined( true);
@@ -99,7 +100,7 @@ public class WorkerThread implements Runnable
     }
 
 	public void preRun() {
-		GlobalData.getInstance().addDocument(doc, idx);
+		dimension = GlobalData.getInstance().addDocument(doc, idx);
 	}
 
 }

@@ -15,13 +15,15 @@ public class Document  implements Serializable, DirtyBit {
 	 * 
 	 */
 	private static final long serialVersionUID = 4575371423244913253L;
+
+	private static boolean isBasicOnly;
 	
 	public boolean isDirtyBit;
 	
 	private String id;
     private String text ;
     private List<String> words;
-    private int dimension;
+    //private int dimension;
     
     public int max_idx;
 	private String cleanText;
@@ -32,9 +34,6 @@ public class Document  implements Serializable, DirtyBit {
 	private int retweet_count;
 	private String reply_to;
 	
-	//private String nearest;
-	//private double nearestDist;
-	//private boolean nearestDetermined;
 	private int favouritesCount;
 	private String user_id;
 	private String retweeted_user_id;
@@ -42,16 +41,24 @@ public class Document  implements Serializable, DirtyBit {
 	private String reply_to_user_id;
 	private String quoted_user_id;
 	
-	public static Document createOrGet(String id)
+	public static Document createOrGetDocument(String json)
 	{
 		Document doc = null;
+		
+		JsonParser jsonParser = new JsonParser();
+		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
+		
+		if(jsonObj.get("text") == null || jsonObj.get("id_str") == null)
+			return null;
+		
+		String id = jsonObj.get("id_str").getAsString();
 		
 		id = id.intern();
 		synchronized (id) {
 			doc = GlobalData.getInstance().id2doc.get(id);
 			if(doc == null)
 			{
-				doc = new Document(id);
+				doc = Document.parse(json, isBasicOnly);
 				GlobalData.getInstance().id2doc.put(id, doc);
 			}
 			
@@ -65,14 +72,9 @@ public class Document  implements Serializable, DirtyBit {
     	this.id = id.intern();
 	}
 	
-    public void init(String text, long timestamp)
+    private void init(String text, long timestamp)
     {
-    	dirtyOn();
         this.text = text;
-        //this.weights = null;
-        //this.nearest = null;
-    	//this.nearestDist = 1.0;
-    	//this.nearestDetermined = false;
         this.timestamp = timestamp;
         this.created_at = null;
     	this.retweeted_id = null;
@@ -161,20 +163,10 @@ public class Document  implements Serializable, DirtyBit {
 		return id;
 	}
 
-	public int getDimension() 
-	{
-		return dimension;
-	}
-	
 	DocumentWordCounts bringWordCount()
 	{
 		DocumentWordCounts wordCount = GlobalData.getInstance().id2wc.get(id);
 		return wordCount;
-	}
-
-	void setDimension(int dimension) {
-		this.dimension = dimension;
-		dirtyOn();
 	}
 
 	public long getTimestamp() {
@@ -202,15 +194,8 @@ public class Document  implements Serializable, DirtyBit {
 		double tmp = Document.Distance(myWC, rWordCount, word2idf);
 		if (getNearestId()==null || tmp < getNearestDist())
 		{
-			//try {
-				setNearestDist(tmp);
-			//} catch (NullPointerException ne)
-			//{
-			//	System.out.println("Failed on NullPointerException... don't know why!?");
-			//	setNearestDist(tmp);
-			//}
-			setNearestId( rWordCount.getId() );
-			dirtyOn();
+			setNearestDist(tmp);
+			setNearestId( rWordCount.getId() );	
 		}
 	}
 	public void updateNearest(String rightId, Map<Integer, Double> word2idf) 
@@ -270,9 +255,9 @@ public class Document  implements Serializable, DirtyBit {
 		}
 			
 		//id == "94816822100099073" is for Amy Winhouse event
-		Document doc = Document.createOrGet(id);
-		doc.init(text, timestamp); 
-
+		Document doc = new Document(id);
+		doc.init(text, timestamp);
+		doc.dirtyOn();
 		
         doc.created_at = created_at;
         JsonObject userObj = jsonObj.get("user").getAsJsonObject();
