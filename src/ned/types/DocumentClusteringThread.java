@@ -8,8 +8,6 @@ import redis.clients.jedis.JedisPool;
 
 public class DocumentClusteringThread extends Thread {
 	private boolean stop = false;
-	
-
 	private GlobalData gd;
 	private PrintStream out;
 	public int clusteredCounter;
@@ -38,9 +36,15 @@ public class DocumentClusteringThread extends Thread {
 	}
 	
 	private void doRun() {
-		String dil=GlobalData.dilimitter;
-		out.print("leadId"+dil+"id"+dil+"created"+dil+"timestamp"+dil+"nearest"+dil+"distance"+dil+"entropy"+dil+"#users"+dil+"size"+dil+"age"+dil+"score"+dil+"topic"+dil+"text"+dil+" score"+dil+"\n");
+		
+		String header = "leadId";
+		if(! gd.getParams().is_prod_mode)
+			header += "\tid";
 
+		header += "\tentropy\t#users\tsize\ttext\n";
+		out.print(header);
+		
+		while(!stop) 
 		{
 			mapToCluster();
 			
@@ -84,23 +88,8 @@ public class DocumentClusteringThread extends Thread {
 		
 		if(last != null)
 			gd.markOldClusters(last);
-		stop=gd.getQueue().isEmpty();
-		
-		if(!stop) return stop;
-		int retry=10;
-		while(stop && retry>0){
-			System.out.println("Is is Empty");
-			try {
-				Thread.sleep(2000);
-				stop=mapToCluster();
-				retry--;
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-		return stop;
+
+		return gd.getQueue().isEmpty();
 	}
 	
 	private Document next()
@@ -132,13 +121,6 @@ public class DocumentClusteringThread extends Thread {
 		{
 		}
 		stop = true;
-	}
-	public boolean isStop() {
-		return stop;
-	}
-
-	public void setStop(boolean stop) {
-		this.stop = stop;
 	}
 		
 }

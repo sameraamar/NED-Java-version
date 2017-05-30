@@ -97,7 +97,7 @@ public class DocumentCluster implements Serializable, DirtyBit {
 	@Override
 	public String toString() {
 		if(GlobalData.getInstance().getParams().is_prod_mode)
-			return toStringProd();
+			return toStringProd2();
 		
 		return toStringNonProd();
 	}
@@ -123,7 +123,7 @@ public class DocumentCluster implements Serializable, DirtyBit {
 public String toStringNonProd()
 	{
 		GlobalData gd = GlobalData.getInstance();
-		String dil=GlobalData.dilimitter;
+
 		String ent =String.format("%.7f",  entropy());
 		String scoreAsStr = String.format("%.7f", score);
 		
@@ -140,60 +140,16 @@ public String toStringNonProd()
 		int numOfUsers = users.size();
 		
 		StringBuilder sb = new StringBuilder();
-		sb.append( ent ).append(dil);
-		sb.append(numOfUsers).append(dil);
-		sb.append( s ).append(dil);
-		sb.append( a ).append(dil);
-		sb.append( scoreAsStr ).append(dil);
+		sb.append( ent ).append("\t");
+		sb.append(numOfUsers).append("\t");
+		sb.append( s ).append("\t");
+		sb.append( a ).append("\t");
+		sb.append( scoreAsStr ).append("\t");
 		String block = sb.toString();
 		
 		sb = new StringBuilder();
-		
-		
-			String docId = idList.get(0);
-			Document doc = gd.id2doc.get(docId);
-			
-			Document nDoc = null;
-			String nearestId = doc.getNearestId();
-			if(nearestId != null){
-				nDoc = gd.id2doc.get(nearestId);
-			}
-				
-			
-			sb.append(leadId).append(dil);
-			
-			//sb.append(doc.getUserId()).append("\t");
-			Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
-			sb.append(time.toString()).append(dil);
-			
-			//sb.append(doc.getTimestamp()).append(dil);
-			sb.append(nearestId).append(dil);
-			sb.append(String.format("%.7f", doc.getNearestDist()));
-			sb.append(dil);
-			sb.append(block);
-			
-			String lbl = gd.labeled.positive.get(docId);
-			lbl = lbl == null ? "" : "t_" + lbl;
-			sb.append( lbl ).append(dil);
-			
-			Matcher matcher = whitespace.matcher(doc.getText());
-			String result = matcher.replaceAll(" ");
-			
-			matcher = whitespace2.matcher(result);
-			result = matcher.replaceAll(" ");
-			sb.append( result ).append(dil);;
-			
-			
-			sb.append( score ).append(dil);;
-			//String text = nDoc == null ? "NA" : nDoc.getCleanText();
-			//sb.append("\t").append(text);
-			
-			
-			sb.append("\n");
-		
-		/*
-		for (int i =0; i<1; i++)
 
+		for (int i =0; i<s; i++)
 		{
 			String docId = idList.get(i);
 			Document doc = gd.id2doc.get(docId);
@@ -232,17 +188,15 @@ public String toStringNonProd()
 			
 			sb.append("\n");
 		}
-		
-		*/
 		return sb.toString();
 	}
 
 
 
-public String toStringProd()
+public String toStringProd1()
 	{
 		GlobalData gd = GlobalData.getInstance();
-		String dil=GlobalData.dilimitter;
+
 		String ent =String.format("%.7f",  entropy());
 		String scoreAsStr = String.format("%.7f", score);
 		
@@ -259,11 +213,11 @@ public String toStringProd()
 		int numOfUsers = users.size();
 		
 		StringBuilder sb = new StringBuilder();
-		sb.append( ent ).append(dil);
-		sb.append(numOfUsers).append(dil);
-		sb.append( s ).append(dil);
-		sb.append( a ).append(dil);
-		sb.append( scoreAsStr ).append(dil);
+		sb.append( ent ).append("\t");
+		sb.append(numOfUsers).append("\t");
+		sb.append( s ).append("\t");
+		sb.append( a ).append("\t");
+		sb.append( scoreAsStr ).append("\t");
 		String block = sb.toString();
 		
 		sb = new StringBuilder();
@@ -279,24 +233,20 @@ public String toStringProd()
 				if(nearestId != null)
 					nDoc = gd.id2doc.get(nearestId);
 				
-				sb.append(docId).append(dil);
+				sb.append(docId).append("\t");
 
 				Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
-				sb.append(time.toString()).append(dil);
+				sb.append(time.toString()).append("\t");
 				
-				sb.append(doc.getTimestamp()).append(dil);
-				sb.append(nearestId).append(dil);
-				sb.append(String.format("%.7f\t", doc.getNearestDist())).append(dil);				
+				sb.append(doc.getTimestamp()).append("\t");
+				sb.append(nearestId).append("\t");
+				sb.append(String.format("%.7f\t", doc.getNearestDist()));
+				
 				sb.append(block);
 				
 				String lbl = gd.labeled.positive.get(docId);
 				lbl = lbl == null ? "" : "t_" + lbl;
-				sb.append( lbl ).append(dil);
-				sb.append( score ).append(dil);;
-				
-				
-				//String text = doc.getCleanText();
-				//sb.append("\t").append(text);
+				sb.append( lbl ).append("\t");
 			}
 			
 			Matcher matcher = whitespace.matcher(doc.getCleanText());
@@ -311,6 +261,51 @@ public String toStringProd()
 		}
 		return sb.toString();
 	}
+
+public String toStringProd2()
+{
+	GlobalData gd = GlobalData.getInstance();
+
+	String ent =String.format("%.7f",  entropy());
+	
+	Pattern whitespace = Pattern.compile("\\s");
+	Pattern whitespace2 = Pattern.compile("\\s\\s");
+	int s = size();
+	int numOfUsers = users.size();
+	
+	StringBuilder sb = new StringBuilder();
+	sb.append( ent ).append("\t");
+	sb.append(numOfUsers).append("\t");
+	sb.append( s ).append("\t");
+	String block = sb.toString();
+	
+	sb = new StringBuilder();
+
+	s = s < 100 ? s : 100;
+	for (int i =0; i<s; i++)
+	{
+		String docId = idList.get(i);
+		Document doc = gd.id2doc.get(docId);
+		if(i == 0)
+		{
+			sb.append(docId).append("\t");
+
+			sb.append(block);
+			
+		}
+		
+		Matcher matcher = whitespace.matcher(doc.getCleanText());
+		String result = matcher.replaceAll(" ");
+		
+		matcher = whitespace2.matcher(result);
+		result = matcher.replaceAll(" ");
+		sb.append("<").append(docId).append("> ").append( result ).append(" ");
+		
+		if (i == s-1)
+			sb.append("\n");
+	}
+	return sb.toString();
+}
 
 	
 	public double entropy() 

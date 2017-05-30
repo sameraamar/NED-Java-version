@@ -310,7 +310,7 @@ public class AppMain {
 	            if (processed == gd.getParams().max_documents)
 	            	stop = true;
 	            
-	            if ((stop || processed % (gd.getParams().print_limit *20) == 0)/*&& false*/)
+	            if (stop || processed % (gd.getParams().print_limit* 20) == 0)
 	            {
 	            	int lastIndex = gd.resumeInfo.get(GlobalData.LAST_SEEN_IDX);
 	        		if(lastIndex <= idx)
@@ -319,7 +319,6 @@ public class AppMain {
 		            	while(!gd.getQueue().isEmpty())
 		            	{
 		            		try {
-		            			clustering.resume();
 								Thread.sleep(50);
 							} catch (InterruptedException e) {
 								e.printStackTrace();
