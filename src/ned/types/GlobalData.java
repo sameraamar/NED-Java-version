@@ -35,6 +35,7 @@ public class GlobalData {
 
 	public class Parameters 
 	{
+		public String DELIMITER = " ||| ";
 		public int monitor_timer_seconds = 5; //seconds
 		public int number_of_threads =50;
 		public int print_limit = 5000;
