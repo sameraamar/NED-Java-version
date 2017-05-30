@@ -53,7 +53,6 @@ public class GlobalData {
 		public int dimension_jumps = 100000;
 		public boolean resume_mode = false;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
-		public boolean is_prod_mode = true;
 	}
 	
 	private static GlobalData globalData = null;
@@ -326,7 +325,7 @@ public class GlobalData {
 		return tweetWithoutHashtagAndUrl;
 	}
 	
-	public void flushClustersAll(PrintStream out)
+	public void flushClustersAll(PrintStream outFull, PrintStream outShort)
 	{
 		for (String leadId : this.clusters.keySet()) {
 			DocumentCluster c = clusterByDoc(leadId);
@@ -339,16 +338,19 @@ public class GlobalData {
 				print = false;
 			
 			if (print)
-				out.print(c.toString());
+			{
+				outFull.print(c.toStringFull());
+				outShort.print(c.toStringShort());
+			}
 		} 
 	}
 	
-	public void flushClusters(PrintStream out)
+	public void flushClusters(PrintStream outFull, PrintStream outShort)
 	{
-		flushClusters(out, null);
+		flushClusters(outFull, outShort, null);
 	}
 	
-	public void flushClusters(PrintStream out, Set<String> todelete)
+	public void flushClusters(PrintStream outFull, PrintStream outShort, Set<String> todelete)
 	{
 		int counter = 0;
 		if (todelete == null)
@@ -371,8 +373,11 @@ public class GlobalData {
 				print = false;
 			
 			if (print)
-				out.print(cluster.toString());
-
+			{
+				outFull.print(cluster.toStringFull());
+				outShort.print(cluster.toStringShort());
+			}
+			
 			counter+=1;
 			
 			this.clusters.remove(leadId);

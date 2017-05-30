@@ -8,13 +8,15 @@ import redis.clients.jedis.JedisPool;
 
 public class DocumentClusteringThread extends Thread {
 	private boolean stop = false;
-	private PrintStream out;
+	private PrintStream outFull;
+	private PrintStream outShort;
 	public int clusteredCounter;
 	public JedisPool jedisPool;
 
-	public DocumentClusteringThread(PrintStream out)
+	public DocumentClusteringThread(PrintStream outFull, PrintStream outShort)
 	{
-		this.out = out;
+		this.outFull = outFull;
+		this.outShort = outShort;
 		clusteredCounter = 0;
 	}
 	
@@ -36,48 +38,38 @@ public class DocumentClusteringThread extends Thread {
 	private void doRun() {
 		GlobalData gd = GlobalData.getInstance();
 
-		StringBuilder header = new StringBuilder("leadId");
+		StringBuilder headerShort = new StringBuilder("leadId").append( gd.getParams().DELIMITER );			
+		headerShort.append( "entropy" ).append( gd.getParams().DELIMITER );
+		headerShort.append( "#users" ).append( gd.getParams().DELIMITER );
+		headerShort.append( "size" ).append( gd.getParams().DELIMITER );
+		headerShort.append( "text" ).append( gd.getParams().DELIMITER );
+		headerShort.append("\n");
 		
-		if(! gd.getParams().is_prod_mode)
-		{
-			header .append( gd.getParams().DELIMITER );
-			header.append( "id" );
-			
-			header .append( gd.getParams().DELIMITER );
-			header.append( "entropy" );
-
-			header .append( gd.getParams().DELIMITER );
-			header.append( "#users" );
-
-			header .append( gd.getParams().DELIMITER );
-			header.append( "size" );
-
-			header .append( gd.getParams().DELIMITER );
-			header.append( "text" );		}
-		else
-		{
-			header .append( gd.getParams().DELIMITER );
-			header.append( "entropy" );
-
-			header .append( gd.getParams().DELIMITER );
-			header.append( "#users" );
-
-			header .append( gd.getParams().DELIMITER );
-			header.append( "size" );
-
-			header .append( gd.getParams().DELIMITER );
-			header.append( "text" );
-		}
-		header.append("\n");
+		//leadId\tid\tuser\t# users\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\n
+		StringBuilder headerFull = new StringBuilder("leadId").append( gd.getParams().DELIMITER );
+		headerFull.append( "id" ).append( gd.getParams().DELIMITER );
+		headerFull.append( "created" ).append( gd.getParams().DELIMITER );
+		headerFull.append( "timestamp" ).append( gd.getParams().DELIMITER );
+		headerFull.append( "nearest" ).append( gd.getParams().DELIMITER );
+		headerFull.append( "distance" ).append( gd.getParams().DELIMITER );
+		headerFull.append( "entropy" ).append( gd.getParams().DELIMITER );
+		headerFull.append( "#users" ).append( gd.getParams().DELIMITER );
+		headerFull.append( "size" ).append( gd.getParams().DELIMITER );
+		headerFull.append( "age" ).append( gd.getParams().DELIMITER );
+		headerFull.append( "score" ).append( gd.getParams().DELIMITER );
+		headerFull.append( "topic" ).append( gd.getParams().DELIMITER );
+		headerFull.append( "text" ).append( gd.getParams().DELIMITER );
+		headerFull.append("\n");
 		
-		out.print(header);
+		outFull.print(headerFull);
+		outShort.print(headerShort);
 		
 		while(!stop) 
 		{
 			mapToCluster();
 			
     		Session.getInstance().message(Session.DEBUG, "Reader", "doing some cleanup...");
-    		gd.flushClusters(out);
+    		gd.flushClusters(outFull, outShort);
     		
 			try 
 			{
@@ -94,7 +86,7 @@ public class DocumentClusteringThread extends Thread {
 		while(!mapToCluster())
 		{}
 
-		gd.flushClustersAll(out);
+		gd.flushClustersAll(outFull, outShort);
 	}
 
 	private boolean mapToCluster()

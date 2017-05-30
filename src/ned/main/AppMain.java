@@ -71,8 +71,10 @@ public class AppMain {
 			String folder = "../temp";
 			if(Session.getMachineName().indexOf("saaama") >= 0)
 				folder  = "c:/temp";
-			String threadsFileName = folder + "/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset+".txt";
-			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
+			String threadsFileNameFull = folder + "/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset+"_full.txt";
+			String threadsFileNameShort = folder + "/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset+"_short.txt";
+			PrintStream outFull = new PrintStream(new FileOutputStream(threadsFileNameFull));
+			PrintStream outShort = new PrintStream(new FileOutputStream(threadsFileNameShort));
 			
 			forest = new LSHForest(gd.getParams().number_of_tables, 
 					 gd.getParams().hyperplanes, 
@@ -80,15 +82,16 @@ public class AppMain {
 					 gd.getParams().max_bucket_size);		
 			
 			executer = new DocumentProcessorExecutor(forest, gd.getParams().number_of_threads);
-	    	clustering = new DocumentClusteringThread(out);
+	    	clustering = new DocumentClusteringThread(outFull, outShort);
 
 	    	Session.getInstance().message(Session.ERROR, "Reader", "Starting Monitor...");
 			int delay = gd.getParams().monitor_timer_seconds; //seconds
 			threadMonitor  = new MyMonitorThread(executer, delay);
 
-			doMain(out);
+			doMain();
 			
-			out.close();
+			outFull.close();
+			outShort.close();
 			
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -118,7 +121,7 @@ public class AppMain {
 		}
 	}
 
-	public static void doMain(PrintStream out) throws IOException {
+	public static void doMain() throws IOException {
 		GlobalData gd = GlobalData.getInstance();
 		
 		String folder = "../data";

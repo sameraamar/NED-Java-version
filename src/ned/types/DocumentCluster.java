@@ -94,23 +94,16 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		return true;
 	}
 
-	@Override
-	public String toString() {
-		if(GlobalData.getInstance().getParams().is_prod_mode)
-			return toStringProd2();
-		
-		return toStringNonProd();
-	}
-			
 	/*
 	public String toString() {
 		StringBuffer text = new StringBuffer();
-		
-		text.append("LeadId\tDocId\tSize\n");
+				String delimiter = GlobalData.getInstance().getParams().DELIMITER;
+
+		text.append("LeadId"+delimiter+"DocId"+delimiter+"Size\n");
 		int size = size();
 		for (String id : idList) {
-			text.append(leadId).append("\t");
-			text.append(id).append("\t");
+			text.append(leadId).append(delimiter);
+			text.append(id).append(delimiter);
 			text.append(size);
 			text.append("\n");
 		}
@@ -120,7 +113,7 @@ public class DocumentCluster implements Serializable, DirtyBit {
 	*/
 	
 
-public String toStringNonProd()
+public String toStringFull()
 	{
 		GlobalData gd = GlobalData.getInstance();
 
@@ -140,11 +133,12 @@ public String toStringNonProd()
 		int numOfUsers = users.size();
 		
 		StringBuilder sb = new StringBuilder();
-		sb.append( ent ).append("\t");
-		sb.append(numOfUsers).append("\t");
-		sb.append( s ).append("\t");
-		sb.append( a ).append("\t");
-		sb.append( scoreAsStr ).append("\t");
+		String delimiter = GlobalData.getInstance().getParams().DELIMITER;
+		sb.append( ent ).append(delimiter);
+		sb.append(numOfUsers).append(delimiter);
+		sb.append( s ).append(delimiter);
+		sb.append( a ).append(delimiter);
+		sb.append( scoreAsStr ).append(delimiter);
 		String block = sb.toString();
 		
 		sb = new StringBuilder();
@@ -159,21 +153,21 @@ public String toStringNonProd()
 			if(nearestId != null)
 				nDoc = gd.id2doc.get(nearestId);
 			
-			sb.append(leadId).append("\t");
-			sb.append(docId).append("\t");
-			//sb.append(doc.getUserId()).append("\t");
+			sb.append(leadId).append(delimiter);
+			sb.append(docId).append(delimiter);
+			//sb.append(doc.getUserId()).append(delimiter);
 			Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
-			sb.append(time.toString()).append("\t");
+			sb.append(time.toString()).append(delimiter);
 			
-			sb.append(doc.getTimestamp()).append("\t");
-			sb.append(nearestId).append("\t");
-			sb.append(String.format("%.7f\t", doc.getNearestDist()));
+			sb.append(doc.getTimestamp()).append(delimiter);
+			sb.append(nearestId).append(delimiter);
+			sb.append(String.format("%.7f", doc.getNearestDist())).append(delimiter);
 			
 			sb.append(block);
 			
 			String lbl = gd.labeled.positive.get(docId);
 			lbl = lbl == null ? "" : "t_" + lbl;
-			sb.append( lbl ).append("\t");
+			sb.append( lbl ).append(delimiter);
 			
 			Matcher matcher = whitespace.matcher(doc.getText());
 			String result = matcher.replaceAll(" ");
@@ -183,7 +177,7 @@ public String toStringNonProd()
 			sb.append( result );
 
 			//String text = nDoc == null ? "NA" : nDoc.getCleanText();
-			//sb.append("\t").append(text);
+			//sb.append(delimiter).append(text);
 			
 			
 			sb.append("\n");
@@ -213,11 +207,12 @@ public String toStringProd1()
 		int numOfUsers = users.size();
 		
 		StringBuilder sb = new StringBuilder();
-		sb.append( ent ).append("\t");
-		sb.append(numOfUsers).append("\t");
-		sb.append( s ).append("\t");
-		sb.append( a ).append("\t");
-		sb.append( scoreAsStr ).append("\t");
+		String delimiter = GlobalData.getInstance().getParams().DELIMITER;
+		sb.append( ent ).append(delimiter);
+		sb.append(numOfUsers).append(delimiter);
+		sb.append( s ).append(delimiter);
+		sb.append( a ).append(delimiter);
+		sb.append( scoreAsStr ).append(delimiter);
 		String block = sb.toString();
 		
 		sb = new StringBuilder();
@@ -233,20 +228,20 @@ public String toStringProd1()
 				if(nearestId != null)
 					nDoc = gd.id2doc.get(nearestId);
 				
-				sb.append(docId).append("\t");
+				sb.append(docId).append(delimiter);
 
 				Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
-				sb.append(time.toString()).append("\t");
+				sb.append(time.toString()).append(delimiter);
 				
-				sb.append(doc.getTimestamp()).append("\t");
-				sb.append(nearestId).append("\t");
-				sb.append(String.format("%.7f\t", doc.getNearestDist()));
+				sb.append(doc.getTimestamp()).append(delimiter);
+				sb.append(nearestId).append(delimiter);
+				sb.append(String.format("%.7f", doc.getNearestDist())).append(delimiter);
 				
 				sb.append(block);
 				
 				String lbl = gd.labeled.positive.get(docId);
 				lbl = lbl == null ? "" : "t_" + lbl;
-				sb.append( lbl ).append("\t");
+				sb.append( lbl ).append(delimiter);
 			}
 			
 			Matcher matcher = whitespace.matcher(doc.getCleanText());
@@ -262,7 +257,7 @@ public String toStringProd1()
 		return sb.toString();
 	}
 
-public String toStringProd2()
+public String toStringShort()
 {
 	GlobalData gd = GlobalData.getInstance();
 
@@ -274,9 +269,10 @@ public String toStringProd2()
 	int numOfUsers = users.size();
 	
 	StringBuilder sb = new StringBuilder();
-	sb.append( ent ).append(gd.getParams().DELIMITER);
-	sb.append(numOfUsers).append(gd.getParams().DELIMITER);
-	sb.append( s ).append(gd.getParams().DELIMITER);
+	String delimiter = gd.getParams().DELIMITER;
+	sb.append( ent ).append(delimiter);
+	sb.append(numOfUsers).append(delimiter);
+	sb.append( s ).append(delimiter);
 	String block = sb.toString();
 	
 	sb = new StringBuilder();
@@ -287,7 +283,7 @@ public String toStringProd2()
 		Document doc = gd.id2doc.get(docId);
 		if(i == 0)
 		{
-			sb.append(docId).append(gd.getParams().DELIMITER);
+			sb.append(docId).append(delimiter);
 			sb.append(block);
 		}
 		
@@ -297,7 +293,7 @@ public String toStringProd2()
 		matcher = whitespace2.matcher(result);
 		result = matcher.replaceAll(" ");
 		
-		result.replaceAll(gd.getParams().DELIMITER," ");
+		result.replaceAll(delimiter," ");
 		sb.append( result );
 
 		sb.append("\n");
