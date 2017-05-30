@@ -1,15 +1,19 @@
 package ned.hash;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.stream.Stream;
 
 import ned.tools.GeneralHelper;
 import ned.types.ArrayFixedSize;
@@ -48,7 +52,6 @@ public class LSHForest {
 
 		System.out.println("LSHForest.init: " + (System.currentTimeMillis()-base));
 	}
-	
 	public List<String> addDocument00(Document doc, Map<Integer, Double> word2idf)
     {
 		//AtomicIntegerArray hitCount1 = new AtomicIntegerArray(length)
@@ -103,85 +106,94 @@ public class LSHForest {
         List<String> res = output.subList(0, toIndex);
         return res;
     }
-	/*
-	public List<String> addDocument32(Document doc)
+	public List<String> addDocument01(Document doc, Map<Integer, Double> word2idf)
     {
+		HashMap<String, AtomicInteger> hitCounts = new HashMap<String, AtomicInteger>();
 		
-		HashMap<String, Integer> hitCounts = new HashMap<String, Integer>();
+		Stream<LSHTable> stream = Arrays.stream(tables);
 		
-		Stream<LSHTable> tablesStream = Arrays.stream(tables);
-		List<String> tmpList = tablesStream.parallel()
-				.map(table->{
-					ArrayFixedSize<String> neighbors = table.AddDocument(doc);
-					return neighbors;
-					})
-				.reduce((a, b) -> {
-						ArrayList<String> output = new ArrayList<String>();
-				        output.addAll(a);
-				        output.addAll(b);
-				        return output;
-					})
-				.get();
-		
-		for (String id : tmpList) {
-			if(doc.getId().compareTo(id) > 0)
-			{
-				int c = hitCounts.getOrDefault(id,  0);
-				hitCounts.put(id,  c+1);
+		 stream.map(table->{
+			return table.AddDocument(doc,word2idf);
+		}).forEach(tmpList->{
+			int s = tmpList.size();
+			for (int k=0; k<s; k++) {
+				String tmp = tmpList.get(k);
+				if(tmp == null)
+				{
+					System.out.println("Something strange.. value "+ k +" is null. tmpList.len = " + s);
+					continue;
+				}
+				String id = doc.getId();
+				if ( tmp.compareTo(id) >=0 )
+					continue;
+				
+				AtomicInteger ai = null;
+				if(!hitCounts.containsKey(tmp))
+				{
+					ai = new AtomicInteger(0);
+					synchronized (hitCounts) {
+						if(!hitCounts.containsKey(tmp))
+							hitCounts.put(tmp, ai);
+					}
+					
+				}
+				if(ai == null)
+					ai = hitCounts.get(tmp);
+				ai.incrementAndGet();
 			}
-		}
-		
-		tmpList.sort( new Comparator<String> () 
-        {  
-            @Override  
-            public int compare(String left, String right){  
-                 return hitCounts.get(right) - hitCounts.get(left) ;  //Descending  
-            }  
-            
-        });
-		
-		List<String> res = tmpList.subList(0, Math.min( tmpList.size(), 3*numberOfTables) );
-        return res;
-    }
-	
-	protected List<String> findTopX(HashMap<String, Integer> hitCounts) {
-		PriorityQueue<String> pqueue = new PriorityQueue<String>(new Comparator<String> () 
-        {  
-            public int compare(String left, String right){  
-            	return hitCounts.get(right)-hitCounts.get(left); //descending order
-            }  
-            
-        });
-		
-		for (String k : hitCounts.keySet()) {
-			pqueue.add(k);
-		}
-		
-		ArrayList<String> output = new ArrayList<String>();
+			
+		});;
 
-		int compare_with = 3*numberOfTables;
-        int toIndex = Math.min(compare_with, pqueue.size());
-		for(int i=0; i<toIndex; i++)
-			output.add( pqueue.poll() );
+
+
 		
+		
+
+        ArrayList<String> output = new ArrayList<String>();
+        Set<Entry<String, AtomicInteger>> es = hitCounts.entrySet();
+        int compare_with = 3*numberOfTables;
+        int i=0;
+        int max=0;
+        String maxkey="";
+        for (Entry<String, AtomicInteger> entry : es) {
+        	if(i<compare_with){
+        		output.add(entry.getKey());
+        		max=entry.getValue().get();
+    			maxkey=entry.getKey();
+        		
+        	}else{
+        		if(max<entry.getValue().get()){
+        			output.remove(maxkey);
+        			output.add(entry.getKey());
+        			max=entry.getValue().get();
+        			maxkey=entry.getKey();
+        		}
+        		
+        	}
+			i++;
+		}
+       /* 
+        output.sort( new Comparator<String> () 
+					        {  
+					            @Override  
+					            public int compare(String left, String right){  
+					                 return hitCounts.get(right).get() - hitCounts.get(left).get() ;  //Descending  
+					            }  
+					            
+					        }
+        ); 
+        
+       
+        int toIndex = Math.min(compare_with, output.size());
+        List<String> res = output.subList(0, toIndex);
+        return res;
+		*/
 		return output;
- 	}
-	
-	protected List<String> findTopX1(HashMap<String, Integer> hitCounts) {
-		TreeMap<String, Integer> sorted = GeneralHelper.sortMapByValue(hitCounts);
-		 ArrayList<String> output = new ArrayList<String>();
-	       output.addAll(sorted.keySet());
-	     
-	        int compare_with = 3*numberOfTables;
-	        int toIndex = Math.min(compare_with, output.size());
-	        List<String> res =output.subList(0, toIndex);
-	        return res;
-	}
-	
-	*/
+    }
+
 	public List<String> addDocument(Document doc, Map<Integer, Double> word2idf)
     {
-		return this.addDocument00(doc, word2idf);
+		return this.addDocument01(doc, word2idf);
 		/*
 		Callable <List<String>> task = () -> {
 			return this.addDocument00(doc);
