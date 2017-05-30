@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-
 import ned.types.Document;
 import ned.types.GlobalData;
 
@@ -25,25 +24,29 @@ public class TestMain {
 	
 	public void updateText()
 	{
+		String DELIMITER = " ||| ";
 		String filename = "c:/temp/threads_7m_not_filtered.txt";
 		
 		BufferedReader br = null;
 		try {
 			br = new BufferedReader(new FileReader(filename));
-		    StringBuilder sb = new StringBuilder();
 		    String line = br.readLine();
 
 		    while (line != null) {
-		        sb.append(line);
-		        sb.append(System.lineSeparator());
+
+		    	String[] values = line.split(DELIMITER)
+		    	
 		        line = br.readLine();
 		    }
-		    String everything = sb.toString();
+		    
+		    
+		    br.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
-		    br.close();
+		    
 		}
+		
 	}
 }
