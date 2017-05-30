@@ -34,7 +34,7 @@ public class TestMain {
 
 		    while (line != null) {
 
-		    	String[] values = line.split(DELIMITER)
+		    	String[] values = line.split(DELIMITER);
 		    	
 		        line = br.readLine();
 		    }
