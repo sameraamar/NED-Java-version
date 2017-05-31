@@ -347,12 +347,12 @@ public class AppMain {
 	            if (processed == gd.getParams().max_documents)
 	            	stop = true;
 	            
-	            if (!stop && processed % (gd.getParams().roll_file) == 0)
+	            if (!stop && (processed % gd.getParams().roll_file == 0))
 	            {
 	            	waitForClusteringQueue();
 	            	PrintStream tmpOut1 = outFull;
 	            	PrintStream tmpOut2 = outShort;
-	            	openOutput(processed / (gd.getParams().print_limit * 10));
+	            	openOutput(processed / gd.getParams().roll_file);
 	            	clustering.setOutput(outFull, outShort);
 	            	tmpOut1.close();
 	            	tmpOut2.close();
