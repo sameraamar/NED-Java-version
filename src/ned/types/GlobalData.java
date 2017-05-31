@@ -35,6 +35,7 @@ public class GlobalData {
 
 	public class Parameters 
 	{
+		public int roll_file = 1_000_000;
 		public String DELIMITER = " ||| ";
 		public int monitor_timer_seconds = 5; //seconds
 		public int number_of_threads =100;

@@ -15,8 +15,7 @@ public class DocumentClusteringThread extends Thread {
 
 	public DocumentClusteringThread(PrintStream outFull, PrintStream outShort)
 	{
-		this.outFull = outFull;
-		this.outShort = outShort;
+		setOutput(outFull, outShort);
 		clusteredCounter = 0;
 	}
 	
@@ -37,33 +36,7 @@ public class DocumentClusteringThread extends Thread {
 	
 	private void doRun() {
 		GlobalData gd = GlobalData.getInstance();
-
-		StringBuilder headerShort = new StringBuilder("leadId").append( gd.getParams().DELIMITER );			
-		headerShort.append( "entropy" ).append( gd.getParams().DELIMITER );
-		headerShort.append( "#users" ).append( gd.getParams().DELIMITER );
-		headerShort.append( "size" ).append( gd.getParams().DELIMITER );
-		headerShort.append( "text" ).append( gd.getParams().DELIMITER );
-		headerShort.append("\n");
-		
-		//leadId\tid\tuser\t# users\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\n
-		StringBuilder headerFull = new StringBuilder("leadId").append( gd.getParams().DELIMITER );
-		headerFull.append( "id" ).append( gd.getParams().DELIMITER );
-		headerFull.append( "created" ).append( gd.getParams().DELIMITER );
-		headerFull.append( "timestamp" ).append( gd.getParams().DELIMITER );
-		headerFull.append( "nearest" ).append( gd.getParams().DELIMITER );
-		headerFull.append( "distance" ).append( gd.getParams().DELIMITER );
-		headerFull.append( "entropy" ).append( gd.getParams().DELIMITER );
-		headerFull.append( "#users" ).append( gd.getParams().DELIMITER );
-		headerFull.append( "size" ).append( gd.getParams().DELIMITER );
-		headerFull.append( "age" ).append( gd.getParams().DELIMITER );
-		headerFull.append( "score" ).append( gd.getParams().DELIMITER );
-		headerFull.append( "topic" ).append( gd.getParams().DELIMITER );
-		headerFull.append( "text" ).append( gd.getParams().DELIMITER );
-		headerFull.append("\n");
-		
-		outFull.print(headerFull);
-		outShort.print(headerShort);
-		
+		printHeader();
 		while(!stop) 
 		{
 			mapToCluster();
@@ -89,6 +62,36 @@ public class DocumentClusteringThread extends Thread {
 		gd.flushClustersAll(outFull, outShort);
 	}
 
+	private void printHeader() {		
+		String delimiter = GlobalData.getInstance().getParams().DELIMITER;
+		
+		StringBuilder headerShort = new StringBuilder("leadId").append( delimiter );			
+		headerShort.append( "entropy" ).append( delimiter );
+		headerShort.append( "#users" ).append( delimiter );
+		headerShort.append( "size" ).append( delimiter );
+		headerShort.append( "text" ).append( delimiter );
+		headerShort.append("\n");
+		
+		//leadId\tid\tuser\t# users\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\n
+		StringBuilder headerFull = new StringBuilder("leadId").append( delimiter );
+		headerFull.append( "id" ).append( delimiter );
+		headerFull.append( "created" ).append( delimiter );
+		headerFull.append( "timestamp" ).append( delimiter );
+		headerFull.append( "nearest" ).append( delimiter );
+		headerFull.append( "distance" ).append( delimiter );
+		headerFull.append( "entropy" ).append( delimiter );
+		headerFull.append( "#users" ).append( delimiter );
+		headerFull.append( "size" ).append( delimiter );
+		headerFull.append( "age" ).append( delimiter );
+		headerFull.append( "score" ).append( delimiter );
+		headerFull.append( "topic" ).append( delimiter );
+		headerFull.append( "text" ).append( delimiter );
+		headerFull.append("\n");
+		
+		outFull.print(headerFull);
+		outShort.print(headerShort);
+	}
+
 	private boolean mapToCluster()
 	{
 		GlobalData gd = GlobalData.getInstance();
@@ -111,6 +114,12 @@ public class DocumentClusteringThread extends Thread {
 			gd.markOldClusters(last);
 
 		return gd.getQueue().isEmpty();
+	}
+	
+	public void setOutput(PrintStream outFull, PrintStream outShort)
+	{
+		this.outFull = outFull;
+		this.outShort = outShort;
 	}
 	
 	private Document next()

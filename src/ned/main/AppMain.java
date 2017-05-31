@@ -1,7 +1,9 @@
 package ned.main;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -27,6 +29,9 @@ public class AppMain {
 	private static DocumentProcessorExecutor executer;
 	private static MyMonitorThread threadMonitor;
 	private static DocumentClusteringThread clustering;
+	private static PrintStream outFull;
+	private static PrintStream outShort;
+	private static String outfolder;
 
 	public static void release()
 	{
@@ -62,16 +67,18 @@ public class AppMain {
 			}			
 			
 			gd.init();
-			printParameters(System.out);
 
 			ExecutionHelper.setCommonPoolSize();
-			String folder = "../temp";
-			if(Session.getMachineName().indexOf("saaama") >= 0)
-				folder  = "c:/temp";
-			String threadsFileNameFull = folder + "/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset+"_full.txt";
-			String threadsFileNameShort = folder + "/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset+"_short.txt";
-			PrintStream outFull = new PrintStream(new FileOutputStream(threadsFileNameFull));
-			PrintStream outShort = new PrintStream(new FileOutputStream(threadsFileNameShort));
+			
+			
+			createOutFolder();
+			openOutput(0);
+			
+			String filename = outfolder + "/params.txt";
+			PrintStream paramsOut = new PrintStream(new FileOutputStream(filename));
+			printParameters(System.out);
+			printParameters(paramsOut);
+			paramsOut.close();
 			
 			forest = new LSHForest(gd.getParams().number_of_tables, 
 					 gd.getParams().hyperplanes, 
@@ -116,6 +123,35 @@ public class AppMain {
 			
 			release();
 		}
+	}
+
+	private static void createOutFolder() {
+		GlobalData gd = GlobalData.getInstance();
+		String folder = "../temp";
+		if(Session.getMachineName().indexOf("saaama") >= 0)
+			folder  = "c:/temp";
+		
+		folder = folder + "/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset;
+
+		File theDir = new File(folder);
+	
+		// if the directory does not exist, create it
+		if (!theDir.exists()) {
+		    System.out.println("creating directory: " + theDir.getAbsolutePath());
+
+		    theDir.mkdir();
+		}
+		
+		outfolder = folder;
+	}
+
+	private static void openOutput(int index) throws FileNotFoundException {
+		
+		String roll = String.format("%02d", index);
+		String threadsFileNameFull = outfolder + "/full_"+roll+".txt";
+		String threadsFileNameShort = outfolder +"/short_"+roll+".txt";
+		outFull = new PrintStream(new FileOutputStream(threadsFileNameFull));
+		outShort = new PrintStream(new FileOutputStream(threadsFileNameShort));
 	}
 
 	public static void doMain() throws IOException {
@@ -307,32 +343,39 @@ public class AppMain {
 	            //	System.gc();
 	            //}
 	            
+	            
 	            if (processed == gd.getParams().max_documents)
 	            	stop = true;
 	            
-	            if (stop || (processed % (gd.getParams().print_limit *10) == 0))
+	            if (!stop && processed % (gd.getParams().roll_file) == 0)
+	            {
+	            	waitForClusteringQueue();
+	            	PrintStream tmpOut1 = outFull;
+	            	PrintStream tmpOut2 = outShort;
+	            	openOutput(processed / (gd.getParams().print_limit * 10));
+	            	clustering.setOutput(outFull, outShort);
+	            	tmpOut1.close();
+	            	tmpOut2.close();
+	            }
+		            
+	            if (stop || (processed % (gd.getParams().print_limit * 20) == 0))
 	            {
 	            	int lastIndex = gd.resumeInfo.get(GlobalData.LAST_SEEN_IDX);
 
-	            	System.out.println("Wait for queue to get empty!");
-	            	while(!gd.getQueue().isEmpty())
-	            	{
-	            		try {
-							Thread.sleep(50);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-	            	}
+	            	waitForClusteringQueue();
 	            	
 	            	System.out.println("clear memory to redis...");
 	            	gd.save(lastIndex <= idx);
-	            	
+	            		            	
 	            	//if (stop || processed % (gd.getParams().print_limit* 20) == 0)
 	            	//	RedisAccessHelper.initRedisConnectionPool(true);
 	            }
 	            
 	            line=buffered.readLine();
 	        }
+			
+			
+			
 			buffered.close();
 	        
 		}
@@ -346,6 +389,18 @@ public class AppMain {
 		long current = System.nanoTime();
 		long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);
 		Session.getInstance().message(Session.INFO, "Summary", "Done in " + Utility.humanTime(seconds) );
+	}
+
+	private static void waitForClusteringQueue() {
+		System.out.println("Wait for queue to get empty!");
+		while(!GlobalData.getInstance().getQueue().isEmpty())
+		{
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 		
 	private static void printParameters(PrintStream out) 
