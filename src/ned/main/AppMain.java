@@ -73,17 +73,26 @@ public class AppMain {
 			
 			createOutFolder();
 			openOutput(0);
+
+			if(gd.getParams().resume_mode)
+			{
+				int n = gd.resumeInfo.get(GlobalData.LAST_DIMENSION);
+				if( n % gd.getParams().dimension_jumps != 0 )
+					n = gd.getParams().dimension_jumps * (n / gd.getParams().dimension_jumps + 1);
+				
+				gd.getParams().inital_dimension = n;
+			}
+			
+			forest = new LSHForest(gd.getParams().number_of_tables, 
+					 gd.getParams().hyperplanes, 
+					 gd.getParams().inital_dimension, 
+					 gd.getParams().max_bucket_size);	
 			
 			String filename = outfolder + "/params.txt";
 			PrintStream paramsOut = new PrintStream(new FileOutputStream(filename));
 			printParameters(System.out);
 			printParameters(paramsOut);
 			paramsOut.close();
-			
-			forest = new LSHForest(gd.getParams().number_of_tables, 
-					 gd.getParams().hyperplanes, 
-					 gd.getParams().inital_dimension, 
-					 gd.getParams().max_bucket_size);		
 			
 			executer = new DocumentProcessorExecutor(forest, gd.getParams().number_of_threads);
 	    	clustering = new DocumentClusteringThread(outFull, outShort);
