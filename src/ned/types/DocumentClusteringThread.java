@@ -8,6 +8,8 @@ import redis.clients.jedis.JedisPool;
 
 public class DocumentClusteringThread extends Thread {
 	private boolean stop = false;
+	
+
 	private PrintStream outFull;
 	private PrintStream outShort;
 	public int clusteredCounter;
@@ -17,6 +19,14 @@ public class DocumentClusteringThread extends Thread {
 	{
 		setOutput(outFull, outShort);
 		clusteredCounter = 0;
+	}
+	
+	public boolean isStop() {
+		return stop;
+	}
+
+	public void setStop(boolean stop) {
+		this.stop = stop;
 	}
 	
 	@Override

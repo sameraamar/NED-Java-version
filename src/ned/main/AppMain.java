@@ -396,7 +396,11 @@ public class AppMain {
 		while(!GlobalData.getInstance().getQueue().isEmpty())
 		{
 			try {
-				clustering.resume();
+				if(clustering.isInterrupted()|| clustering.isStop()){
+					clustering.setStop(false);
+					clustering.resume();
+				}
+				
 				Thread.sleep(50);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
