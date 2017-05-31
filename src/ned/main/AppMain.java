@@ -147,7 +147,7 @@ public class AppMain {
 
 	private static void openOutput(int index) throws FileNotFoundException {
 		
-		String roll = String.format("%02d", index);
+		String roll = String.format("%03d", index);
 		String threadsFileNameFull = outfolder + "/full_"+roll+".txt";
 		String threadsFileNameShort = outfolder +"/short_"+roll+".txt";
 		outFull = new PrintStream(new FileOutputStream(threadsFileNameFull));
