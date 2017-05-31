@@ -52,7 +52,7 @@ public class GlobalData {
 		public double min_cluster_size = 3;
 		public int inital_dimension = 100000;
 		public int dimension_jumps = 100000;
-		public boolean resume_mode = true;
+		public boolean resume_mode = false;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
 	}
 	
@@ -389,10 +389,15 @@ public class GlobalData {
 			}
 		}
 		
-		/*for (String id : marktoremove) {
-			this.id2cluster.remove(id);
-			countDocs++;
-		}*/
+		for (String id : marktoremove) 
+		{
+			GlobalData.id2nearestId.remove(id);
+			GlobalData.id2nearestDist.remove(id);
+			GlobalData.id2nearestOk.remove(id);
+			
+			//this.id2cluster.remove(id);
+			//countDocs++;
+		}
 		
 		if (counter>0)
 			Session.getInstance().message(Session.DEBUG, "cleanClusters", "released "+counter+" clusters (" + countDocs + " docs)" );
@@ -482,7 +487,7 @@ public class GlobalData {
 		msg.append("\n");
 		
 		msg.append( String.format("\t[monitor] Documents: %d/%d, Document-WordCounts: %d/%d, Words: %d/%d, "
-				+ "\n\tW2Count: %d/%d, Clusters %d, clust2replcmnt: %d, id2cluster: %d",
+				+ "\n\tW2Count: %d/%d, Clusters %d, clust2replcmnt: %d, id2cluster: %d, nearest [Id: %d, D: %d, B: %d]",
 				this.id2doc.size(), 
 				-1, //this.id2doc.redisSize(), 
 				this.id2wc.size(), 
@@ -493,7 +498,10 @@ public class GlobalData {
 				-1, //this.numberOfDocsIncludeWord.redisSize(),
 				this.clusters.size(),
 				this.cluster2replacement.size(),
-				this.id2cluster.size()
+				this.id2cluster.size(),
+				id2nearestId.size(),
+				id2nearestDist.size(),
+				id2nearestOk.size()
 			) ).append("\n");
 		
 		
