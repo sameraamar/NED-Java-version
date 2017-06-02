@@ -1,3 +1,4 @@
+
 package ned.main;
 
 import java.io.BufferedReader;
@@ -25,8 +26,8 @@ public class TestMain {
 	static public void updateText()
 	{
 		String DELIMITER = " ||| ";
-		String filename = "C:\\temp\\threads_50000000_4000000\\short_000.txt";
-		String filenameOut = "C:\\temp\\threads_50000000_4000000\\short_000_out.txt";
+		String filename = "../temp/threads_50000000_13000000/res_short.txt";
+		String filenameOut = "../temp/threads_50000000_13000000/res_001.txt";
 		
 		
 		
@@ -44,6 +45,7 @@ public class TestMain {
 		    String leadId = null, entropy = null;
 		    String size;
 	        line = br.readLine();
+	        System.out.println(line);
 		    while (line != null) {
 		        if(line.trim().equals(""))
 		        	continue;
@@ -62,18 +64,22 @@ public class TestMain {
 		        	entr = Double.parseDouble(entropy);
 		        } catch (Exception e)
 		        {
+		        	e.printStackTrace();
+		        	System.out.println(e.getMessage());
 		        }
 
 		        try {
 		        	s = Integer.parseInt(size);
 		        } catch (Exception e)
 		        {
+		        	e.printStackTrace();
+		        	System.out.println(e.getMessage());
 		        }
 
-		        if(entr != null && entr < 1.1 )
+		        if(entr != null && entr < 1.2 )
 		        	skip = true;
 		        
-		        if(entr != null && s < 10 )
+		        if(s != null && s < 10 )
 		        	skip = true;
 		        
 		        if(!skip)
@@ -98,3 +104,4 @@ public class TestMain {
 		
 	}
 }
+

@@ -45,11 +45,11 @@ public class GlobalData {
 		public int max_bucket_size = 2000;
 		public int max_documents = 50_000_000;
 		public int max_thread_delta_time = 4*3600; //seconds
-		public int offset =  10_000_000;
+		public int offset =  19_000_000;
 		public int search_recents = 2000;
 		public double threshold = 0.65;
-		public double min_cluster_entropy = 1.0;
-		public double min_cluster_size = 3;
+		public double min_cluster_entropy = 1.2;
+		public double min_cluster_size =10;
 		public int inital_dimension = 100000;
 		public int dimension_jumps = 100000;
 		public boolean resume_mode = false;
