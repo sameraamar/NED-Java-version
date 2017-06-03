@@ -48,8 +48,8 @@ public class GlobalData {
 		public int offset =  0;//10_000_000;
 		public int search_recents = 2000;
 		public double threshold = 0.65;
-		public double min_cluster_entropy = 1.0;
-		public double min_cluster_size = 3;
+		public double min_cluster_entropy = 1.2;
+		public double min_cluster_size =10;
 		public int inital_dimension = 100000;
 		public int dimension_jumps = 100000;
 		public boolean resume_mode = false;
