@@ -5,20 +5,29 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.StringTokenizer;
+
+import ned.types.Document;
+import ned.types.GlobalData;
 
 public class TestMain {
 
 	public static void main(String[] args) throws Exception {
 		
-//		GlobalData.getInstance().getParams().resume_mode = true;
-//		GlobalData.getInstance().init();
-//		System.out.println("------------------------------------------");
-//
-//		Document doc = GlobalData.getInstance().id2doc.get("93431326086152192");
-//		System.out.println(doc==null ? "NULL" : doc.toString());
+		GlobalData.getInstance().getParams().resume_mode = true;
+		GlobalData.getInstance().init();
+		System.out.println("------------------------------------------");
+
+		String[] ids = {"97829502591320067", "98454114152878081", "97986298270330880", "98199872209035265", "98454114152878081", "98079151780675586",
+				"90224059228499969", "90239997587886080", "91813843075993600"};
 		
-		updateText();
+		for (String id : Arrays.asList( ids )) {
+			Document doc = GlobalData.getInstance().id2doc.get(id);
+			System.out.println(doc==null ? "NULL" : doc.toString());
+		}
+		
+		//updateText();
 	}
 
 	
