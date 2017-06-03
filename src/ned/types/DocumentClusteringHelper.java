@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import ned.tools.ExecutionHelper;
 
@@ -21,6 +23,7 @@ public class DocumentClusteringHelper {
 		String id = doc.getId();
 		
 		Iterator<String> iter = list.iterator();
+		/*
 		while(iter.hasNext()){
 			String rightId = iter.next();
 		    if(rightId.compareTo(id) < 0)
@@ -29,6 +32,16 @@ public class DocumentClusteringHelper {
 				doc.updateNearest(right, word2idf);
 		    }
 		}
+		*/
+		Iterable<String> iterable = () -> iter;
+		Stream<String> stream = StreamSupport.stream(iterable.spliterator(), true);
+		stream.forEach(rightId->{
+		    if(rightId.compareTo(id) < 0)
+		    {
+		    	DocumentWordCounts right = GlobalData.getInstance().id2wc.get(rightId);
+				doc.updateNearest(right, word2idf);
+		    }
+		});
 		
 		
 	/*
