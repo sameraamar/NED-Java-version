@@ -74,13 +74,16 @@ public class AppMain {
 			createOutFolder();
 			openOutput(0);
 
-			if(gd.getParams().resume_mode)
+			if(gd.getParams().resume_mode) 
 			{
 				int n = gd.resumeInfo.get(GlobalData.LAST_DIMENSION);
-				if( n % gd.getParams().dimension_jumps != 0 )
-					n = gd.getParams().dimension_jumps * (n / gd.getParams().dimension_jumps + 1);
-				
-				gd.getParams().inital_dimension = n;
+				if(gd.getParams().inital_dimension < n)
+				{
+					if( n % gd.getParams().dimension_jumps != 0 )
+						n = gd.getParams().dimension_jumps * (n / gd.getParams().dimension_jumps + 1);
+					
+					gd.getParams().inital_dimension = n;
+				}
 			}
 			
 			forest = new LSHForest(gd.getParams().number_of_tables, 
