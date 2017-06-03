@@ -14,7 +14,10 @@ import ned.types.GlobalData;
 public class TestMain {
 
 	public static void main(String[] args) throws Exception {
-		
+		GlobalData.getInstance().getParams().resume_mode = true;
+		GlobalData.getInstance().init();
+		System.out.println("------------------------------------------");
+
 		String[] ids = {"97829502591320067", "98454114152878081", "97986298270330880", "98199872209035265", "98454114152878081", "98079151780675586",
 				"90224059228499969", "90239997587886080", "91813843075993600"};
 		
