@@ -173,10 +173,6 @@ public class AppMain {
 		if(Session.getMachineName().indexOf("saaama") >= 0)
 			folder  = "c:/data/events_db/petrovic";
 		
-		
-		String inputfile = folder + "/relevance_judgments_00000000";
-		gd.labeled = LabeledDocuments.loadLabeledData(inputfile);
-
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
 	                    "petrovic_01000000.gz",
@@ -370,7 +366,7 @@ public class AppMain {
 	            	tmpOut2.close();
 	            }
 		            
-	            if (stop || (processed % (gd.getParams().print_limit * 20) == 0))
+	            if (stop || (processed % (gd.getParams().print_limit * 100) == 0))
 	            {
 	            	int lastIndex = gd.resumeInfo.get(GlobalData.LAST_SEEN_IDX);
 

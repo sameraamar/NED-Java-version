@@ -10,11 +10,32 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import ned.tools.ExecutionHelper;
 
 public class DocumentClusteringHelper {
 	
+	
+	private static void determineClosest11(Document doc, List<String> list, Map<Integer, Double> word2idf)
+	{
+		String id = doc.getId();
+		
+		Iterator<String> iter = list.iterator();
+		Iterable<String> iterable = () -> iter;
+
+		Stream<String> stream = StreamSupport.stream(iterable.spliterator(), true);
+
+		stream.forEach(rightId->{
+		    if(rightId.compareTo(id) < 0)
+
+		    {
+			    DocumentWordCounts right = GlobalData.getInstance().id2wc.get(rightId);
+			    doc.updateNearest(right, word2idf);
+		    }
+		});
+	}
 	
 	private static void determineClosest(Document doc, List<String> list, Map<Integer, Double> word2idf)
 	{

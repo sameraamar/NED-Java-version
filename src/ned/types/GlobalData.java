@@ -13,8 +13,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import ned.main.LabeledDocuments;
 import ned.modules.Twokenize;
 import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
@@ -45,10 +43,10 @@ public class GlobalData {
 		public int max_bucket_size = 2000;
 		public int max_documents = 50_000_000;
 		public int max_thread_delta_time = 4*3600; //seconds
-		public int offset =  10_000_000;
+		public int offset =  0;
 		public int search_recents = 2000;
-		public double threshold = 0.65;
-		public double min_cluster_entropy = 1.0;
+		public double threshold = 0.5;
+		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 3;
 		public int inital_dimension = 100000;
 		public int dimension_jumps = 100000;
@@ -87,7 +85,6 @@ public class GlobalData {
 
 	private Parameters parameters = new Parameters();
 	public List<String> cleanClusterQueue = null;
-	public LabeledDocuments labeled;
 	public static ConcurrentHashMap<String, Double> id2nearestDist;
 	public static ConcurrentHashMap<String, Boolean> id2nearestOk;
 	public static ConcurrentHashMap<String, String> id2nearestId;

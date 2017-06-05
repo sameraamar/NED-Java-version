@@ -162,10 +162,6 @@ public String toStringFull()
 			
 			sb.append(block);
 			
-			String lbl = gd.labeled.positive.get(docId);
-			lbl = lbl == null ? "" : "t_" + lbl;
-			sb.append( lbl ).append(delimiter);
-			
 			Matcher matcher = whitespace.matcher(doc.getText());
 			String result = matcher.replaceAll(" ");
 			
@@ -228,10 +224,6 @@ public String toStringProd1()
 				sb.append(String.format("%.7f", doc.getNearestDist())).append(delimiter);
 				
 				sb.append(block);
-				
-				String lbl = gd.labeled.positive.get(docId);
-				lbl = lbl == null ? "" : "t:" + lbl;
-				sb.append( lbl ).append(delimiter);
 			}
 			
 			Matcher matcher = whitespace.matcher(doc.getCleanText());
