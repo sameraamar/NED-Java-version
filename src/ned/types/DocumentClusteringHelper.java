@@ -186,7 +186,8 @@ public class DocumentClusteringHelper {
 			DocumentCluster c = gd.clusterByDoc(leadId);
 			if (c.size() > 1)
 			{
-				out.println(c.toString());
+				out.print(c.toString());
+				out.print("\n");
 			}
 		}
 		};
