@@ -300,6 +300,17 @@ public String toStringShort()
 			DocumentWordCounts doc = gd.id2wc.get(id);
 			if(doc!=null){
 				Map<Integer, Integer> tmp = doc.getWordCount();
+				Set<Entry<Integer, Integer>> es = tmp.entrySet();
+				
+				for (Entry<Integer, Integer> entry : es) {
+					int i=entry.getKey();
+					int count = wordcount.getOrDefault(i, 0); 
+					count += entry.getValue().intValue();
+					wordcount.put(i, count);
+					
+					N += tmp.get(i).intValue();
+				}
+				/*
 				for (Integer i : tmp.keySet())
 				{
 					int count = wordcount.getOrDefault(i, 0); 
@@ -308,7 +319,7 @@ public String toStringShort()
 					
 					N += tmp.get(i).intValue();
 				}
-				
+				*/
 			}
 			
 		}

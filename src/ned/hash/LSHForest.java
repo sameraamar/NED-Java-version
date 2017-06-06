@@ -52,6 +52,7 @@ public class LSHForest {
 
 		System.out.println("LSHForest.init: " + (System.currentTimeMillis()-base));
 	}
+	/*
 	public List<String> addDocument00(Document doc, int dim, Map<Integer, Double> word2idf)
     {
 		//AtomicIntegerArray hitCount1 = new AtomicIntegerArray(length)
@@ -106,6 +107,7 @@ public class LSHForest {
         List<String> res = output.subList(0, toIndex);
         return res;
     }
+    */
 	public List<String> addDocument01(Document doc, int dim, Map<Integer, Double> word2idf)
     {
 		HashMap<String, AtomicInteger> hitCounts = new HashMap<String, AtomicInteger>();

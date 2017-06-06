@@ -275,9 +275,9 @@ public class GlobalData {
 		int lastDocIndex = resumeInfo.get(LAST_SEEN_IDX); 
 		if(lastDocIndex < idx)
 		{
-			Set<Entry<Integer, Integer>> keySet = dwc.getWordCount().entrySet();
+			Set<Entry<Integer, Integer>> es = dwc.getWordCount().entrySet();
 			//update number of documents holding each word (for TFIDF)
-			for (Entry<Integer, Integer> k : keySet) 
+			for (Entry<Integer, Integer> k : es) 
 			{
 				int val = numberOfDocsIncludeWord.getOrDefault(k.getKey(), 0);
 				numberOfDocsIncludeWord.put(k.getKey(), val+1);					
@@ -453,22 +453,22 @@ public class GlobalData {
 		Enumeration<DocumentCluster> enumerator = clusters.elements();
 		
 		while(enumerator.hasMoreElements())
-		//for (String leadId : this.clusters.keySet()) 
 		{
 			DocumentCluster c = enumerator.nextElement(); //this.clusterByDoc(leadId);
-			if (c.isOpen(doc))
-				young++;
+			if (c.isOpen(doc)){
+				//young++;
+			}
 			else
 			{
 				this.cleanClusterQueue.add(c.leadId);
 				old++;
 			}
 		}
-		
+		/*
 		int wait;
 		if (true)
 			wait = 0;
-		
+		*/
 		if (old>0)
 			Session.getInstance().message(Session.DEBUG, "markOldClusters", "marked " + old + " old clusters for cleanup");
 	}
