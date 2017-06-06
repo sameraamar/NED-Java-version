@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import ned.modules.Twokenize;
 import ned.tools.ClusteringQueueManager;
 import ned.tools.ExecutionHelper;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class GlobalData {
 	private static final String V = "";
@@ -130,18 +131,31 @@ public class GlobalData {
 
 	public void save(boolean force)
 	{
-		System.out.println("Save to Redis...");
-		if(force || !getParams().resume_mode)
-		{
-			id2wc.save();
-			word2index.save();
-	    	numberOfDocsIncludeWord.save();
-	    	resumeInfo.save();
+		try{
+			System.out.println("Save to Redis...");
+			if(force || !getParams().resume_mode)
+			{
+				id2wc.save();
+				word2index.save();
+		    	numberOfDocsIncludeWord.save();
+		    	resumeInfo.save();
+			}
+			
+			id2doc.save();
+	    	id2cluster.save();
+	    	cluster2replacement.save();
+		}
+		catch(JedisConnectionException re){
+			System.out.println(re.getMessage());
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 		
-		id2doc.save();
-    	id2cluster.save();
-    	cluster2replacement.save();
 	}
 	
 	public RoundRobinArray<String> getRecentManager() {
