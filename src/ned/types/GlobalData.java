@@ -149,6 +149,7 @@ public class GlobalData {
 			System.out.println(re.getMessage());
 			try {
 				Thread.sleep(3000);
+				save(force);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

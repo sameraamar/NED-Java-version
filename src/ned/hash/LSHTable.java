@@ -72,6 +72,39 @@ public class LSHTable
  		long res=convertBooleanArrayToLong(st);
          return res;
      }
+     private long GenerateHashCode01(Document doc, int dim, Map<Integer, Double> word2idf)
+     {
+     	
+     	boolean[] st = new boolean [hyperPlanesNumber];
+     	Session session = Session.getInstance();
+     	
+     	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
+     	DocumentWordCounts dwc = GlobalData.getInstance().id2wc.get( doc.getId() );
+     	Map<Integer, Double> weights = dwc.getWeights(word2idf);
+     	hyperPlanes.fixDim(dim);
+ 		
+ 		for (int i = 0 ; i<hyperPlanesNumber; i++)
+    	{
+    		double tmp = 0;
+    		Set<Entry<Integer, Double>> es = weights.entrySet();
+			for (Entry<Integer, Double> entry : es) 
+    		{
+				try {
+    			tmp += entry.getValue() * hyperPlanes.get(i, entry.getKey());
+				} catch(ArrayIndexOutOfBoundsException e)
+				{
+					System.out.println( "doc dimension: " + dim + " this.fixingDim = ");
+					throw e;
+				}
+    		}
+			session.message(Session.DEBUG, "GenerateHashCode", ""+ tmp);
+
+			st[i]=( tmp>=0 ? true : false );
+    		session.message(Session.DEBUG, "GenerateHashCode", "\nLOG");
+    	}
+ 		long res=convertBooleanArrayToLong(st);
+         return res;
+     }
      
      private long convertBooleanArrayToLong(boolean[] st){
      	long res=0;
