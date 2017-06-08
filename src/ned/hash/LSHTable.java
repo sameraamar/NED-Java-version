@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import ned.tools.HyperPlansManager;
 import ned.types.Document;
@@ -82,8 +83,7 @@ public class LSHTable
      	DocumentWordCounts dwc = GlobalData.getInstance().id2wc.get( doc.getId() );
      	Map<Integer, Double> weights = dwc.getWeights(word2idf);
      	hyperPlanes.fixDim(dim);
- 		
- 		for (int i = 0 ; i<hyperPlanesNumber; i++)
+     	IntStream.range(0, hyperPlanesNumber).forEach(i->
     	{
     		double tmp = 0;
     		Set<Entry<Integer, Double>> es = weights.entrySet();
@@ -101,7 +101,7 @@ public class LSHTable
 
 			st[i]=( tmp>=0 ? true : false );
     		session.message(Session.DEBUG, "GenerateHashCode", "\nLOG");
-    	}
+    	});
  		long res=convertBooleanArrayToLong(st);
          return res;
      }
@@ -153,7 +153,7 @@ public class LSHTable
 
     public RoundRobinArray<String> AddDocument(Document doc, int dim, Map<Integer, Double> word2idf)
     {
-        long code = GenerateHashCode(doc, dim, word2idf);
+        long code = GenerateHashCode01(doc, dim, word2idf);
         RoundRobinArray<String> bucket = buckets.get(code);
         if (bucket == null)
         {
