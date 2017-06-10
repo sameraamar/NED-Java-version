@@ -46,6 +46,11 @@ public class RedisBasedMap<K, V> implements Map<K, V> , Serializable {
 		}
 	}
 	
+	public void reset()
+	{
+		RedisAccessHelper.resetKey(jedisKey);
+	}
+	
 	@Override
 	public V get(Object key) {
 		V value = map.get(key);

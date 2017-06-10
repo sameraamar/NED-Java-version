@@ -462,7 +462,6 @@ public class GlobalData {
 
 	public void markOldClusters(Document doc) 
 	{
-		int young = 0;
 		int old = 0;
 		
 		Enumeration<DocumentCluster> enumerator = clusters.elements();
@@ -470,20 +469,13 @@ public class GlobalData {
 		while(enumerator.hasMoreElements())
 		{
 			DocumentCluster c = enumerator.nextElement(); //this.clusterByDoc(leadId);
-			if (c.isOpen(doc)){
-				//young++;
-			}
-			else
+			if (!c.isOpen(doc))
 			{
 				this.cleanClusterQueue.add(c.leadId);
 				old++;
 			}
 		}
-		/*
-		int wait;
-		if (true)
-			wait = 0;
-		*/
+
 		if (old>0)
 			Session.getInstance().message(Session.DEBUG, "markOldClusters", "marked " + old + " old clusters for cleanup");
 	}
