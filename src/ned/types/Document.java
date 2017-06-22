@@ -67,6 +67,7 @@ public class Document  implements Serializable, DirtyBit {
 		return doc;
 	}
 	
+	
 	private Document(String id)
 	{
     	this.id = id.intern();
@@ -304,7 +305,41 @@ public class Document  implements Serializable, DirtyBit {
 		}        
         return doc;
 	}
-
+	
+	public static Document parse01(String json, boolean isBasicOnly)
+	{
+		JsonParser jsonParser = new JsonParser();
+		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
+		
+		JsonObject object = (JsonObject) jsonObj.get("object");
+		
+		if(object.get("summary") == null || object.get("id") == null)
+			return null;
+		
+		String text = object.get("summary").getAsString();
+		String id = object.get("id").getAsString();
+		
+		String created_at = jsonObj.get("postedTime").getAsString();
+		JsonElement element = jsonObj.get("timestamp");
+		long timestamp;
+		if(element != null)
+			timestamp = element.getAsLong();
+		else {
+			//convert from created_at to timestamp
+			timestamp = 0;
+		}
+			
+		//id == "94816822100099073" is for Amy Winhouse event
+		Document doc = new Document(id);
+		doc.init(text, timestamp);
+		doc.dirtyOn();
+		
+        doc.created_at = created_at;
+        JsonObject userObj = jsonObj.get("actor").getAsJsonObject();
+    	doc.user_id = userObj.get("id").getAsString();	
+    	 return doc;
+		
+}
 	public String getCreatedAt() {
 		return created_at;
 	}
