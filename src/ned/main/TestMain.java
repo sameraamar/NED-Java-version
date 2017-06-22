@@ -7,19 +7,25 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import ned.types.Document;
 import ned.types.GlobalData;
+import ned.types.RedisBasedMap;
+import ned.types.SerializeHelperStrDoc;
 
 public class TestMain {
+
+	private static String DELIMITER = " ||| ";
+
 
 	public static void main(String[] args) throws Exception {
 		GlobalData.getInstance().getParams().resume_mode = true;
 		GlobalData.getInstance().init();
 		System.out.println("------------------------------------------");
 
-		String[] ids = {"97829502591320067", "98454114152878081", "97986298270330880", "98199872209035265", "98454114152878081", "98079151780675586",
-				"90224059228499969", "90239997587886080", "91813843075993600"};
+	
+		String[] ids = {"86419754188935168"};
 		
 		for (String id : Arrays.asList( ids )) {
 			Document doc = GlobalData.getInstance().id2doc.get(id);
@@ -29,12 +35,64 @@ public class TestMain {
 		//updateText();
 	}
 
-	
 	static public void updateText()
 	{
-		String DELIMITER = " ||| ";
-		String filename = "../temp/threads_50000000_13000000/res_short.txt";
-		String filenameOut = "../temp/threads_50000000_13000000/res_001.txt";
+		String filename = "C:\\temp\\threads_petrovic_all\\hit_results-MechanichalTurk.csv.txt";
+		String filenameOut = "C:\\temp\\threads_petrovic_all\\hit_results-MechanichalTurk_text.csv.txt";
+
+		RedisBasedMap<String, Document> id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, false, new SerializeHelperStrDoc() );
+
+		BufferedReader br = null;
+		try {
+			PrintStream out = new PrintStream(new FileOutputStream(filenameOut));
+
+			br = new BufferedReader(new FileReader(filename));
+			String line = br.readLine();
+		    
+			int count = 0;
+		    int printed = 0;
+		    
+		    if(line.startsWith("idHitResult"))
+		    {
+		    	out.print(line + "\ttext\n");
+		    	line = br.readLine();
+		    }
+		    
+	        //System.out.println(line);
+		    while (line != null) {
+		        if(line.trim().equals(""))
+		        	continue;
+		        
+		    	String[] tokens = line.split( Pattern.quote("\t") ) ;
+		    	String id = tokens[4]; 
+		    	
+		    	Document doc = id2doc.get(id);
+		    	
+		    	String text = doc.getText().replace("\t", " ").replace("\n", " ").replace("\r", " ");
+		    	out.print(line + "\t" + text + "\n");
+		        
+		        count++;
+		        line = br.readLine();
+		    }
+		    
+		    
+		    br.close();
+		    out.close();
+		    System.out.println("count: " + count );
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+		    
+		}
+		
+	}
+	
+	static public void filterShortResults()
+	{
+		String filename = "C:\\temp\\threads_petrovic_all\\run_June11\\full_002.txt";
+		String filenameOut = "C:\\temp\\threads_petrovic_all\\run_June11\\full_002-filtered.txt";
 		
 		
 		
@@ -50,18 +108,20 @@ public class TestMain {
 		    int count = 0;
 		    int printed = 0;
 		    String leadId = null, entropy = null;
-		    String size;
-	        line = br.readLine();
+		    String size="0";
+		    if(line.startsWith("leadId"))
+		    	line = br.readLine();
+		    
 	        System.out.println(line);
 		    while (line != null) {
 		        if(line.trim().equals(""))
 		        	continue;
 		        
-		    	StringTokenizer tk = new StringTokenizer(line, DELIMITER);
-		    	leadId = tk.nextToken();
-		    	entropy = tk.nextToken();
-		    	size = tk.nextToken();
-		    	size = tk.nextToken();
+		    	String[] tokens = line.split( Pattern.quote(DELIMITER) ) ;
+		    	leadId = tokens[0]; // tk.nextToken();
+		    	entropy = tokens[6]; //tk.nextToken();
+		    	size = tokens[7]; //tk.nextToken();
+		    	//size = tk.nextToken();
 		    	
 		    	Double entr = null;
 		    	Integer s = null;
@@ -83,7 +143,7 @@ public class TestMain {
 		        	System.out.println(e.getMessage());
 		        }
 
-		        if(entr != null && entr < 1.2 )
+		        if(entr != null && entr < 1.0 )
 		        	skip = true;
 		        
 		        if(s != null && s < 10 )
@@ -100,6 +160,7 @@ public class TestMain {
 		    
 		    
 		    br.close();
+		    out.close();
 		    System.out.println("count: " + count + " , printed: " + printed );
 		    
 		} catch (IOException e) {
