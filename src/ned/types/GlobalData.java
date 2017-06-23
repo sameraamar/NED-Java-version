@@ -24,13 +24,13 @@ public class GlobalData {
 	public static final String LAST_NUM_DOCS = "doc_count";
 	public static final String LAST_SEEN_IDX = "last_idx";
 	
-	private static final String K_ID2DOCUMENT = "id2doc" + V;
-	private static final String K_ID2WORD_COUNT = "id2word_counts" + V;
-	private static final String K_WORD2INDEX = "w2i" + V;
-	private static final String K_WORD2COUNTS = "w2c" + V;
-	private static final String K_RESUME_INFO = "resume" + V;
-	private static final String K_ID2CLUSTR_INFO = "id2cluster" + V;
-	private static final String K_CLUSTR2REPLCMENT = "replacement" + V;
+	public static final String K_ID2DOCUMENT = "id2doc" + V;
+	public static final String K_ID2WORD_COUNT = "id2word_counts" + V;
+	public static final String K_WORD2INDEX = "w2i" + V;
+	public static final String K_WORD2COUNTS = "w2c" + V;
+	public static final String K_RESUME_INFO = "resume" + V;
+	public static final String K_ID2CLUSTR_INFO = "id2cluster" + V;
+	public static final String K_CLUSTR2REPLCMENT = "replacement" + V;
 
 	public class Parameters 
 	{
