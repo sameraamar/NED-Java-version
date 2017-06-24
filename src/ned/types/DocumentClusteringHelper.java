@@ -1,195 +1,115 @@
 package ned.types;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ForkJoinPool;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import ned.tools.ExecutionHelper;
 
 public class DocumentClusteringHelper {
 	
-	private static void determineClosest3(Document doc, List<String> list)
-
+	
+	private static void determineClosest11(Document doc, List<String> list, Map<Integer, Double> word2idf)
 	{
-		ForkJoinPool forkJoinPool = GlobalData.getForkPool();
+		String id = doc.getId();
 		
-		forkJoinPool.execute(() ->
-		{
-			try {Stream<String> stream = list.parallelStream();
-				Optional<Object[]> nearest = stream.filter( rightId-> {
-							return ( doc.getId().compareTo(rightId) > 0 ) ;
-							} )
-					.map( rightId -> {
-						Document right = GlobalData.getInstance().getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
-						int i=0;
-						while(right==null) 
-						{
-							i++;
-							
-							right = GlobalData.getInstance().getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
-						}
-						Object[] result = { doc, new Double( Document.Distance(doc, right) ) };
-						return result;
-						} )
-					.reduce((a, b) -> {
-						if((Double)a[1] < (Double)b[1])
-							return a;
-						return b;
-					});
-				
-				
-				nearest.ifPresent(x -> {
-					doc.updateNearest((Document)x[0]);
-				});
-				
-				doc.setNearestDetermined(true);
-		        //update the document in redis with the update doc //setNearestDetermined
-				GlobalData.getInstance().setDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getId(), doc);
-		    } catch (Throwable thr) {
-				thr.printStackTrace();
-			}
-		});	
+		Iterator<String> iter = list.iterator();
+		Iterable<String> iterable = () -> iter;
+
+		Stream<String> stream = StreamSupport.stream(iterable.spliterator(), true);
+
+		stream.forEach(rightId->{
+		    if(rightId.compareTo(id) < 0)
+
+		    {
+			    DocumentWordCounts right = GlobalData.getInstance().id2wc.get(rightId);
+			    doc.updateNearest(right, word2idf);
+		    }
+		});
 	}
 	
-	private static void determineClosest2(Document doc, List<String> list)
-
+	private static void determineClosest(Document doc, List<String> list, Map<Integer, Double> word2idf)
 	{
-		//long base = System.currentTimeMillis();
-		GlobalData gd = GlobalData.getInstance();
-		list.parallelStream().filter( rightId-> {
-			
-			if(rightId==null)
-				System.out.println(">>>>>>>>>>>>>>>>>>>>>>> how can rightId be null");
-			
-			return ( doc.getId().compareTo(rightId) > 0 ) ;
-			} ).forEach(rightId-> {
-				
-				doc.updateNearest(gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId));
-			});
-		doc.setNearestDetermined(true);
-        gd.setDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getId(), doc);
-
-		//long ms = System.currentTimeMillis() - base;
-		//System.out.println("determineClosest: " + list.size() + " - " + ms + " ms.");
-	}
-	
-	
-	private static void determineClosest1(Document doc, List<String> list)
-	{
-		GlobalData gd = GlobalData.getInstance();
-		//double minDist = 1.0;
-		//Document nearest = null;
-		for (String rightId : list) {
-			
-			if(rightId == null)
-			{
-				System.out.println("WE HAVE A BUG>>>>>>>>> the rightId is null (determineClosets1)");
-				continue;
-			}
-			
-			if ( doc.getId().compareTo(rightId) <= 0 ) 
-				continue;
-			
-			Document right = gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
-
-			int i = 0;
-			if ( right == null )
-				continue;
-			
-			doc.updateNearest(right);
-			
+		String id = doc.getId();
+		
+		Iterator<String> iter = list.iterator();
+		while(iter.hasNext()){
+			String rightId = iter.next();
+		    if(rightId.compareTo(id) < 0)
+		    {
+		    	DocumentWordCounts right = GlobalData.getInstance().id2wc.get(rightId);
+				doc.updateNearest(right, word2idf);
+		    }
 		}
 		
 		
-		doc.setNearestDetermined(true);
-        gd.setDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getId(), doc);
+	/*
+		Object[] tmp = list.toArray();
+		for (int i=0; i<tmp.length; i++)
+		{
+			String rightId = (String)tmp[i];
+			if(rightId.compareTo(id) < 0)
+		    {
+		    	Document right = 		RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
+				doc.updateNearest(right);
+		    }
+		}
+		*/
 	}
 	
-	public static void postLSHMapping(Document doc, List<String> set)
+	public static void postLSHMapping(Document doc, List<String> set, Map<Integer, Double> word2idf)
 	{
-		long base = System.currentTimeMillis();
-		StringBuffer msg = new StringBuffer("time: to compare ");
+		RoundRobinArray<String> recent = GlobalData.getInstance().getRecentManager();
+		if(recent!=null)
+		{
+			int s = recent.size();
+			for(int i=0; i< s;i++)
+				set.add(recent.get(i));
+		}
+		DocumentClusteringHelper.determineClosest(doc, set, word2idf);
+		//DocumentClusteringHelper.determineClosest(doc, GlobalData.getInstance().getRecent());
 		//handle recent documents
-		
-
-        for(String s : set)
-        {
-        	if(s == null)
-        		System.out.println("DocumentClusterHelp.post(set): >>>>>>>>>>>>>>>>> something strange");
-        }
-		
-        
-        List<String> compare = new ArrayList<String>();
-        GlobalData.getInstance().recent.forEach(id -> compare.add(id));
-        
-        compare.addAll(set);
-        
-        
-		msg.append(compare.size()).append(" items. ");
-
-        msg.append(" concatenation: ").append(System.currentTimeMillis()-base).append("\t");
-         
-        doc.setCacheFlag(true);
-		
-        long milestone = System.currentTimeMillis();
-        if(compare.size() < 500)
-        	DocumentClusteringHelper.determineClosest1(doc, compare);
-        else
-        	DocumentClusteringHelper.determineClosest2(doc, compare);
-
-        msg.append(" Stream: ").append(System.currentTimeMillis()-milestone).append("\t");
-        
-		milestone = System.currentTimeMillis();
-		//DocumentClusteringHelper.determineClosest3(doc, compare);
-       // msg.append(" Fork+Stream: ").append(System.currentTimeMillis()-milestone).append("\t");
-        
-        doc.setCacheFlag(false);
-        
-        long time = System.currentTimeMillis() - base;
-        msg.append(" total: ").append(time).append("\t");
-        
-        //msg.append("java.util.concurrent.ForkJoinPool.common‌​.parallelism=").append(System.getProperty("java.util.concurrent.ForkJoinPool.common‌​.parallelism"));
-        
-		//System.out.println(msg.toString());
-	}
-
-	/*@SuppressWarnings("unchecked")
-	public static void searchInRecentDocuments(Document doc) 
-	{
-		GlobalData gd = GlobalData.getInstance();
-		DocumentClusteringHelper.determineClosest(doc, (List<String>)gd.recent.clone());
+		//searchInRecentDocuments(doc);
 	}
 	
-	public static void searchInRecentDocuments1(Document doc) 
+	/*public static void searchInRecentDocuments(Document doc) 
 	{
 		GlobalData gd = GlobalData.getInstance();
 		
 		//java.util.concurrent.ConcurrentLinkedDeque<Document> list = new java.util.concurrent.ConcurrentLinkedDeque<Document>();
-		Object[] tmp = gd.recent.toArray();  //TODO : This is not effecient
-		for (int i=0; i<tmp.length; i++)
-		//for (Document r : gd.recent)
-		{
-			Document r = (Document)tmp[i];
-			if ( doc.getId().compareTo(r.getId() ) <= 0 ) 
-				continue;
-
-			doc.updateNearest(r);
-		}
+		  List<String> tmp = gd.getRecent();
+		 
+		 
+		  for(String str:tmp){
+			  doc.updateNearest(str);
+		  }
+		  
+		//for (int i=0; i<tmp.length; i++)
+		//{
+		//	Document r = (Document)tmp[i];
+		//}
+		
 	}*/
 	
+
 	public static void mapToClusterHelper(Document doc)
 	{
 		GlobalData data = GlobalData.getInstance();
-		
-		Document nearest = null;
+
+		String nearest = null;
 		Double distance = null;
-		if (doc.getNearest() != null)
+		if (doc.getNearestId() != null)
 		{
-			 nearest = GlobalData.getInstance().getDocumentFromRedis(GlobalData.ID2DOCUMENT,doc.getNearest());
-
-
-			//nearest =  data.id2document.get(doc.getNearest());
+			nearest = doc.getNearestId();
 			distance = doc.getNearestDist();
 		}
 		
@@ -200,43 +120,134 @@ public class DocumentClusteringHelper {
 	
 		else if (distance > data.getParams().threshold)
 				createNewThread = true;
-
-			
+					
+		String targetCluster = null;
 		if (!createNewThread) 
 		{
-			DocumentCluster cluster = data.clusterByDoc(nearest.getId());
-			if (cluster != null && cluster.isOpen(doc))
-			{
-				cluster.addDocument(doc, nearest, distance);
-				data.mapToCluster(cluster.leadId, doc);
-				
-				//int idx = data.clusterIndexByDoc(nearest.getId());
-				//data.getId2Cluster().put(doc.getId(), idx);
-			}
-			else 
-			{
+			targetCluster = lookForCluster(doc, nearest);
+			
+			if (targetCluster == null)
 				createNewThread = true;
-			}
 		}
-		
-		if (createNewThread)
+
+		if(createNewThread)
 		{
 			data.createCluster(doc);
 		}
+		else
+		{
+			assert(targetCluster != null);
+			DocumentCluster cluster = data.clusterByDoc(targetCluster); 
+			cluster.addDocument(doc);
+			data.mapToCluster(cluster.leadId, doc);
+		}
 	}
+
+	private static String lookForCluster(Document doc, String nearest) {
+		String original = nearest;
+		while(true) 
+		{
+			if(nearest == null)
+			{
+				return null;
+			}
+			
+			GlobalData gd = GlobalData.getInstance();
+			String joinClusterId = gd.id2cluster.get(nearest);
+			
+			if(joinClusterId==null)
+			{
+				System.out.println("joinClusterId==null : " + nearest);
+			}
+			
+			DocumentCluster cluster = gd.clusterByDoc(joinClusterId);
+			if (cluster != null && cluster.isOpen(doc))
+			{
+				return cluster.leadId;
+			}
+			String replacement = gd.cluster2replacement.get(joinClusterId);
+			if(replacement == null || replacement.equals(joinClusterId)) 
+			{
+				gd.cluster2replacement.put(joinClusterId, doc.getId());
+				return null;
+			}
 	
+			nearest = replacement;
+		}		
+	}
+		
 	public static void pprint(PrintStream out)
 	{
+		Runnable task=()->{
 		GlobalData gd = GlobalData.getInstance();
 		
-		for (String leadId : gd.getId2Cluster().keySet())
+		for (String leadId : gd.id2cluster.keySet())
 		{
 			DocumentCluster c = gd.clusterByDoc(leadId);
 			if (c.size() > 1)
 			{
-				out.println(c.toString());
+				out.print(c.toString());
+				out.print("\n");
 			}
 		}
+		};
+		ExecutionHelper.asyncRun(task);
 	}
+	
+//	 public static <T> List<T> intersection(List<T> list1, List<T> list2) {
+//	        List<T> list = new ArrayList<T>();
+//	        for (T t : list1) {
+//	            if(list2.contains(t)) {
+//	                list.add(t);
+//	            }
+//	        }
+//
+//	        return list;
+//	}
+	
+	 public static <K, V> Set<K> intersection(Map<K, V> left, Map<K, V> right) 
+	 {
+		 if (left.size() > right.size())
+		 {
+			 Map<K, V> tmp = right;
+			 right = left;
+			 left = tmp;
+		 }
+        
+		 HashSet<K> intersection = new HashSet<K>();
+		 Set<K> lkeys = left.keySet();
+		 for (K key : lkeys) 
+		 {
+			 if (right.containsKey(key))
+			 {
+				 intersection.add(key);
+			 }
+		 }
+
+		 return intersection;
+	 }
+	 
+	 public static <K, V> Set<K> intersection(HashMap<K, V> left,HashMap<K, V> right) {
+		 if (left.size() > right.size())
+	        {
+			 	HashMap<K, V> tmp = right;
+				right = left;
+				left = tmp;
+	        }
+	        
+	        HashSet<K> intersection = new HashSet<K>();
+	        Set<Entry<K, V>> lkeys = left.entrySet();
+	        
+	        for (Entry<K, V> entry : lkeys) {
+	        	K k = entry.getKey();
+	        	if (right.containsKey(k))
+	            {
+					intersection.add(k);
+	            }
+			}
+	       
+
+	        return intersection;
+	    }
 	
 }

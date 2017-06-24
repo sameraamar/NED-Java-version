@@ -1,71 +1,78 @@
 package ned.main;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-
-import ned.hash.LSHForestAbstract;
-import ned.hash.LSHTable;
-import ned.hash.WorkerLSHTable;
-import ned.hash.WorkerPostLSH;
+import ned.hash.LSHForest;
 import ned.types.Document;
+import ned.types.GlobalData;
 
 public class DocumentProcessorExecutor {
 	private ExecutorService executor;
-	LSHForestAbstract forest;
+	private int number_of_threads;
+	LSHForest forest;
 	
-	public DocumentProcessorExecutor(LSHForestAbstract forest, int number_of_threads)
+	public DocumentProcessorExecutor(LSHForest forest, int number_of_threads)
 	{
 		this.forest = forest;
-		executor = Executors.newFixedThreadPool(number_of_threads);
+		this.number_of_threads = number_of_threads;
+		executor = Executors.newFixedThreadPool(number_of_threads);		
 	}
 	
-	public void submit(Document doc)
+	public void submit(Document doc, int idx)
 	{
-		WorkerThread worker = new WorkerThread(forest, doc);
+		WorkerThread worker = new WorkerThread(forest, doc, idx);
 		worker.preRun();
-		worker.run();
-		//executor.execute(worker);
+		//ExecutionHelper.asyncRun(worker);
+		
+		if(!GlobalData.getInstance().getParams().scan_mode_only)
+		{	
+			//worker.run();
+			executor.execute(worker);
+		}
 	}
 	
-	public Future<List<String>> addToLSH(LSHTable lshTable, Document doc) 
-	{
-		WorkerLSHTable worker = new WorkerLSHTable(lshTable, doc);
-		Future<List<String>> neighbors = executor.submit(worker);
-		return neighbors;
-	}
-	
-	public void postLSH(Document doc, List<String> neighbors)
-	{
-		Runnable worker = new WorkerPostLSH(doc, neighbors);
-		executor.execute(worker);
-	}
-	
-	public void await()
+	public boolean await()
 	{
 		try {
 			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+			return false;
 		}
+		
+		return true;
 	}
 	
 	public void shutdown()
 	{
-        System.out.println("Executer.shutdown(): stopping processing");
-
+		shutdown(executor);
+	}
+	
+	private void shutdown(ExecutorService executor)
+	{
 		executor.shutdown();
         while (!executor.isTerminated()) 
         {
+        	try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
         }
-        System.out.println("Executer.shutdown(): Finished all threads");
+        System.out.println("Finished all threads");
 	}
 
+	public void refresh()
+	{
+		System.out.println("Refresh the thread-executor manager!");
+		ExecutorService temp = executor;
+		executor = Executors.newFixedThreadPool(number_of_threads);
+		temp.shutdown();
+	}
+	
 	public ExecutorService getExecutor() 
 	{
 		return executor;
 	}
-
 }

@@ -1,72 +1,106 @@
 package ned.main;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Hashtable;
 import java.util.List;
-import java.util.concurrent.Future;
-import ned.hash.LSHForestAbstract;
+import java.util.Map;
+
+import ned.hash.LSHForest;
+import ned.tools.RedisAccessHelper;
 import ned.types.Document;
 import ned.types.DocumentClusteringHelper;
 import ned.types.GlobalData;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 public class WorkerThread implements Runnable 
 {
-	private Document doc;
-	private LSHForestAbstract forest;
-	ArrayList<Future<List<String>>> neighbors;
+	private static Boolean locker = true;
+	private static long time = 0;
+	public static int counter = 0;
+	public static int counter_all = 0;
+	private int idx;
 	
-    public WorkerThread(LSHForestAbstract forest, Document doc)
+	private Document doc;
+	private LSHForest forest;
+	public JedisPool jedisPool;
+	private int dimension;
+	
+    public WorkerThread(LSHForest forest, Document doc, int idx)
     {
         this.doc = doc;
+        this.idx = idx;
         this.forest = forest;
+        this.jedisPool = null;
     }
 
+    private static void updateTime(long ms) 
+    {
+    	synchronized(locker)
+    	{
+    		counter++;
+    		counter_all++;
+    		time+=ms;
+    	}
+    }
+    
+    public static String glance()
+    {
+    	synchronized (locker) {
+    		String msg = String.format("Total Processed: %d, AHT: %.2f, Group count: %d", counter_all, (1.0*time/counter), counter); 
+			return msg; //(1.0*time/counter);
+		}
+    }
+    
+
+	public static void resetCounter() {
+		synchronized(locker)
+    	{
+    		counter = 0;
+    		time = 0;
+    	}
+	}
+    
     @Override
     public void run() 
     {
-    	GlobalData gd = GlobalData.getInstance();
-		if (doc.getWords().size() > 0)
-		{
-	        //Step 2: Can be parallelized per table
-			long base = System.currentTimeMillis();
-			List<String> set  = forest.addDocument(this.doc);
-			//List<String> set = forest.processResults(neighbors, doc);
-			long time1 = System.currentTimeMillis() - base;
-			
-			base = System.currentTimeMillis();
-			//List<String> set  = forest.addDocument4(this.doc);
-			long time2 = System.currentTimeMillis() - base;
+    	long base = System.currentTimeMillis();
+        //this.jedisPool = RedisAccessHelper.createRedisConnectionPool();
 
-			//System.out.println("parallel - serial: " + (time2-time1));
-			
-			//Step 2.5: (nice to have) synchronized milestone
-
-			//Step 3: post LSH mapping
-			
-
-			//gd.executer.postLSH(doc, set);
-	        DocumentClusteringHelper.postLSHMapping(doc, set);
-		}
-		else{
-			this.doc.setNearestDetermined(true);
-	        //update the document in redis with the update doc //setNearestDetermined
-	        gd.setDocumentFromRedis(GlobalData.ID2DOCUMENT, doc.getId(), doc);
-		}
-	}
-    
-    public void preRun()
-    {
-    	GlobalData gd = GlobalData.getInstance();
-
-    	//Step 1: (after parse) should be in main thread (chronological order)
-    	gd.addDocument(doc);
-    	
-        //Step 2: Can be parallelized per table
-		//neighbors  = forest.addDocumentFuture(this.doc);
+        processCommand();
+        //this.jedisPool.destroy();
+        this.jedisPool = null;
+        updateTime(System.currentTimeMillis() - base);
     }
-    
+
+    private void processCommand() 
+    {
+		if (doc.getWords().size() == 0)
+		{
+	        this.doc.setNearestDetermined( true);
+			return;
+		}
+    	Map<Integer, Double> word2idf = new Hashtable<Integer, Double>();
+    	
+		//JedisPool jedisPool = RedisAccessHelper.createRedisConnectionPool();
+    	//GlobalData.getInstance().thread2redis.put(Thread.currentThread().getName(), jedisPool);
+    	
+    	List<String> set = forest.addDocument(this.doc, this.dimension, word2idf);
+
+    	DocumentClusteringHelper.postLSHMapping(this.doc, set, word2idf);
+    	this.doc.setNearestDetermined( true);
+
+        //DocumentClusteringHelper.mapToClusterHelper(doc);
+    	//GlobalData.getInstance().thread2redis.remove(Thread.currentThread().getName());
+    	//jedisPool.destroy();
+    }
+
     public Document getDocument()
 	{
         return this.doc;
     }
+
+	public void preRun() {
+		dimension = GlobalData.getInstance().addDocument(doc, idx);
+	}
+
 }

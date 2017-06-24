@@ -6,9 +6,13 @@ import java.util.Random;
 import java.util.Set;
 
 final public class Utility {
+	private static Random rand = new Random(1000000);
 
+	private Utility()
+	{
+	}
+    
 	public static double randomFill(){
-        Random rand = new Random();
         double randomNum = 2.0 * rand.nextDouble() - 1.0;
         return randomNum;
     }
@@ -60,6 +64,10 @@ final public class Utility {
 		s.add(8);
 		s.add(6);
 		s.add(9);
+		
+		System.out.println("numbers");
+		for(int i=0;i<10;i++)
+			System.out.println( randomFill() );
 		
 		System.out.println(s);
 	}

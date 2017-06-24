@@ -1,21 +1,21 @@
 package ned.main;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
-import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ned.hash.LSHForest;
-import ned.hash.LSHForestAbstract;
-import ned.hash.LSHForestParallel;
+import ned.tools.ExecutionHelper;
+import ned.tools.RedisAccessHelper;
 import ned.types.Document;
 import ned.types.DocumentClusteringThread;
 import ned.types.GlobalData;
@@ -25,91 +25,153 @@ import ned.types.Utility;
 public class AppMain {
 
 		
-	private static LSHForestAbstract forest;
-	private static ExecutorMonitorThread threadMonitor;
+	private static LSHForest forest;
+	private static DocumentProcessorExecutor executer;
+	private static MyMonitorThread threadMonitor;
 	private static DocumentClusteringThread clustering;
-	
+	private static PrintStream outFull;
+	private static PrintStream outShort;
+	private static String outfolder;
 
-	public static void main(String[] args) throws IOException
+	public static void release()
 	{
-		GlobalData gd = GlobalData.getInstance();
-		try {			
-			Hashtable<String, String> arguments = new Hashtable<String, String>();
-			
-			if(args.length > 0 && args[0] == "-help")
-			{
-				System.out.println("-ifolder <input-folder> -ofolder <output-folder> -threads <threads-file-name>");
-				return;
+		forest = null;
+		executer = null;
+		threadMonitor = null;
+		clustering = null;
+	}
+
+	public static void main(String[] args) throws Exception 
+	{
+		try {
+			GlobalData gd = GlobalData.getInstance();
+			RedisAccessHelper.initRedisConnectionPool();
+			while(!RedisAccessHelper.ready){
+				System.out.print('.');
+				Thread.sleep(100);
 			}
-			
-			for (int i=0; i<args.length; i++)
+
+			if(args.length > 0)
 			{
-				if(args[i].startsWith("-"))
+			
+				int o = Integer.parseInt(args[0]);
+				int max = Integer.parseInt(args[1]);
+				boolean resume = Boolean.parseBoolean(args[2]);
+				int dimension = Integer.parseInt(args[3]);
+				
+				gd.getParams().offset = o ;
+				gd.getParams().max_documents = max;
+				gd.getParams().resume_mode = resume;
+				gd.getParams().inital_dimension = dimension;
+				//System.out.println(String.format("Run: offset %d,  max-doc %d, resume? = %b, dim? = %d", o, max, resume, dimension));
+			}			
+			
+			gd.init();
+
+			ExecutionHelper.setCommonPoolSize();
+			
+			
+			createOutFolder();
+			openOutput(0);
+
+			if(gd.getParams().resume_mode) 
+			{
+				int n = gd.resumeInfo.get(GlobalData.LAST_DIMENSION);
+				if(gd.getParams().inital_dimension < n)
 				{
-					arguments.put(args[i], args[++i]);
+					if( n % gd.getParams().dimension_jumps != 0 )
+						n = gd.getParams().dimension_jumps * (n / gd.getParams().dimension_jumps + 1);
+					
+					gd.getParams().inital_dimension = n;
 				}
 			}
 			
-			String inputFolder = "/Users/ramidabbah/private/mandoma/samer_a/data";
-			if (System.getProperty("os.name").startsWith("Windows"))
-				inputFolder = "C:\\data\\events_db\\petrovic";
-			
-			
-			inputFolder = arguments.getOrDefault("-ifolder", inputFolder);
-			int documentNumber = Integer.parseInt( arguments.getOrDefault("-max_doc", gd.getParams().max_documents+"") );
-			gd.getParams().max_documents = documentNumber;
-			
-			
-			String outputFolder = arguments.getOrDefault("-ofolder", inputFolder + "/out");
-
-			String threadsFileName = outputFolder + "/" + arguments.getOrDefault("-threads", "threads.txt" );
-
-			System.out.println("Max documents:" + gd.getParams().max_documents);
-			System.out.println("input folder:" + inputFolder);
-			System.out.println("thread file:" + threadsFileName);
-
-			PrintStream out = new PrintStream(new FileOutputStream(threadsFileName));
-			
-			/*forest = new LSHForestParallel(gd.getParams().number_of_tables, 
-					 gd.getParams().hyperplanes, 
-					 gd.getParams().inital_dimension, 
-					 gd.getParams().max_bucket_size);
-			*/
 			forest = new LSHForest(gd.getParams().number_of_tables, 
 					 gd.getParams().hyperplanes, 
 					 gd.getParams().inital_dimension, 
-					 gd.getParams().max_bucket_size);
-				 
-			gd.executer = new DocumentProcessorExecutor(forest, gd.getParams().number_of_threads);
-	    	clustering = new DocumentClusteringThread(out);
+					 gd.getParams().max_bucket_size);	
+			
+			String filename = outfolder + "/params.txt";
+			PrintStream paramsOut = new PrintStream(new FileOutputStream(filename));
+			printParameters(System.out);
+			printParameters(paramsOut);
+			paramsOut.close();
+			
+			executer = new DocumentProcessorExecutor(forest, gd.getParams().number_of_threads);
+	    	clustering = new DocumentClusteringThread(outFull, outShort);
 
 	    	Session.getInstance().message(Session.ERROR, "Reader", "Starting Monitor...");
 			int delay = gd.getParams().monitor_timer_seconds; //seconds
-			threadMonitor  = new MyMonitorThread(gd.executer.getExecutor(), delay);
+			threadMonitor  = new MyMonitorThread(executer, delay);
 
-			doMain(out, inputFolder);
+			doMain();
 			
-			out.close();
+			outFull.close();
+			outShort.close();
 			
 		} catch(Exception e) {
 			e.printStackTrace();
+			throw e;
 		} finally {
 
-			
-			if ( gd.executer != null )
-				gd.executer.shutdown();
-			
-			if (threadMonitor != null)
-				threadMonitor.shutdown();
-						
 			if ( clustering != null )
+			{
+		    	Session.getInstance().message(Session.INFO, "Main", "Waiting for clustering thread to finish...");
 				clustering.shutdown();
-
+				while(clustering.isAlive())
+					;
+			}
+			if (threadMonitor != null) {
+				threadMonitor.shutdown();
+				while(threadMonitor.isAlive())
+				{
+					try {
+						Thread.sleep(50);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			
+			release();
 		}
 	}
 
-	public static void doMain(PrintStream out, String inputFolder) throws IOException {
+	private static void createOutFolder() {
 		GlobalData gd = GlobalData.getInstance();
+		String folder = "../temp";
+		if(Session.getMachineName().indexOf("saaama") >= 0)
+			folder  = "c:/temp";
+		
+		folder = folder + "/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset;
+
+		File theDir = new File(folder);
+	
+		// if the directory does not exist, create it
+		if (!theDir.exists()) {
+		    System.out.println("creating directory: " + theDir.getAbsolutePath());
+
+		    theDir.mkdir();
+		}
+		
+		outfolder = folder;
+	}
+
+	private static void openOutput(int index) throws FileNotFoundException {
+		
+		String roll = String.format("%03d", index);
+		String threadsFileNameFull = outfolder + "/full_"+roll+".txt";
+		String threadsFileNameShort = outfolder +"/short_"+roll+".txt";
+		outFull = new PrintStream(new FileOutputStream(threadsFileNameFull));
+		outShort = new PrintStream(new FileOutputStream(threadsFileNameShort));
+	}
+
+	public static void doMain() throws IOException {
+		GlobalData gd = GlobalData.getInstance();
+		
+		String folder = "../data";
+		if(Session.getMachineName().indexOf("saaama") >= 0)
+			folder  = "c:/data/events_db/petrovic";
 		
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
@@ -174,6 +236,7 @@ public class AppMain {
 	                   };
 		//files = new String[] {"test.json.gz"};
 
+
 		int processed = 0;
 		int middle_processed = 0;
 		int cursor = 0;
@@ -183,38 +246,36 @@ public class AppMain {
 		long firstdoc = 0;
 		long lastdoc;
 
-		printParameters(out);
-
+		//printParameters(out);
 
 		//CleanupThread thread = new CleanupThread(out);
 		//threadsFileName.isDaemon(true);
 		//thread.start();
 		threadMonitor.start();
-    	Session.getInstance().message(Session.ERROR, "Reader", "monitoring thread started");
+    	Session.getInstance().message(Session.ERROR, "Reader", "Loading data...");
 
     	clustering.start();
-    	Session.getInstance().message(Session.INFO, "Reader", "clustering thread started");
 
- 		System.setProperty("java.util.concurrent.ForkJoinPool.common‌​.parallelism", "2000");
-    	
-		int offset = gd.getParams().offset;
+    	int offset = gd.getParams().offset;
+		int skip_files = (offset / 500_000);
+		offset = offset % 500_000;
+		int fileidx = -1;
+		
 		int offset_p = (int)(offset * 0.05);
 		boolean flushData = false;
-		int fileidx = -1;
 		for (String filename : files) {
-			fileidx ++;
-			
+			fileidx++;
 			if (stop)
 				break;
 			
-	    	Session.getInstance().message(Session.INFO, "Reader", "reading from file: " + filename);
-			if(fileidx < gd.getParams().skip_files)
+			if(fileidx < skip_files)
 			{
-            	Session.getInstance().message(Session.INFO, "Reader", "Skipping file " + fileidx );
+            	Session.getInstance().message(Session.INFO, "Reader", "Skipping file " + fileidx + ": " + filename);
 				continue;
 			}
-			
-			GZIPInputStream stream = new GZIPInputStream(new FileInputStream(inputFolder + "/" + filename));
+	    	Session.getInstance().message(Session.INFO, "Reader", "reading from file: " + filename);
+
+			GZIPInputStream stream = new GZIPInputStream(new FileInputStream(folder + "/" + filename));
 			Reader decoder = new InputStreamReader(stream, "UTF-8");
 			BufferedReader buffered = new BufferedReader(decoder);
 			
@@ -232,69 +293,129 @@ public class AppMain {
 					continue;
 				}
 				
-				Document doc = Document.parse(line, true);
-				if(doc == null)
-					continue;
+				Document doc = Document.createOrGetDocument(line);
+				GlobalData.getInstance().getQueue().add(doc.getId());
 				
-				synchronized (gd.queue) 
-				{
-					gd.queue.add(doc.getId());
-				}
-								
-				gd.executer.submit(doc);
+	            int idx = gd.getParams().offset+processed;
+				executer.submit(doc, idx);
 				
 	            processed ++;
 	            middle_processed++;
-
+	            idx++;
+	            
+	            
 	            if (processed % (gd.getParams().print_limit) == 0)
 	            {
-	            	//gd.flushClusters(out);
-	        		long tmp = System.nanoTime() - middletime;
+	            	//if(GlobalData.getInstance().getQueue().size() > 25000)
+		            //{
+		            //	executer.refresh();
+		            //}
+		            	        		
+	            	long currenttime = System.nanoTime();
+	        		long tmp = currenttime - middletime;
 	            	double average2 = 1.0 * TimeUnit.NANOSECONDS.toMillis(tmp) / middle_processed;
 	            	average2 = Math.round(100.0 * average2) / 100.0;
 	            	
 	            	StringBuffer msg = new StringBuffer();
 	            	msg.append( "Processed " ).append ( processed ).append(" docs. ");
-	            	long seconds = TimeUnit.NANOSECONDS.toSeconds( System.nanoTime() - base);
+	            	long seconds = TimeUnit.NANOSECONDS.toSeconds( currenttime - base );
+	            	long milliseconds = TimeUnit.NANOSECONDS.toMillis( currenttime - base );
 	            	msg.append(" elapsed time: ").append(Utility.humanTime(seconds));
 	            	msg.append("(AHT: ").append(average2).append(" ms). ");
+//	            	//msg.append("Cursor: ").append(doc.getId());
 	            	msg.append("Dim: ").append( forest.getDimension() );
+	            	if(clustering.clusteredCounter > 0)
+	            	{
+	            		String ahtStr = String.format(". Finalized %d docs, ms/doc: %.3f", clustering.clusteredCounter, 1.0 * milliseconds / clustering.clusteredCounter);
+	            		msg.append( ahtStr ).append(" ms");
+	            	}
 	            	
 	            	Session.getInstance().message(Session.INFO, "Reader", msg.toString());
 	            	
+	            	flushData = processed % (2*gd.getParams().print_limit) == 0;
+	            	if(flushData)
+	            	{
+	            		//executer.await();
+	        			//DocumentHandler.waitForSuProcesses();
+	            		//Session.getInstance().message(Session.DEBUG, "Reader", "doing some cleanup...");
+	            		//gd.flushClusters(out);
+	            		flushData = false;
+	            	}
+
             		middletime = System.nanoTime();
             		middle_processed = 0;
 	            }
 	            
+	            //if (processed % (gd.getParams().print_limit* 40) == 0){
+	            //	System.out.println("GC submited");
+	            //	System.gc();
+	            //}
+	            
+	            
 	            if (processed == gd.getParams().max_documents)
 	            	stop = true;
 	            
+	            if (!stop && (processed % gd.getParams().roll_file == 0))
+	            {
+	            	waitForClusteringQueue();
+	            	PrintStream tmpOut1 = outFull;
+	            	PrintStream tmpOut2 = outShort;
+	            	openOutput(processed / gd.getParams().roll_file);
+	            	clustering.setOutput(outFull, outShort);
+	            	tmpOut1.close();
+	            	tmpOut2.close();
+	            }
+		            
+	            if (stop || (processed % (gd.getParams().print_limit * 100) == 0))
+	            {
+	            	int lastIndex = gd.resumeInfo.get(GlobalData.LAST_SEEN_IDX);
+
+	            	waitForClusteringQueue();
+	            	
+	            	System.out.println("clear memory to redis...");
+	            	gd.save(lastIndex <= idx);
+	            		            	
+	            	//if (stop || processed % (gd.getParams().print_limit* 20) == 0)
+	            	//	RedisAccessHelper.initRedisConnectionPool(true);
+	            }
+	            
 	            line=buffered.readLine();
 	        }
+			
+			
+			
 			buffered.close();
 	        
 		}
 		
+		//wait till all processes finish
+		executer.shutdown();
+		ExecutionHelper.shutdown();
+		
+		Session.getInstance().message(Session.INFO, "Summary", "wait till all processes finish");
 
 		long current = System.nanoTime();
-		//wait till all processes finish
-		gd.executer.shutdown();
-    	Session.getInstance().message(Session.INFO, "Main", "Waiting for clustering thread to finish...");
-
-    	if(clustering!=null)
-    		clustering.shutdown();
-    	
-    	if(gd.clusters.size() > 0)
-    		System.out.println("!!!! not all clusters were saved. Still in memory: " + gd.clusters.size());
-    	
-    	gd.flushClustersAll(out);
-
 		long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);
 		Session.getInstance().message(Session.INFO, "Summary", "Done in " + Utility.humanTime(seconds) );
 	}
-	
 
-	
+	private static void waitForClusteringQueue() {
+		System.out.println("Wait for queue to get empty!");
+		while(!GlobalData.getInstance().getQueue().isEmpty())
+		{
+			try {
+				if(clustering.isInterrupted()|| clustering.isStop()){
+					clustering.setStop(false);
+					clustering.resume();
+				}
+				
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+		
 	private static void printParameters(PrintStream out) 
 	{
 		GsonBuilder gson = new GsonBuilder();

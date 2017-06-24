@@ -1,5 +1,8 @@
 package ned.types;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class Session {
 	public static final int ERROR=0;
 	public static final int INFO=1;
@@ -10,11 +13,6 @@ public class Session {
 	
 	//singleton
 	private static Session instance;
-	
-	public boolean isDebugMode()
-	{
-		return this.logLevel >= DEBUG;
-	}
 	
 	public static Session getInstance() { 
 		if (instance == null)
@@ -36,6 +34,23 @@ public class Session {
 			return;
 		
 		System.out.println(msg);
+	}
+	
+	public static String getMachineName()
+	{
+		String hostname = "Unknown";
+
+		try
+		{
+		    InetAddress addr;
+		    addr = InetAddress.getLocalHost();
+		    return addr.getHostName().toLowerCase();
+		}
+		catch (UnknownHostException ex)
+		{
+		    System.out.println("Hostname can not be resolved");
+		}		
+		return "";
 	}
 	
 }

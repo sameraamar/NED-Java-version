@@ -1,73 +1,98 @@
 package ned.main;
 
-import java.io.PrintStream;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-import ned.types.Document;
+import ned.tools.RedisAccessHelper;
 import ned.types.GlobalData;
 import ned.types.Session;
+import ned.types.Utility;
 
-public class MyMonitorThread extends ExecutorMonitorThread
+public class MyMonitorThread extends Thread
 {
-    private boolean flush=false;
-    private PrintStream out;
+    private DocumentProcessorExecutor executor;
+    private int seconds;
+    private long starttime;
 
-    public MyMonitorThread(ExecutorService executorService, int delay)
+    private boolean stop=false;
+
+    public MyMonitorThread(DocumentProcessorExecutor executorService, int delay)
     {
-        super(executorService, delay);
+        this.executor = executorService;
+        this.seconds=delay;
     }
     
+    public MyMonitorThread(int delay)
+    {
+        this.executor = null;
+        this.seconds=delay;
+    }
+
+    public void shutdown() {
+    	Session.getInstance().message(Session.INFO, "[monitor]", "request to shutdown");
+        this.stop=true;
+    }
+
     @Override
-    protected void printHook() {
-		GlobalData gd = GlobalData.getInstance();
-		Session.getInstance().message(Session.INFO, "[monitor]", gd.memoryGlance());
+    public void run()
+    {
+    starttime = System.nanoTime();
+        while(!stop){
+            /*System.out.println(
+                    String.format("[monitor] [%d/%d] Active: %d, Completed: %d, Task: %d, isShutdown: %s, isTerminated: %s",
+                        this.executor.getPoolSize(),
+                        this.executor.getCorePoolSize(),
+                        this.executor.getActiveCount(),
+                        this.executor.getCompletedTaskCount(),
+                        this.executor.getTaskCount(),
+                        this.executor.isShutdown(),
+                        this.executor.isTerminated()));
+                */
+        
+        GlobalData gd = GlobalData.getInstance();
 
-		StringBuffer msg = new StringBuffer();
-		msg.append("\tn('i')=").append(gd.numberOfDocsIncludeWord.get(gd.word2index.getOrDefault("i",-1)));
-		msg.append(String.format("  idf('i')==%.5f", gd.getIDFOrDefault(gd.word2index.getOrDefault("i",-1))));
-		msg.append(String.format(", idf('rt')==%.5f", gd.getIDFOrDefault(gd.word2index.getOrDefault("rt",-1))));
-		msg.append(String.format(", idf('ramadan')=%.5f", gd.getIDFOrDefault(gd.word2index.getOrDefault("ramadan",-1))));
-		msg.append(String.format(", idf('amy')==%.5f", gd.getIDFOrDefault(gd.word2index.getOrDefault("amy",-1))));
-		msg.append(String.format(", idf('winehouse')==%.5f", gd.getIDFOrDefault(gd.word2index.getOrDefault("winehouse",-1))));
-		msg.append(", Queue: ").append(gd.queue.size()).append(". ID: ").append(gd.queue.peek());
-		msg.append("\n\t");
-		msg.append("Common Paral.=").append(ForkJoinPool.getCommonPoolParallelism());
-		msg.append(", ForkPool.StealCount=").append(GlobalData.getForkPool().getStealCount());
-		msg.append(", ForkPool.Actives=").append(GlobalData.getForkPool().getActiveThreadCount());
-		msg.append(", ForkPool.Running=").append(GlobalData.getForkPool().getRunningThreadCount());
-		msg.append(", ForkPool.Submitted=").append(GlobalData.getForkPool().getQueuedSubmissionCount());
-		msg.append(", ForkPool.Queued=").append(GlobalData.getForkPool().getQueuedTaskCount());
-		
-		Session.getInstance().message(Session.INFO, "[monitor]", msg.toString());
-		
-		msg = new StringBuffer();
-		if(gd.recent!=null && gd.recent.size()>1)
-		{
-			Document doc = gd.getDocumentFromRedis(GlobalData.ID2DOCUMENT, gd.recent.get(gd.recent.size()-1));
-			if(doc != null)
-				msg.append("\tlast document time: " ).append(doc.getCreatedAt()).append("\n");
-		}
-		Session.getInstance().message(Session.INFO, "[monitor]", msg.toString());
-        
-        
-        if(flush)
-        {
-    		Session.getInstance().message(Session.INFO, "[monitor]", "doing some cleanup...");
-    		
-    		gd.markOldClusters(gd.recent.get(0));
-    		gd.flushClusters(out);
-    		//System.gc();
-        	flush = false;
+    		Session.getInstance().message(Session.INFO, "[monitor]", gd.memoryGlance());
+    				
+        	long delta =  System.nanoTime()-starttime;
+        	delta = TimeUnit.NANOSECONDS.toSeconds(delta);
+        	String waht = WorkerThread.glance();
+        	//if(waht>500){
+        	//	System.out.println("GC Run");
+        	//	System.gc();
+        	//}
+
+            StringBuffer msg = new StringBuffer();
+            msg.append("\tActive Redis Connections: ").append(RedisAccessHelper.getNumActive()).append("\n");
+            msg.append("\tElapsed time: ").append(Utility.humanTime(delta));
+            msg.append(", Worker AHT: ").append(waht).append("\n\t");
+            WorkerThread.resetCounter();
+            if (executor != null)
+	        {
+	        String str = this.executor.getExecutor().toString();
+	        str = str.substring(str.indexOf('[')+1, str.indexOf(']'));
+	        msg.append( "[monitor]").append( "\t" + str).append("\n") ;  
+	        }
+	        
+	        try {            
+	            msg.append("\tidf('winehouse')=").append(gd.calcIDF(gd.word2index.getOrDefault("winehouse",-1)));
+	            msg.append(", idf('the')=").append(gd.calcIDF(gd.word2index.getOrDefault("the",-1)));
+	            msg.append(", idf('rt')=").append(gd.calcIDF(gd.word2index.getOrDefault("rt",-1)));
+	            msg.append(", idf('ramadan')=").append(gd.calcIDF(gd.word2index.getOrDefault("ramadan",-1)));
+	        } catch (NullPointerException e) {
+	        }
+	
+            msg.append("\n");
+            msg.append("\tQueue: ").append(gd.getQueue().size()).append(", ID=").append(gd.getQueue().peek());
+	        Session.getInstance().message(Session.INFO, "[monitor]", msg.toString());
+	                
+	        try {
+	                Thread.sleep(seconds*1000);
+	        } catch (Exception e) {
+	            Session.getInstance().message(Session.INFO, "[monitor]", "Exception");
+	            e.printStackTrace();
+	        }
         }
-     
-	}
 
+    }
 
-	public void flush(PrintStream out) 
-	{
-		this.out = out;
-		flush = true;
-	}
 }

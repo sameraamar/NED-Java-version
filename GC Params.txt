@@ -1,0 +1,1 @@
+-XX:+PrintGC -XX:+UseParallelGC -Xms30000m

@@ -1,155 +1,214 @@
-package ned.hash;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.List;
-
-import ned.types.Document;
-import ned.types.GlobalData;
-import ned.types.Session;
-import ned.types.Utility;
-
-public class LSHTable
-{
-    private int maxBucketSize ;
-    private int hyperPlanesNumber;
-    private int dimension;
-    
-    private ArrayList<Double>[] hyperPlanes = null;
-    private java.util.Dictionary<String, Bucket> buckets = null;
-    
-    public LSHTable(int hyperPlanesNumber, int dimension, int maxBucketSize)
-    {
-    	this.hyperPlanesNumber = hyperPlanesNumber;
-        buckets = new Hashtable<String, Bucket>();
-        this.maxBucketSize = maxBucketSize;
-        this.dimension = dimension;
-        GenerateHyperPlanes();
-    }
-
-    private void GenerateHyperPlanes() 
-    {
-    	if (getHyperPlanes() == null) {
-			ArrayList[] arrayLists = new ArrayList[hyperPlanesNumber];
-			hyperPlanes = arrayLists;
-		}
-    	
-    	for (int i = 0 ; i<hyperPlanesNumber; i++)
-    	{
-    		getHyperPlanes()[i] = new ArrayList<Double>();
-    		for (int j = 0 ; j<dimension; j++)
-    		{
-        		getHyperPlanes()[i].add( Utility.randomFill() );
-    		}
-    	}
-    }
-
-    synchronized private void FixDimension(int newDimension) 
-    {
-    	if (dimension > newDimension)
-    		return;
-    	
-    	newDimension = dimension + GlobalData.getInstance().getParams().dimension_jumps;
-    	
-		Session.getInstance().message(Session.DEBUG, "FixDimension", "Fixing to a new dimension: " + newDimension);
-    	
-    	int delta = newDimension - dimension;
-    	for (int i = 0 ; i<hyperPlanesNumber; i++)
-    	{
-    		for (int j = 0 ; j<delta; j++)
-    		{
-        		getHyperPlane(i).add( Utility.randomFill() );
-    		}
-    	}
-    	
-    	dimension = newDimension;
-    }
-    
-    private String GenerateHashCode(Document doc)
-    {
-    	StringBuffer st = new StringBuffer();
-    	Session session = Session.getInstance();
-    	
-    	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
-    	Hashtable<Integer, Double> weights = doc.getWeights();
-		if (doc.getMaxWordIndex() >= this.dimension) 
-		{
-			this.FixDimension(doc.getMaxWordIndex());
-		}
-		
-		int doubleScale = GlobalData.getInstance().getParams().DOUBLE_SCALE;
-    	for (int i = 0 ; i<hyperPlanesNumber; i++)
-    	{
-    		double tmp = 0;
-
-			for (Integer j : weights.keySet()) 
-    		{
-    			tmp += weights.get(j) * getHyperPlane(i).get(j);
-    		}
-
-			if(doubleScale>0)
-				tmp = BigDecimal.valueOf(tmp).setScale(doubleScale, RoundingMode.HALF_UP).doubleValue();
-			
-    		st.append( tmp>=0 ? "1" : "0" );
-    	}
-    	
-        return st.toString();
-    }
-
-    public List<String> AddDocument(Document doc)
-    {
-        String code = GenerateHashCode(doc);
-        if (buckets.get(code) == null)
-            buckets.put(code, new Bucket(maxBucketSize));
-
-        buckets.get(code).Append(doc);
-
-        return buckets.get(code).getDocIDsList(doc.getId());
-    }
-    
-    public String toString() 
-    {
-    	StringBuffer sb = new StringBuffer();
-    	/*
-    	for (ArrayList<Double> arrayList : hyperPlanes) {
-    		sb.append("[");
-			for (Double d : arrayList) {
-				sb.append(d + ",");
-			}
-			sb.append("]\n");
-    	}
-    	*/
-    	sb.append(buckets.toString().replaceAll("}], ", "}],\n"));
-    	sb.append("\n");
-    	return sb.toString();
-    }
-
-	public int getMaxBucketSize() {
-		return maxBucketSize;
-	}
-
-	private void setMaxBucketSize(int maxBucketSize) {
-		this.maxBucketSize = maxBucketSize;
-	}
-
-	public ArrayList<Double> getHyperPlane(int i)
-	{
-		return this.hyperPlanes[i];
-	}
+	package ned.hash;
 	
-	public int getHyperPlanesNumber() {
-		return hyperPlanesNumber;
+	
+	import java.util.HashMap;
+	import java.util.List;
+	import java.util.Map;
+	import java.util.Map.Entry;
+	import java.util.Set;
+	import java.util.stream.IntStream;
+	
+	import ned.tools.HyperPlansManager;
+	import ned.types.Document;
+	import ned.types.DocumentWordCounts;
+	import ned.types.GlobalData;
+	import ned.types.RoundRobinArray;
+	import ned.types.Session;
+	
+	public class LSHTable
+	{
+	    private int maxBucketSize ;
+	    private int hyperPlanesNumber;
+	    //private int dimension;
+	    private int tableId;
+	    public  Boolean fixingDim=false;
+	    
+	    private HyperPlansManager hyperPlanes;
+	    private HashMap<Long, RoundRobinArray<String>> buckets = null;
+	    
+	    public LSHTable(int tableId,int hyperPlanesNumber, int dimension, int maxBucketSize)
+	    {
+	    	this.tableId=tableId;
+	    	this.hyperPlanesNumber = hyperPlanesNumber;
+	        buckets = new HashMap<Long, RoundRobinArray<String>>(maxBucketSize);
+	        this.maxBucketSize = maxBucketSize;
+			hyperPlanes = new HyperPlansManager(hyperPlanesNumber, dimension, GlobalData.getInstance().getParams().dimension_jumps);
+	    }
+	
+	    public void init()
+	    {
+	    	hyperPlanes.init();
+	    }
+	    
+	     private long GenerateHashCode(Document doc, int dim, Map<Integer, Double> word2idf)
+	     {
+	     	
+	     	boolean[] st = new boolean [hyperPlanesNumber];
+	     	Session session = Session.getInstance();
+	     	
+	     	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
+	     	DocumentWordCounts dwc = GlobalData.getInstance().id2wc.get( doc.getId() );
+	     	Map<Integer, Double> weights = dwc.getWeights(word2idf);
+	     	hyperPlanes.fixDim(dim);
+	 		
+	 		for (int i = 0 ; i<hyperPlanesNumber; i++)
+	    	{
+	    		double tmp = 0;
+	    		Set<Entry<Integer, Double>> es = weights.entrySet();
+				for (Entry<Integer, Double> entry : es) 
+	    		{
+					try {
+	    			tmp += entry.getValue() * hyperPlanes.get(i, entry.getKey());
+					} catch(ArrayIndexOutOfBoundsException e)
+					{
+						System.out.println( "doc dimension: " + dim + " this.fixingDim = ");
+						throw e;
+					}
+	    		}
+				session.message(Session.DEBUG, "GenerateHashCode", ""+ tmp);
+	
+				st[i]=( tmp>=0 ? true : false );
+	    		session.message(Session.DEBUG, "GenerateHashCode", "\nLOG");
+	    	}
+	 		long res=convertBooleanArrayToLong(st);
+	         return res;
+	     }
+	     private long GenerateHashCode01(Document doc, int dim, Map<Integer, Double> word2idf)
+	     {
+	     	
+	     	boolean[] st = new boolean [hyperPlanesNumber];
+	     	Session session = Session.getInstance();
+	     	
+	     	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
+	     	DocumentWordCounts dwc = GlobalData.getInstance().id2wc.get( doc.getId() );
+	     	Map<Integer, Double> weights = dwc.getWeights(word2idf);
+	     	Set<Entry<Integer, Double>> es = weights.entrySet();
+	     	hyperPlanes.fixDim(dim);
+	     	IntStream.range(0, hyperPlanesNumber).forEach(i->
+	    	{
+	    		double tmp = 0;    		
+				for (Entry<Integer, Double> entry : es) 
+	    		{
+					try {
+	    			tmp += entry.getValue() * hyperPlanes.get(i, entry.getKey());
+					} catch(ArrayIndexOutOfBoundsException e)
+					{
+						System.out.println( "doc dimension: " + dim + " this.fixingDim = ");
+						throw e;
+					}
+	    		}
+				session.message(Session.DEBUG, "GenerateHashCode", ""+ tmp);
+	
+				st[i]=( tmp>=0 ? true : false );
+	    		session.message(Session.DEBUG, "GenerateHashCode", "\nLOG");
+	    	});
+	 		long res=convertBooleanArrayToLong(st);
+	         return res;
+	     }
+	     
+	     private long convertBooleanArrayToLong(boolean[] st){
+	     	long res=0;
+	     	for (int i = 0 ; i<hyperPlanesNumber; i++){
+	     		if(st[i]){
+	     			res+=Math.pow(2,i);
+	     		}
+	     		
+	     	}
+	 		return res;
+	     	
+	     }
+	
+	     /*
+		private String GenerateHashCode_orig(Document doc)
+	    {
+	    	StringBuffer st = new StringBuffer();
+	    	Session session = Session.getInstance();
+	    	
+	    	session.message(Session.DEBUG, "GenerateHashCode", doc.getText());
+	    	ConcurrentHashMap<Integer, Double> weights = doc.getWeights();
+			if (!this.fixingDim && doc.getDimension() >= hyperPlanes.getDimension()-3*GlobalData.getInstance().getParams().dimension_jumps) 
+			{
+				hyperPlanes.fixDim(doc.getDimension());
+			}
+			
+	    	for (int i = 0 ; i<hyperPlanesNumber; i++)
+	    	{
+	    		double tmp = 0;
+	    		//Samer: remove syncronized
+	    		//synchronized (weights) {
+					for (Integer j : weights.keySet()) 
+		    		{
+		    			tmp += weights.get(j) * hyperPlanes.get(i, j);
+		    		}
+	    		//}
+				session.message(Session.DEBUG, "GenerateHashCode", ""+ tmp);
+	
+	    		st.append( tmp>=0 ? "1" : "0" );
+	    		session.message(Session.DEBUG, "GenerateHashCode", "\nLOG");
+	    	}
+	    	
+	        return st.toString();
+	    }
+	    */
+	
+	    public RoundRobinArray<String> AddDocument(Document doc, int dim, Map<Integer, Double> word2idf)
+	    {
+	        long code = GenerateHashCode01(doc, dim, word2idf);
+	        RoundRobinArray<String> bucket = buckets.get(code);
+	        if (bucket == null)
+	        {
+	        	synchronized (buckets) {
+	        		bucket = buckets.get(code);
+	        		if (bucket == null) //still null
+	        		{
+	        			buckets.put(code, new RoundRobinArray<String>(maxBucketSize));
+	        			bucket = buckets.get(code);
+	        		}
+	        	}
+	        }
+	        
+	        bucket.add(doc.getId().intern());
+	        	
+	        return bucket;
+	        	/*list = new LinkedList<String>();
+	        	
+	     		for(int i=0; i<bucket.size(); i++)
+	     		{
+	     			String id = bucket.get(i);
+	     			if (excludeId.compareTo(id) <= 0)
+	     				continue;    		
+	     			list.add((String)id);
+	     		} 
+	     		return list;*/
+		}
+	    
+	    public String toString() 
+	    {
+	    	StringBuffer sb = new StringBuffer();
+	    	/*
+	    	for (ArrayList<Double> arrayList : hyperPlanes) {
+	    		sb.append("[");
+				for (Double d : arrayList) {
+					sb.append(d + ",");
+				}
+				sb.append("]\n");
+	    	}
+	    	*/
+	    	sb.append(buckets.toString().replaceAll("}], ", "}],\n"));
+	    	sb.append("\n");
+	    	return sb.toString();
+	    }
+	
+		public int getMaxBucketSize() {
+			return maxBucketSize;
+		}
+	
+		public int getHyperPlanesNumber() {
+			return hyperPlanesNumber;
+		}
+	
+		public int getDimension() {
+			return hyperPlanes.getDimension();
+		}
+	
 	}
-
-	private ArrayList<Double>[] getHyperPlanes() {
-		return hyperPlanes;
-	}
-
-	public int getDimension() {
-		return this.dimension;
-	}
-
-}

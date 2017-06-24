@@ -2,167 +2,180 @@ package ned.types;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
-import org.springframework.data.redis.serializer.RedisSerializer;
-
-import ned.main.DocumentProcessorExecutor;
 import ned.modules.Twokenize;
-import ned.types.GlobalData.Parameters;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-
-//amy winehouse 94801731006894080  Sat Jul 23 16:11:08 +0000 2011
+import ned.tools.ClusteringQueueManager;
+import ned.tools.ExecutionHelper;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class GlobalData {
-	public static final String ID2DOCUMENT = "id2document";
+	private static final String V = "";
+	public static final String LAST_DIMENSION = "dimension";
+	public static final String LAST_NUM_DOCS = "doc_count";
+	public static final String LAST_SEEN_IDX = "last_idx";
+	
+	public static final String K_ID2DOCUMENT = "id2doc" + V;
+	public static final String K_ID2WORD_COUNT = "id2word_counts" + V;
+	public static final String K_WORD2INDEX = "w2i" + V;
+	public static final String K_WORD2COUNTS = "w2c" + V;
+	public static final String K_RESUME_INFO = "resume" + V;
+	public static final String K_ID2CLUSTR_INFO = "id2cluster" + V;
+	public static final String K_CLUSTR2REPLCMENT = "replacement" + V;
 
 	public class Parameters 
 	{
-		public int ForkJoinPool = 2000;
-		public int DOUBLE_SCALE = 5; //precision scale for double
+		public int roll_file = 1_000_000;
+		public String DELIMITER = " ||| ";
 		public int monitor_timer_seconds = 5; //seconds
-		public int number_of_threads = 50000;
+		public int number_of_threads =100;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
-		public int hyperplanes = 13;
+		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
 		public int max_bucket_size = 2000;
-		public int max_documents = 300000000; //52_200_000;
-		public int max_thread_delta_time = 3600; //seconds
-		public int offset = 0;//8500000-17*500000;
-		public int skip_files = 0;//17;
+		public int max_documents = 50_000_000;
+		public int max_thread_delta_time = 4*3600; //seconds
+		public int offset =  0;
 		public int search_recents = 2000;
-		public double threshold = 0.6;
-		public double min_cluster_entropy = 1.0;
-		public double min_cluster_size = 5;
-		public int inital_dimension = 50000;
-		public int dimension_jumps = 50000;
+		public double threshold = 0.5;
+		public double min_cluster_entropy = 0.0;
+		public double min_cluster_size = 3;
+		public int inital_dimension = 100000;
+		public int dimension_jumps = 100000;
+		public boolean resume_mode = false;
+		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
 	}
 	
 	private static GlobalData globalData = null;
-	//private static ForkJoinPool forkPool;
 	public static GlobalData getInstance() 
 	{
 		if (globalData == null)
+		{
 			globalData = new GlobalData();
-		
+		}
 		return globalData;
-	}
+	}	
 	
-	public ConcurrentLinkedQueue<String> queue; 
-	public Hashtable<String, Integer>    word2index;
-	public Hashtable<String, Document>   id2document = null;
-	
-	//for calculating IDF
-	public int numberOfDocuments;
-	private Hashtable<Integer, Double> word2idf;
-	public Hashtable<Integer, Integer>   numberOfDocsIncludeWord;
-	public Hashtable<String, DocumentCluster>  clusters;
-	public Hashtable<String, String> id2cluster;
-	public List<String> recent;
-	public Parameters parameters = new Parameters();
-	public Set<String> cleanClusterQueue = null;
-	private JedisPool jedisPool = null;
-	private RedisSerializer<Object> docSerializer ;
-	
-	//threads
-	public DocumentProcessorExecutor executer;
-
-	public RedisSerializer<Object> getDocSerializer() {
-		if(docSerializer==null){
-			docSerializer= new JdkSerializationRedisSerializer();
-
-		}
-		return docSerializer;
-	}
-
-
-	public Jedis getRedisClient() {
-		
-		if(jedisPool==null){
-			synchronized(this) 
-			{
-				if(jedisPool==null)
-				{	
-					JedisPoolConfig config = new JedisPoolConfig();
-					config.setMaxTotal(10000);
-					config.setMaxIdle(0);
-					config.setMinIdle(0);
-					config.setMaxWaitMillis(10);
-					config.setTestOnBorrow(false);
-					config.setTestOnReturn(false);
-					config.setTestWhileIdle(false);
-					jedisPool = new JedisPool(config,"localhost", 6379, 30000);
-				}
-			}
-		}
-
-		Jedis cn = null;
-		try {
-			cn = jedisPool.getResource();
-		} catch (Exception e) {
-			if(cn!=null)
-				cn.close();
-			
-			cn=this.getRedisClient();
-		}
-		finally {
-		}
-		  
-		return cn;
-	}
-
-
-	public long redisSize(String hash) 
+	public static void release()
 	{
-		if(id2document != null)
-			return id2document.size();
-		
-		Jedis jdis=getRedisClient();
-		long len = jdis.hlen(hash);
-		jdis.close();
-		return len;
+		globalData = null;
 	}
+	
+	public RedisBasedMap<String, Integer>    word2index;
+	public RedisBasedMap<String, Document>   id2doc;
+	public RedisBasedMap<String, DocumentWordCounts> id2wc;
 
+	public RedisBasedMap<Integer, Integer>   numberOfDocsIncludeWord;
+	public RedisBasedMap<String, Integer>   resumeInfo;
+	
+	public ConcurrentHashMap<String, DocumentCluster>  clusters;
+	public RedisBasedMap<String, String> id2cluster;
+	public RedisBasedMap<String, String> cluster2replacement;
+	
+	private ClusteringQueueManager queue;
+	private RoundRobinArray<String> recentManager = null;
+
+	private Parameters parameters = new Parameters();
+	public List<String> cleanClusterQueue = null;
+	public static ConcurrentHashMap<String, Double> id2nearestDist;
+	public static ConcurrentHashMap<String, Boolean> id2nearestOk;
+	public static ConcurrentHashMap<String, String> id2nearestId;
+	
 	private GlobalData()
 	{	
-		word2index  = new Hashtable<String , Integer>();
-		id2document = new Hashtable<String , Document>();
-		numberOfDocsIncludeWord = new Hashtable<Integer, Integer>();
-		cleanClusterQueue = (Set<String>) Collections.synchronizedSet(new HashSet<String>()); //new LinkedList<Document>();
-		clusters = new Hashtable<String, DocumentCluster>();
-		numberOfDocuments = 0;
-		queue = new ConcurrentLinkedQueue<String>();
-		word2idf = new Hashtable<Integer, Double>();
-		id2cluster = new Hashtable<String, String>();
-		clearRedisKeys();
+		cleanClusterQueue = new LinkedList<String>();
+		clusters = new ConcurrentHashMap<String, DocumentCluster>();
+		queue = new ClusteringQueueManager();
 	}
-
-	private void clearRedisKeys()
+	
+	synchronized public void init() throws Exception
 	{
-		if(id2document != null)
+		if(recentManager != null)
 			return;
 		
-		Jedis jdis=getRedisClient();
-		jdis.del(ID2DOCUMENT);
-		jdis.close();
+		recentManager = new RoundRobinArray<String>(parameters.search_recents);
+		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, !getParams().resume_mode, new SerializeHelperStrDoc() );
+		id2wc = new RedisBasedMap<String, DocumentWordCounts>(GlobalData.K_ID2WORD_COUNT, !getParams().resume_mode, new SerializeHelperStrDocWordCounts() );
+		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, !getParams().resume_mode, new SerializeHelperStrInt() );
+		numberOfDocsIncludeWord = new RedisBasedMap<Integer, Integer>(GlobalData.K_WORD2COUNTS, !getParams().resume_mode, new SerializeHelperIntInt() );
+		resumeInfo = new RedisBasedMap<String, Integer>(GlobalData.K_RESUME_INFO, !getParams().resume_mode, new SerializeHelperStrInt() );
+		id2cluster = new RedisBasedMap<String, String>(GlobalData.K_ID2CLUSTR_INFO, true, new SerializeHelperStrStr() );
+		cluster2replacement = new RedisBasedMap<String, String>(GlobalData.K_CLUSTR2REPLCMENT, true, new SerializeHelperStrStr() );
+		id2nearestDist = new ConcurrentHashMap<String, Double>();
+		id2nearestOk = new ConcurrentHashMap<String, Boolean>();
+		id2nearestId = new ConcurrentHashMap<String, String>();
+		
+		if(!getParams().resume_mode)
+		{
+			resumeInfo.put(LAST_SEEN_IDX, getParams().offset-1);
+			resumeInfo.put(LAST_NUM_DOCS, 0);
+			resumeInfo.put(LAST_DIMENSION, 0);
+		}
+		else
+		{
+			if(word2index.redisSize() != numberOfDocsIncludeWord.redisSize())
+			{
+				throw new Exception(String.format("Mistmach in the size of word2index vs. numberOfDocsIncludeWord (%d vs. %d)", word2index.redisSize(), numberOfDocsIncludeWord.redisSize()));
+			}
+		}
+	}
+
+	public void save(boolean force)
+	{
+		try{
+			System.out.println("Save to Redis...");
+			if(force || !getParams().resume_mode)
+			{
+				id2wc.save();
+				word2index.save();
+		    	numberOfDocsIncludeWord.save();
+		    	resumeInfo.save();
+			}
+			
+			id2doc.save();
+	    	id2cluster.save();
+	    	cluster2replacement.save();
+		}
+		catch(JedisConnectionException re){
+			System.out.println(re.getMessage());
+			try {
+				Thread.sleep(3000);
+				save(force);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
 	}
 	
-	
+	public RoundRobinArray<String> getRecentManager() {
+		return recentManager;
+	}
+
+	public ClusteringQueueManager getQueue() {
+		return queue;
+	}
+
+	public void setQueue(ClusteringQueueManager queue) {
+		this.queue = queue;
+	}
+
 	public DocumentCluster clusterByDoc(String id)
 	{
+		if(id == null)
+			return null;
+		
 		String leadId = id2cluster.get(id);
 		if (leadId == null)
 			return null;
@@ -171,57 +184,52 @@ public class GlobalData {
 		return c;
 	}
 	
-	private double calcIDF(int word) 
+	public double calcIDF(int word) 
 	{		
-		double numerator = (numberOfDocuments + 0.5) / numberOfDocsIncludeWord.get(word);
+		int numberOfDocuments = resumeInfo.get(LAST_NUM_DOCS);
+		
+		Integer appeared = numberOfDocsIncludeWord.get(word);
+		
+		if (appeared ==null)
+			return -1;
+		
+		double numerator = (numberOfDocuments + 0.5) / appeared;
 		numerator = Math.log10(numerator);
 		
 		double denominator = Math.log10(numberOfDocuments + 1.0);	
 		
-		double idf = numerator / denominator;
-		return idf;
+		return numerator / denominator;
 	}
 	
-	public double getIDF(int k)
+	public void calcWeights(DocumentWordCounts doc, Map<Integer, Double> weights, Map<Integer, Double> word2idf) 
 	{
-		return word2idf.get(k);
+		Map<Integer, Integer> wordCount = doc.getWordCount();
+		Set<Entry<Integer, Integer>> tmp = wordCount.entrySet();
+		
+		for (Entry<Integer, Integer> entry : tmp) {
+			int k =entry.getKey();
+			Integer a = wordCount.get(k);
+			Double b = word2idf.get(k);
+			if (b==null)
+			{
+				b = calcIDF(k);
+				word2idf.put(k, b);
+			}
+			double r=a*b;
+			weights.put(k, r);
+		}
 	}
 	
-	
-	public double getIDFOrDefault(int k)
-	{
-		return word2idf.getOrDefault(k, -1.0);
-	}
-	
-	public void calcWeights(Document doc, Hashtable<Integer, Double> weights)
-	{
-		Hashtable<Integer, Integer> wordCount = doc.getWordCount();
-		Enumeration<Integer> tmp = wordCount.keys();
-		wordCount.entrySet()
-		   .parallelStream()
-		   .forEach(entry->{
-			   double a = entry.getValue() * this.word2idf.get(entry.getKey());
-				weights.put(entry.getKey(), a);
-		   });
-		/*
-		while(tmp.hasMoreElements())
-		{
-			int k = tmp.nextElement();
-			double a = wordCount.get(k) * this.word2idf.get(k);
-			weights.put(k, a);
-		}*/
-	}
-	
-	public int wordCounts(List<String> list, Hashtable<Integer, Integer> d)
+	private int wordCounts(List<String> list, Map<Integer, Integer> map)
 	{
 		int max_idx = addWords(list);
 		
 		for (String w : list) 
 		{
 			int idx = word2index.get(w);
-			int val = d.getOrDefault(idx,  0);
+			int val = map.getOrDefault(idx,  0);
 			val += 1;
-			d.put(idx, val);
+			map.put(idx, val);
 		}
 		
 		return max_idx;
@@ -239,108 +247,75 @@ public class GlobalData {
 		}
 		
 		return max;
-	}	
+	}
+	
 	private int addWord(String word)
 	{
 		int idx = word2index.getOrDefault(word, -1);
-		
 		if (idx == -1) 
 		{
-			idx = word2index.size();
-			//index2word.put(idx, word);
-			word2index.put(word, idx);
+			synchronized (word2index)
+			{
+				if (word2index.getOrDefault(word, -1) == -1)
+				{
+					idx = resumeInfo.get(LAST_DIMENSION);
+					resumeInfo.put(LAST_DIMENSION, idx+1);
+					
+					//index2word.put(idx, word);
+					word2index.put(word, idx);
+				}
+			}
 		}
 		
 		return idx;
 	}
 	
-	public void addDocument(Document doc) 
+	public int addDocument(Document doc, int idx) 
 	{
-		int d = wordCounts( doc.getWords(), doc.getWordCount());
-		doc.setMaxWordIndex ( d );
 		
-		numberOfDocuments++;
-		if (d > 0)
+		DocumentWordCounts dwc = doc.bringWordCount();
+		if(dwc == null)
 		{
+			String id = doc.getId().intern();
+			synchronized (id) {
+				dwc = id2wc.getOrDefault( doc.getId(), new DocumentWordCounts(id, new HashMap<Integer, Integer>()) );
+				id2wc.put(id,  dwc);
+			}
+		}
+		
+		int d = wordCounts( doc.getWords(), dwc.getWordCount() );
+		//doc.setDimension ( d );
+
+		
+		int lastDocIndex = resumeInfo.get(LAST_SEEN_IDX); 
+		if(lastDocIndex < idx)
+		{
+			Set<Entry<Integer, Integer>> es = dwc.getWordCount().entrySet();
 			//update number of documents holding each word (for TFIDF)
-			for (int i : doc.getWordCount().keySet()) 
+			for (Entry<Integer, Integer> k : es) 
 			{
-				int val = numberOfDocsIncludeWord.getOrDefault(i, 0);
-				numberOfDocsIncludeWord.put(i, val+1);					
+				int val = numberOfDocsIncludeWord.getOrDefault(k.getKey(), 0);
+				numberOfDocsIncludeWord.put(k.getKey(), val+1);					
 			}
-	
-			for (int i : doc.getWordCount().keySet()) 
-			{
-				double idf = calcIDF(i);
-				word2idf.put(i, idf);
-			}
-			
-			addToRecent(doc);
+			resumeInfo.put(LAST_SEEN_IDX, idx);
+			resumeInfo.put(LAST_NUM_DOCS, resumeInfo.get(LAST_NUM_DOCS)+1);
 		}
 		
-		//id2document.put(doc.getId(), doc);
-		this.setDocumentFromRedis(ID2DOCUMENT, doc.getId(), doc);
+		id2doc.put(doc.getId(), doc);
+
+		addToRecent(doc.getId());
+		
+		return d;
 	}
 	
-	public Document getDocumentFromRedis(String hash,String key) {
-
-		if(key == null)
-			return null;
+	private void addToRecent(String docId) {
 		
-		if(id2document != null)
-		{
-			return id2document.get(key);
-		}
-		
-		Document doc=null;
-		Jedis jdis=getRedisClient();
-		
-		byte[] kbytes = key.getBytes();
-		byte[] hbytes = hash.getBytes();
-		byte[] retobject=jdis.hget(hbytes,kbytes);
-		if(retobject!=null){
-			doc=(Document) this.getDocSerializer().deserialize(retobject);
-		}
-		jdis.close();
-		return doc;
-	}
-
-	public void setDocumentFromRedis(String hash,String key,Document doc){
-		if(doc==null){
-			return;
-		}
-		
-		if(id2document != null)
-		{
-			id2document.put(key, doc);
-			return;
-		}
-		
-		Jedis jdis=getRedisClient();
-		
-		
-		byte[] sobject=this.getDocSerializer().serialize(doc);
-		jdis.hset(hash.getBytes(),key.getBytes(),sobject);
-		jdis.close();
-		
+		this.recentManager.add(docId.intern());
 	}
 	
-	public void addToRecent(Document doc) {
-		if (this.recent == null)
-		{
-			synchronized (this) {
-				if(this.recent == null)
-					this.recent = Collections.synchronizedList(new ArrayList<String>()); //new LinkedList<Document>();
-			}
-		}
-		Integer lock = 0;
-
-		synchronized (lock) {
-			this.recent.add(doc.getId());
-			if (this.recent.size() > this.parameters.search_recents)
-				this.recent.remove(0);
-		}
-	}
+	//public List<String> getRecent() {		
+	//	return this.recentManager.getRecentCopy();
+	//}
 
 	public String tweetWithoutURL(String text)
 	{
@@ -364,12 +339,10 @@ public class GlobalData {
 		return tweetWithoutHashtagAndUrl;
 	}
 	
-	public void flushClustersAll(PrintStream out)
+	public void flushClustersAll(PrintStream outFull, PrintStream outShort)
 	{
-		Enumeration<DocumentCluster> elements = clusters.elements();
-		while(elements.hasMoreElements())
-		{
-			DocumentCluster c = elements.nextElement();
+		for (String leadId : this.clusters.keySet()) {
+			DocumentCluster c = clusterByDoc(leadId);
 			
 			boolean print = true;
 			if (c.size() < this.getParams().min_cluster_size)
@@ -379,27 +352,25 @@ public class GlobalData {
 				print = false;
 			
 			if (print)
-				out.println(c.toString());
-			
-			clusters.remove(c.leadId);
+			{
+				outFull.print(c.toStringFull());
+				outShort.print(c.toStringShort());
+			}
 		} 
 	}
 	
-	public void flushClusters(PrintStream out)
+	public void flushClusters(PrintStream outFull, PrintStream outShort)
 	{
-		//System.out.println("flushClusters");
-		flushClusters(out, null);
+		flushClusters(outFull, outShort, null);
 	}
 	
-	public void flushClusters(PrintStream out, Set<String> todelete)
+	public void flushClusters(PrintStream outFull, PrintStream outShort, Set<String> todelete)
 	{
 		int counter = 0;
 		if (todelete == null)
 			todelete = prepareListBeforeRelease();
 		
-		if(todelete.size() > 0)
-    		Session.getInstance().message(Session.DEBUG, "Reader", "doing some memory cleanup");
-
+		
 		ArrayList<String> marktoremove = new ArrayList<String>();
 		int countDocs = 0;
 		for (String leadId : todelete) 
@@ -416,8 +387,11 @@ public class GlobalData {
 				print = false;
 			
 			if (print)
-				out.println(cluster.toString());
-
+			{
+				outFull.print(cluster.toStringFull());
+				outShort.print(cluster.toStringShort());
+			}
+			
 			counter+=1;
 			
 			this.clusters.remove(leadId);
@@ -427,22 +401,15 @@ public class GlobalData {
 			}
 		}
 		
-		for (String id : marktoremove) {
-			this.id2cluster.remove(id);
+		for (String id : marktoremove) 
+		{
+			GlobalData.id2nearestId.remove(id);
+			GlobalData.id2nearestDist.remove(id);
+			GlobalData.id2nearestOk.remove(id);
 			
-		
-			if(id2document!=null)
-				this.id2document.remove(id);
-			else {
-				Jedis jdis=getRedisClient();
-				
-				jdis.hdel(ID2DOCUMENT, id);
-				jdis.close();
-			}
-			
-			countDocs++;
+			//this.id2cluster.remove(id);
+			//countDocs++;
 		}
-		
 		
 		if (counter>0)
 			Session.getInstance().message(Session.DEBUG, "cleanClusters", "released "+counter+" clusters (" + countDocs + " docs)" );
@@ -451,16 +418,10 @@ public class GlobalData {
 	public Set<String> prepareListBeforeRelease() {
 		Set<String> todelete = new HashSet<String>();
 		
-		Iterator<String> itr = cleanClusterQueue.iterator();
-		
-		while (itr.hasNext()) {
-			String docId = itr.next(); 
-			DocumentCluster c = clusterByDoc(docId);
-
-			String leadId = c.leadId;
+		while (!cleanClusterQueue.isEmpty()) {
+			String docId = cleanClusterQueue.remove(0); 
+			String leadId = clusterByDoc(docId).leadId;
 			todelete.add(leadId);
-			
-			itr.remove();
 		}
 		return todelete;
 	}
@@ -475,15 +436,6 @@ public class GlobalData {
 		return words;
 	}
 
-	public Hashtable<String, String> getId2Cluster() {
-		return id2cluster;
-	}
-
-	/*private HashMap<Integer, DocumentCluster> getClusters()
-	{
-		return clusters;
-	}*/
-	
 	public void createCluster(Document doc)
 	{
 		DocumentCluster cluster = new DocumentCluster(doc);
@@ -508,69 +460,92 @@ public class GlobalData {
 		return parameters;
 	}
 
-	public void setParams(Parameters params) {
-		this.parameters = params;
-	}
-	
-	public void markOldClusters(String docId) 
+	public void markOldClusters(Document doc) 
 	{
-		int young = 0;
 		int old = 0;
 		
-		Document doc = GlobalData.getInstance().getDocumentFromRedis(ID2DOCUMENT, docId);
 		Enumeration<DocumentCluster> enumerator = clusters.elements();
 		
 		while(enumerator.hasMoreElements())
-		//for (String leadId : this.clusters.keySet()) 
 		{
 			DocumentCluster c = enumerator.nextElement(); //this.clusterByDoc(leadId);
-			if (c.isOpen(doc))
-				young++;
-			else
+			if (!c.isOpen(doc))
 			{
 				this.cleanClusterQueue.add(c.leadId);
 				old++;
 			}
 		}
-		
+
 		if (old>0)
 			Session.getInstance().message(Session.DEBUG, "markOldClusters", "marked " + old + " old clusters for cleanup");
 	}
 
-	public String memoryGlance() 
-	{
-		long len = redisSize(ID2DOCUMENT);
-		return String.format("\t[monitor] Processed %d documents. In memory: Documents=%d, Clusters=%d, Recent=%d, words=%d",
-				numberOfDocuments,
-				len,
+	public String memoryGlance() {
+		
+		StringBuffer msg = new StringBuffer();
+		
+		msg.append("\t[monitor] Sumitted TaskCount ").append(ExecutionHelper.getQueuedSubmissionCount());
+		msg.append(" Total Active threads=").append( Thread.activeCount());
+		msg.append(" ActiveTasks= ").append(ExecutionHelper.activeCount());
+		msg.append(" QueuedTaskCount ").append(ExecutionHelper.getQueuedTaskCount());
+		msg.append("\n");
+		
+		msg.append( String.format("\t[monitor] Documents: %d/%d, Document-WordCounts: %d/%d, Words: %d/%d, "
+				+ "\n\tW2Count: %d/%d, Clusters %d, clust2replcmnt: %d, id2cluster: %d, nearest [Id: %d, D: %d, B: %d]",
+				this.id2doc.size(), 
+				-1, //this.id2doc.redisSize(), 
+				this.id2wc.size(), 
+				-1, //this.id2doc.redisSize(), 
+				this.word2index.size(),
+				-1, //this.word2index.redisSize(),
+				this.numberOfDocsIncludeWord.size(),
+				-1, //this.numberOfDocsIncludeWord.redisSize(),
 				this.clusters.size(),
-				this.recent==null ? 0 : this.recent.size(),
-				this.word2index.size()
-			);
+				this.cluster2replacement.size(),
+				this.id2cluster.size(),
+				id2nearestId.size(),
+				id2nearestDist.size(),
+				id2nearestOk.size()
+			) ).append("\n");
+		
+		
+		return msg.toString();
 	}
-
-
 
 	public void markForCleanup(String leadId) 
 	{
 		cleanClusterQueue.add(leadId);
 	}
+	
+	public static Double  getId2nearestDist(String key) {
+		Double res = id2nearestDist.get(key);
+		if(res==null)
+			res=1.0;
+		return res;
+	}
 
+	public static void setId2nearestDist(String key, Double value) {
+		id2nearestDist.put(key, value);
+	}
 
-	synchronized public static ForkJoinPool getForkPool() {
-		/*if(forkPool == null)
-			forkPool = new ForkJoinPool(
-							30000, 
-							ForkJoinPool.defaultForkJoinWorkerThreadFactory, 
-							new UncaughtExceptionHandler() {
-								@Override
-								public void uncaughtException(Thread t, Throwable e) {					
-									e.printStackTrace();
-								}
-							}, 
-							true);*/
-			
-		return ForkJoinPool.commonPool();
+	public static Boolean getId2nearestOk(String key) {
+		Boolean res = id2nearestOk.get(key);
+		if(res==null)
+			res=false;
+		return res;
+		
+	}
+
+	public static  void setId2nearestOk(String key, boolean value) {
+		id2nearestOk.put(key, value);
+	}
+
+	public static String getId2nearestId(String key) {
+		return id2nearestId.get(key);
+	}
+
+	public static void setId2nearestId(String key, String value) {
+		id2nearestId.put(key, value);
 	}
 	
 }

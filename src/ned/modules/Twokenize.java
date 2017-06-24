@@ -1,9 +1,6 @@
 package ned.modules;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.util.regex.*;
 import java.util.Arrays;
 import java.util.List;
@@ -78,7 +75,6 @@ public class Twokenize {
     static String decorations = "(?:[♫♪]+|[★☆]+|[♥❤♡]+|[\\u2639-\\u263b]+|[\\ue001-\\uebbb]+)";
     static String thingsThatSplitWords = "[^\\s\\.,?\"]";
     static String embeddedApostrophe = thingsThatSplitWords+"+['’′]" + thingsThatSplitWords + "*";
-    static String moreStuff = "\\+|@";
     
     public static String NOT(String part) {
     	StringBuilder sb = new StringBuilder();
@@ -207,8 +203,7 @@ public class Twokenize {
                     separators,
                     decorations,
                     AtMention,
-                    edgePunct,
-                    moreStuff
+                    edgePunct
             ));
     
     public static String splitEdgePunct (String input) {
@@ -300,7 +295,7 @@ public class Twokenize {
         for (String s : smaller){
             String strim = s.trim();
             if (strim.length() > 0)
-                master.add(strim);
+                master.add(strim.intern());
         }
         return master;
     }
@@ -353,6 +348,8 @@ public class Twokenize {
      */
     public static List<String> tokenizeRawTweetText(String text) {
         List<String> tokens = tokenize(normalizeTextForTagger(text));
+        tokens.removeIf(u -> u.length()<2);
+        
         return tokens;
     }
 
@@ -378,9 +375,7 @@ public class Twokenize {
         		"*busy* do home work ㅠㅠ",
         		"rt july better than june ) #julywish",
         		"rt #wowfakta logizomechanophobia / cyberphobia \\ * : - orang yang takut komputer",
-        		"ly sunshine	rt you + god sunshine",
-        		"86383750291800064	86383687406592000	1.0000000	????rt meeting vivie  @  nne westwood	NA",
-        		"@peopletree: Meeting Vivienne Westwood http://goo.gl/fb/22aO4\""};
+        		"This is o n e l e tt e r"};
         
     
     	for(String line : lines)

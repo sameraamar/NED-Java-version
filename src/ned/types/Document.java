@@ -1,24 +1,29 @@
 package ned.types;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
-
+import java.util.Map;
+import java.util.Set;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-public class Document implements Serializable{
-    //private double cacheNorm;
-    private String id;
+public class Document  implements Serializable, DirtyBit {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4575371423244913253L;
+
+	private static boolean isBasicOnly;
+	
+	public boolean isDirtyBit;
+	
+	private String id;
     private String text ;
     private List<String> words;
-    //private Hashtable<Integer, Double> weights ;
-    private Hashtable<Integer, Integer> wordCount ;
-    private int maxWordIndex;
+    //private int dimension;
     
     public int max_idx;
 	private String cleanText;
@@ -28,26 +33,49 @@ public class Document implements Serializable{
 	private String retweeted_id;
 	private int retweet_count;
 	private String reply_to;
-	private String user_id;
 	
-	private String nearest;
-	private double nearestDist;
-	private boolean nearestDetermined;
 	private int favouritesCount;
-	private boolean cacheOn;
-	private Hashtable<Integer, Double> cacheWeights;
-	private double cacheNorm;
-
-    public Document(String id, String text, long timestamp)
+	private String user_id;
+	private String retweeted_user_id;
+	private String quoted_status_id;
+	private String reply_to_user_id;
+	private String quoted_user_id;
+	
+	public static Document createOrGetDocument(String json)
+	{
+		Document doc = null;
+		
+		JsonParser jsonParser = new JsonParser();
+		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
+		
+		if(jsonObj.get("text") == null || jsonObj.get("id_str") == null)
+			return null;
+		
+		String id = jsonObj.get("id_str").getAsString();
+		
+		id = id.intern();
+		synchronized (id) {
+			doc = GlobalData.getInstance().id2doc.get(id);
+			if(doc == null)
+			{
+				doc = Document.parse(json, isBasicOnly);
+				GlobalData.getInstance().id2doc.put(id, doc);
+			}
+			
+		}
+		
+		return doc;
+	}
+	
+	
+	private Document(String id)
+	{
+    	this.id = id.intern();
+	}
+	
+    private void init(String text, long timestamp)
     {
-    	this.id = id;
         this.text = text;
-        this.cacheOn = false;
-        this.cacheNorm = -1;
-        this.cacheWeights = null;
-        this.nearest = null;
-    	this.nearestDist = 1.0;
-    	this.nearestDetermined = false;
         this.timestamp = timestamp;
         this.created_at = null;
     	this.retweeted_id = null;
@@ -55,7 +83,6 @@ public class Document implements Serializable{
     	this.favouritesCount = -1;
     	this.reply_to = null;
         this.words = GlobalData.getInstance().identifyWords(text);
-		this.wordCount = new Hashtable<Integer, Integer>();
         this.cleanText = String.join(" ", words);
     }
 	
@@ -76,143 +103,52 @@ public class Document implements Serializable{
 		return id.hashCode();
 	}
 	
-	@Override
-	protected void finalize() throws Throwable {
-		//System.out.println("Document - finalize");
-		super.finalize();
-	}
-	
-    public double Norm()
-    {
-        if (cacheOn && cacheNorm >= 0.0)
-            return cacheNorm;
-
-        double res = 0;
-        Enumeration<Double> values = getWeights().elements();
-        
-        while(values.hasMoreElements())
+    private static double Norm(Map<Integer, Double> rWeights) {
+    	double res = 0;
+        for(Double v : rWeights.values())
         {
-			double v = values.nextElement();
             res += v * v;
         }
 
         res = Math.sqrt(res);
-        
-        if (cacheOn)
-        	cacheNorm = res;
-        
         return res;
-    }
-
-    public static double Distance(Document left, Document right)
-    {
-        double res = 0.0;
-
-        double norm1 = right.Norm();
-        double norm2 = left.Norm();
-        double norms = norm1 * norm2;
-
-        Hashtable<Integer, Double> leftWeights = left.getWeights();
-		Hashtable<Integer, Double> rightWeights = right.getWeights();
-		if (rightWeights.size() > leftWeights.size())
-        {
-			Hashtable<Integer, Double> tmp = leftWeights;
-            leftWeights = rightWeights;
-            rightWeights = tmp;
-        }
-
-        double dot = 0.0;
-        
-        //right.getWeights().keySet().retainAll(left.getWeights().keySet())
-        
-        Enumeration<Integer> keys = rightWeights.keys();
-        while( keys.hasMoreElements() )
-        {
-        	Integer key = keys.nextElement();
-			if (leftWeights.containsKey(key))
-            {
-                dot += rightWeights.get(key) * leftWeights.get(key);
-            }
-
-        }
-
-        res = dot / norms; 
-        
-        if(norms < 0)
-        	norms = norms;
-        
-        res = 1.0 - res;
-       
-		int doubleScale = GlobalData.getInstance().getParams().DOUBLE_SCALE;
-
-		try {
-		if(doubleScale>0)
-			res = BigDecimal.valueOf(res).setScale(doubleScale, RoundingMode.HALF_UP).doubleValue();
-		} catch (java.lang.NumberFormatException e)
-		{
-			e.printStackTrace();
-		}
-		if(res < 0.0)
-			res = res * 1;
-		
-		return res;
-    }
+	}
     
-    public static double Distance(Document left2, double norm, Hashtable<Integer, Double> weights, Document right)
+    public static double Distance(DocumentWordCounts left, DocumentWordCounts right, Map<Integer, Double> word2idf)
     {
+    	Set<Integer> commonWords = DocumentClusteringHelper.intersection(left.getWordCount(), right.getWordCount());
+     	if(commonWords.isEmpty()){
+     		return 1;
+     	}
+
+        if (left.getWordCount().size() > right.getWordCount().size())
+        {
+            DocumentWordCounts tmp = right;
+            right = left;
+            left = tmp;
+        }
+        
+        Map<Integer, Double> rWeights = right.getWeights(word2idf);
+        Map<Integer, Double> lWeights = left.getWeights(word2idf);
+        
         double res = 0;
-
-        double norms = right.Norm() * norm;
-
+        double norms = Norm(rWeights) * Norm(lWeights);
         double dot = 0.0;
-        
-        //right.getWeights().keySet().retainAll(left.getWeights().keySet())
-        
-        Hashtable<Integer, Double> a = weights;
-        Hashtable<Integer, Double> b = right.getWeights();
-        
-        if(a.size() > b.size())
-        {
-        	Hashtable<Integer, Double> c = a;
-        	a = b;
-        	b = c;
-        }
-        
-        Enumeration<Integer> keys = a.keys();
-        
-        while( keys.hasMoreElements() )
-        {
-        	Integer key = keys.nextElement();
-			if (b.containsKey(key))
-            {
-                dot += b.get(key) * a.get(key);
-            }
-        }
 
-        res = dot / norms; 
-        res = 1.0 - res;
-        
-		int doubleScale = GlobalData.getInstance().getParams().DOUBLE_SCALE;
-		if(doubleScale>0)
-			res = BigDecimal.valueOf(res).setScale(doubleScale, RoundingMode.HALF_UP).doubleValue();
-		
-		return res;
-    }
-    
-    public void calcWeights(Hashtable<Integer, Double> weights)
-    {
-		if (weights == null || weights.isEmpty()) 
-		{
-			GlobalData gd = GlobalData.getInstance();
-			gd.calcWeights(this, weights);
+        for (Integer k : commonWords) {
+            dot += rWeights.get(k) * lWeights.get(k);
 		}
+        
+        res = dot / norms; 
+        return 1.0 - res;
+     	 
     }
-    
-    public String toString() {
+
+	public String toString() {
     	StringBuffer sb = new StringBuffer();
-    	sb.append("{\"").append(id).append("\":\"").append(text);
+    	sb.append("{").append(id).append(": ").append(text);
     	//sb.append(weights)
-    	sb.append("\"}");
+    	sb.append("}");
     	return sb.toString();
     }
 
@@ -220,42 +156,6 @@ public class Document implements Serializable{
 		return text;
 	}
 
-	public Hashtable<Integer, Double> getWeights() 
-	{
-		if(!cacheOn)
-		{
-			Hashtable<Integer, Double> tmp = new Hashtable<Integer, Double>();
-			calcWeights(tmp);
-			return tmp;
-		}
-		
-		if(cacheWeights == null)
-		{
-			synchronized (this) {
-				if(cacheWeights == null)
-				{
-					Hashtable<Integer, Double> tmp = new Hashtable<Integer, Double>();
-					calcWeights(tmp);
-					cacheWeights = tmp;
-				}
-			}	
-		}
-		
-		return cacheWeights;
-		
-	}
-
-	public void setCacheFlag(boolean flag)
-	{
-		if(!flag)
-		{
-			cacheNorm = -1;
-			cacheWeights = null;
-		}
-		
-		cacheOn = flag;
-	}
-	
 	public List<String> getWords() {
 		return words;
 	}
@@ -264,20 +164,10 @@ public class Document implements Serializable{
 		return id;
 	}
 
-	public int getMaxWordIndex() {
-		return maxWordIndex;
-	}
-
-	Hashtable<Integer, Integer> getWordCount() {		
+	DocumentWordCounts bringWordCount()
+	{
+		DocumentWordCounts wordCount = GlobalData.getInstance().id2wc.get(id);
 		return wordCount;
-	}
-
-	void setWordCount(Hashtable<Integer, Integer> wordCount) {
-		this.wordCount = wordCount;
-	}
-
-	void setMaxWordIndex(int maxIndex) {
-		this.maxWordIndex = maxIndex;
 	}
 
 	public long getTimestamp() {
@@ -290,46 +180,57 @@ public class Document implements Serializable{
 
 	public void setCreatedAt(String created_at) {
 		this.created_at = created_at;
+		dirtyOn();
 	}
 
-	public void updateNearest(String rightId) 
+	public void updateNearest(DocumentWordCounts rWordCount, Map<Integer, Double> word2idf) {
+		if(rWordCount == null)
+			return;
+		
+		if(rWordCount.getId().compareTo(getId()) >= 0)
+			return;
+		
+		DocumentWordCounts myWC = GlobalData.getInstance().id2wc.get( getId() );
+				
+		double tmp = Document.Distance(myWC, rWordCount, word2idf);
+		if (getNearestId()==null || tmp < getNearestDist())
+		{
+			setNearestDist(tmp);
+			setNearestId( rWordCount.getId() );	
+		}
+	}
+	public void updateNearest(String rightId, Map<Integer, Double> word2idf) 
 	{
 		if(rightId == null)
 			return;
 		
-		Document right = GlobalData.getInstance().getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
-		updateNearest(right);
-	}
-
-	public void updateNearest(Document right) {
-		if(right == null)
-			return;
-		
-		double tmp = Document.Distance(this, right);
-		synchronized (this) 
-		{
-			if (nearest==null || tmp < nearestDist)
-			{
-				nearestDist = tmp;
-				nearest = right.getId();
-			}
-		}
+		//Document right = RedisHelper.getDocumentFromRedis(GlobalData.ID2DOCUMENT, rightId);
+		DocumentWordCounts right = GlobalData.getInstance().id2wc.get(rightId);
+		updateNearest(right, word2idf);
 	}
 
 	public boolean isNearestDetermined() {
-		return nearestDetermined;
+		return GlobalData.getId2nearestOk(id);
 	}
 
 	public void setNearestDetermined(boolean nearestDetermined) {
-		this.nearestDetermined = nearestDetermined;
+		GlobalData.setId2nearestOk(id,  nearestDetermined);
 	}
 
 	public double getNearestDist() {
-		return nearestDist;
+		return GlobalData.getId2nearestDist(id);
 	}
 
-	public String getNearest() {
-		return nearest;
+	private void setNearestDist(double d) {
+		GlobalData.setId2nearestDist(id, d);
+	}
+
+	public String getNearestId() {
+		return GlobalData.getId2nearestId(id);
+	} 
+	
+	public void setNearestId(String n) {
+		GlobalData.setId2nearestId(id, n);
 	} 
 	
 	//**************************************************************
@@ -343,23 +244,50 @@ public class Document implements Serializable{
 		
 		String text = jsonObj.get("text").getAsString();
 		String id = jsonObj.get("id_str").getAsString();
-		long timestamp = jsonObj.get("timestamp").getAsLong();
 		
-        Document doc = new Document(id, text, timestamp); //id == "94816822100099073" is for Amy Winhouse event
-
-        doc.created_at = jsonObj.get("created_at").getAsString();
-
+		String created_at = jsonObj.get("created_at").getAsString();
+		JsonElement element = jsonObj.get("timestamp");
+		long timestamp;
+		if(element != null)
+			timestamp = element.getAsLong();
+		else {
+			//convert from created_at to timestamp
+			timestamp = 0;
+		}
+			
+		//id == "94816822100099073" is for Amy Winhouse event
+		Document doc = new Document(id);
+		doc.init(text, timestamp);
+		doc.dirtyOn();
+		
+        doc.created_at = created_at;
+        JsonObject userObj = jsonObj.get("user").getAsJsonObject();
+    	doc.user_id = userObj.get("id_str").getAsString();			
+		
         if(!isBasicOnly)
 		{
-        	JsonObject userObj = jsonObj.get("user").getAsJsonObject();
-        	doc.user_id = userObj.get("id_str").getAsString();			
+        	//String retweeted_status = jsonObj.get("retweeted_status").getAsString();
 			
-			//String retweeted_status = jsonObj.get("retweeted_status").getAsString();
-			
-        	JsonElement element = jsonObj.get("in_reply_to_status_id_str");
+        	element = jsonObj.get("in_reply_to_status_id_str");
 			if(!element.isJsonNull())
 				doc.reply_to = element.getAsString();
-				        
+			
+        	element = jsonObj.get("in_reply_to_user_id");
+			if(!element.isJsonNull())
+				doc.reply_to_user_id = element.getAsString();
+			
+        	element = jsonObj.get("quoted_status_id");
+			if(element != null && !element.isJsonNull())
+				doc.quoted_status_id = element.getAsString();
+	        
+			element = jsonObj.get("quoted_status");
+			if(element!=null && !element.isJsonNull())
+			{				
+				JsonObject obj = element.getAsJsonObject();
+				userObj = obj.get("user").getAsJsonObject();
+	        	doc.quoted_user_id = userObj.get("id_str").getAsString();
+			}
+			
 			doc.retweet_count = jsonObj.get("retweet_count").getAsInt();
 			doc.favouritesCount = jsonObj.get("favorite_count").getAsInt();
 	        
@@ -368,11 +296,50 @@ public class Document implements Serializable{
 			{
 				JsonObject retweetObj = element.getAsJsonObject();
 				doc.retweeted_id = retweetObj.get("id_str").getAsString();
+				
+				userObj = retweetObj.get("user").getAsJsonObject();
+	        	doc.retweeted_user_id = userObj.get("id_str").getAsString();
 			}
+			
+			
 		}        
         return doc;
 	}
-
+	
+	public static Document parse01(String json, boolean isBasicOnly)
+	{
+		JsonParser jsonParser = new JsonParser();
+		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
+		
+		JsonObject object = (JsonObject) jsonObj.get("object");
+		
+		if(object.get("summary") == null || object.get("id") == null)
+			return null;
+		
+		String text = object.get("summary").getAsString();
+		String id = object.get("id").getAsString();
+		
+		String created_at = jsonObj.get("postedTime").getAsString();
+		JsonElement element = jsonObj.get("timestamp");
+		long timestamp;
+		if(element != null)
+			timestamp = element.getAsLong();
+		else {
+			//convert from created_at to timestamp
+			timestamp = 0;
+		}
+			
+		//id == "94816822100099073" is for Amy Winhouse event
+		Document doc = new Document(id);
+		doc.init(text, timestamp);
+		doc.dirtyOn();
+		
+        doc.created_at = created_at;
+        JsonObject userObj = jsonObj.get("actor").getAsJsonObject();
+    	doc.user_id = userObj.get("id").getAsString();	
+    	 return doc;
+		
+}
 	public String getCreatedAt() {
 		return created_at;
 	}
@@ -397,5 +364,39 @@ public class Document implements Serializable{
 		return favouritesCount;
 	}
 
+	public String getRetweetedUserId() {
+		return retweeted_user_id;
+	}
+
+	public String getQuotedStatusId() {
+		return quoted_status_id;
+	}
+
+	public String getQuotedUserId() {
+		return quoted_user_id;
+	}
 	
+	public String getReplyToUserId() {
+		return reply_to_user_id;
+	}
+
+	@Override
+	public boolean isDirty() {
+		return isDirtyBit;
+	}
+
+	@Override
+	public void dirtyOff() {
+		isDirtyBit = false;
+	}
+
+	@Override
+	public void dirtyOn() {
+		isDirtyBit = true;
+	}
+
+	public void setUserId(String asString) {
+		user_id = asString;
+		dirtyOn();
+	}
 }
