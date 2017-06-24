@@ -171,7 +171,7 @@ public class AppMain {
 		
 		String folder = "../data";
 		if(Session.getMachineName().indexOf("saaama") >= 0)
-			folder  = "c:/data/events_db/petrovic";
+			folder  = "c:/data/thesis/events_db/petrovic";
 		
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
