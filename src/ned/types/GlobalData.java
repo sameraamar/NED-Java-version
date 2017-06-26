@@ -51,7 +51,7 @@ public class GlobalData {
 		public double min_cluster_size = 3;
 		public int inital_dimension = 100000;
 		public int dimension_jumps = 100000;
-		public boolean resume_mode = false;
+		public boolean resume_mode = true;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
 	}
 	
@@ -103,13 +103,13 @@ public class GlobalData {
 			return;
 		
 		recentManager = new RoundRobinArray<String>(parameters.search_recents);
-		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, !getParams().resume_mode, new SerializeHelperStrDoc() );
-		id2wc = new RedisBasedMap<String, DocumentWordCounts>(GlobalData.K_ID2WORD_COUNT, !getParams().resume_mode, new SerializeHelperStrDocWordCounts() );
-		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, !getParams().resume_mode, new SerializeHelperStrInt() );
+		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, !getParams().resume_mode, new SerializeHelperAdapterDirtyBit<Document>() );
+		id2wc = new RedisBasedMap<String, DocumentWordCounts>(GlobalData.K_ID2WORD_COUNT, !getParams().resume_mode, new SerializeHelperAdapterDirtyBit<DocumentWordCounts>() );
+		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, !getParams().resume_mode, new SerializeHelperAdapterSimpleType<Integer>(Integer.class) );
 		numberOfDocsIncludeWord = new RedisBasedMap<Integer, Integer>(GlobalData.K_WORD2COUNTS, !getParams().resume_mode, new SerializeHelperIntInt() );
-		resumeInfo = new RedisBasedMap<String, Integer>(GlobalData.K_RESUME_INFO, !getParams().resume_mode, new SerializeHelperStrInt() );
-		id2cluster = new RedisBasedMap<String, String>(GlobalData.K_ID2CLUSTR_INFO, true, new SerializeHelperStrStr() );
-		cluster2replacement = new RedisBasedMap<String, String>(GlobalData.K_CLUSTR2REPLCMENT, true, new SerializeHelperStrStr() );
+		resumeInfo = new RedisBasedMap<String, Integer>(GlobalData.K_RESUME_INFO, !getParams().resume_mode, new SerializeHelperAdapterSimpleType<Integer>(Integer.class) );
+		id2cluster = new RedisBasedMap<String, String>(GlobalData.K_ID2CLUSTR_INFO, true, new SerializeHelperAdapterSimpleType<String>(String.class) );
+		cluster2replacement = new RedisBasedMap<String, String>(GlobalData.K_CLUSTR2REPLCMENT, true, new SerializeHelperAdapterSimpleType<String>(String.class) );
 		id2nearestDist = new ConcurrentHashMap<String, Double>();
 		id2nearestOk = new ConcurrentHashMap<String, Boolean>();
 		id2nearestId = new ConcurrentHashMap<String, String>();

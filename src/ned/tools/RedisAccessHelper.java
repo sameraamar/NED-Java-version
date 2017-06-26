@@ -238,42 +238,6 @@ public class RedisAccessHelper {
 			
 			retunRedisClient(jedis);
 		}
-	 
-	public static void saveStrDocMap(String jedisKey, Map<String, Document> data)
-	{
-		Jedis jedis=getRedisClient();
-
-		int count = 0;
-		int update = 0;
-		int skip = 0;
-		
-		Set<Entry<String, Document>> entries = data.entrySet();
-		
-		
-		for (Entry<String, Document> entry : entries) {
-			Document value=entry.getValue();
-			if(value.isDirty())
-			{
-				String key = entry.getKey();
-				byte[] bytes = getDocSerializer().serialize(value);
-
-				if(jedis.hexists(jedisKey, key))
-					update++;
-				else
-					count++;
-
-				jedis.hset(jedisKey.getBytes(), key.getBytes(), bytes);
-				value.dirtyOff();;
-			}
-			else
-				skip ++;
-			
-		}
-
-		System.out.println(jedisKey + ": skipped " + skip + ", updated " + update + " added " + count);
-		
-		retunRedisClient(jedis);
-	}
 	
 	public static void loadStrDocMap(String key, Hashtable<String, Document> data) {
 		Jedis jedis=getRedisClient();

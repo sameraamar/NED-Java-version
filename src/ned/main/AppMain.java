@@ -76,7 +76,11 @@ public class AppMain {
 
 			if(gd.getParams().resume_mode) 
 			{
-				int n = gd.resumeInfo.get(GlobalData.LAST_DIMENSION);
+				Integer n = gd.resumeInfo.get(GlobalData.LAST_DIMENSION);
+				if(n == null)
+				{
+					throw new Exception("No previous run was found to resume. Please run first with resume_mode=False.");
+				}
 				if(gd.getParams().inital_dimension < n)
 				{
 					if( n % gd.getParams().dimension_jumps != 0 )
@@ -171,7 +175,7 @@ public class AppMain {
 		
 		String folder = "../data";
 		if(Session.getMachineName().indexOf("saaama") >= 0)
-			folder  = "c:/data/events_db/petrovic";
+			folder  = "c:/data/Thesis/events_db/petrovic";
 		
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
