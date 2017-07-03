@@ -33,7 +33,7 @@ public class AppMain {
 	private static PrintStream outShort;
 	private static String outfolder;
 
-	public static void release()
+	private static void release()
 	{
 		forest = null;
 		executer = null;
@@ -144,7 +144,7 @@ public class AppMain {
 	private static void createOutFolder() {
 		GlobalData gd = GlobalData.getInstance();
 		String folder = "../temp";
-		if(Session.getMachineName().indexOf("saaama") >= 0)
+		if(Session.getMachineName().indexOf("samer") >= 0)
 			folder  = "c:/temp";
 		
 		folder = folder + "/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset;
@@ -170,11 +170,11 @@ public class AppMain {
 		outShort = new PrintStream(new FileOutputStream(threadsFileNameShort));
 	}
 
-	public static void doMain() throws IOException {
+	private static void doMain() throws IOException {
 		GlobalData gd = GlobalData.getInstance();
 		
 		String folder = "../data";
-		if(Session.getMachineName().indexOf("saaama") >= 0)
+		if(Session.getMachineName().indexOf("samer") >= 0)
 			folder  = "c:/data/Thesis/events_db/petrovic";
 		
 		String[] files = {"petrovic_00000000.gz",

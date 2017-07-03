@@ -339,7 +339,8 @@ public class Document  implements Serializable, DirtyBit {
     	doc.user_id = userObj.get("id").getAsString();	
     	 return doc;
 		
-}
+	}
+	
 	public String getCreatedAt() {
 		return created_at;
 	}
