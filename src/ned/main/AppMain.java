@@ -394,8 +394,8 @@ public class AppMain {
 		
 		//wait till all processes finish
 		Session.getInstance().message(Session.INFO, "Summary", "wait till all processes finish");
-		executer.await(); //.shutdown();
-		ExecutionHelper.await(); //.shutdown();
+		executer.await();
+		ExecutionHelper.await();
 		
 
 		long current = System.nanoTime();

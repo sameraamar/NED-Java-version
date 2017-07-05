@@ -44,12 +44,7 @@ public class DocumentProcessorExecutor {
 		
 		return true;
 	}
-	
-	//public void shutdown()
-	//{
-	//	shutdown(executor);
-	//}
-	
+		
 	private void shutdown(ExecutorService executor)
 	{
 		executor.shutdown();
