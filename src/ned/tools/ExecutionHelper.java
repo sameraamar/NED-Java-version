@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public class ExecutionHelper {
 	private  static ExecutorService executor = Executors.newFixedThreadPool(2000);
@@ -16,9 +17,17 @@ public class ExecutionHelper {
 			executor.execute(task);
 	}
 	
-	public static void shutdown()
+	public static boolean await()
 	{
-		executor.shutdown();
+		try {
+			executor.shutdown();
+			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		return true;
 	}
 	
 	public static Future<?> asyncAwaitRun(Callable<?> task) {

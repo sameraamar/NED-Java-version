@@ -26,6 +26,7 @@ public class AppMain2 {
 	private static PrintStream outShort;
 	private static String outfolder;
 	private static LSHForest forest;
+	private static PrintStream idListFile;
 
 	private static void release()
 	{
@@ -81,10 +82,11 @@ public class AppMain2 {
 			throw e;
 		} finally {
 			//wait till all processes finish
-			executer.shutdown();
-			ExecutionHelper.shutdown();
+			Session.getInstance().message(Session.INFO, "Summary", "wait till ExecutionHelper finish");
+			ExecutionHelper.await(); //.shutdown();
+			Session.getInstance().message(Session.INFO, "Summary", "wait till executer finish");
+			executer.await(); //.shutdown();
 			
-			Session.getInstance().message(Session.INFO, "Summary", "wait till all processes finish");
 
 			long current = System.nanoTime();
 			long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);
@@ -112,6 +114,7 @@ public class AppMain2 {
 			
 			outFull.close();
 			outShort.close();
+			idListFile.close();
 			release();
 		}
 	}
@@ -143,6 +146,7 @@ public class AppMain2 {
 		String threadsFileNameShort = outfolder +"/short_"+roll+".txt";
 		outFull = new PrintStream(new FileOutputStream(threadsFileNameFull));
 		outShort = new PrintStream(new FileOutputStream(threadsFileNameShort));
+		idListFile = new PrintStream(new FileOutputStream(outfolder +"/ids_"+roll+".txt"));
 	}
 	
 	private static void doMain() throws Exception {
@@ -160,6 +164,7 @@ public class AppMain2 {
 			int idx = p.getCursor();
 
 			gd.addDocument(d, idx);
+			idListFile.println(d.getId());
 			
 			GlobalData.getInstance().getQueue().add(d.getId());
 			executer.submit(d, idx);

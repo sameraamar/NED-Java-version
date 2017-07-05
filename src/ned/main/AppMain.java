@@ -393,10 +393,10 @@ public class AppMain {
 		}
 		
 		//wait till all processes finish
-		executer.shutdown();
-		ExecutionHelper.shutdown();
-		
 		Session.getInstance().message(Session.INFO, "Summary", "wait till all processes finish");
+		executer.await(); //.shutdown();
+		ExecutionHelper.await(); //.shutdown();
+		
 
 		long current = System.nanoTime();
 		long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);

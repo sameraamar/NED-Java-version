@@ -35,6 +35,7 @@ public class DocumentProcessorExecutor {
 	public boolean await()
 	{
 		try {
+			executor.shutdown();
 			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -44,10 +45,10 @@ public class DocumentProcessorExecutor {
 		return true;
 	}
 	
-	public void shutdown()
-	{
-		shutdown(executor);
-	}
+	//public void shutdown()
+	//{
+	//	shutdown(executor);
+	//}
 	
 	private void shutdown(ExecutorService executor)
 	{
