@@ -42,13 +42,13 @@ public class GlobalData {
 		public int number_of_tables = 70;
 		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
 		public int max_bucket_size = 2000;
-		public int max_documents = 50_000_000;
+		public int max_documents = 100001;
 		public int max_thread_delta_time = 4*3600; //seconds
 		public int offset =  0;
 		public int search_recents = 2000;
 		public double threshold = 0.5;
 		public double min_cluster_entropy = 0.0;
-		public double min_cluster_size = 3;
+		public double min_cluster_size = 1;
 		public int inital_dimension = 100000;
 		public int dimension_jumps = 100000;
 		public boolean resume_mode = false;
