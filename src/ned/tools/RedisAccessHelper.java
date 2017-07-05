@@ -1,5 +1,6 @@
 package ned.tools;
 
+import java.net.SocketTimeoutException;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
@@ -22,6 +23,7 @@ import ned.types.Session;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisException;
 
 public class RedisAccessHelper {
@@ -161,11 +163,37 @@ public class RedisAccessHelper {
 		return 0;		
 	}
 
-	 public static void resetKey(String key)
-	 {
-	 	Jedis jedis=getRedisClient();
-		jedis.del(key);
-		retunRedisClient(jedis);
+	public static void resetKey(String key)
+	{
+		Jedis jedis = null;
+		int tries = 0;
+		boolean try_again = true;
+		
+		while(try_again && tries < 5)
+		{
+			jedis=getRedisClient();
+			
+			try {
+				jedis.del(key);
+		 		try_again = false;
+		 	}	 
+		 	catch (JedisConnectionException se) 
+		 	{
+		 		System.out.println("Failed to reset key " + key + ". trying again (" + tries + ")");
+		 		se.printStackTrace();
+		 		tries ++;
+		 	}
+			
+			if(try_again)
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+			if(jedis != null)
+	 			retunRedisClient(jedis);
+	 	}
 	 }
 	
 	 public static void saveStrSerializableMap(String jedisKey, Map<String, Map<Integer, Integer>> data)

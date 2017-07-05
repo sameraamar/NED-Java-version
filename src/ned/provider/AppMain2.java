@@ -196,15 +196,14 @@ public class AppMain2 {
         		middle_processed = p.getCursor();
         	}
 			
-			if (processed % (gd.getParams().print_limit * 10) == 0)
+			if (processed % (gd.getParams().print_limit * 100) == 0)
             {
             	int lastIndex = gd.resumeInfo.get(GlobalData.LAST_SEEN_IDX);
             	waitForClusteringQueue();
             	gd.save(lastIndex <= idx);
             }
-			
-			boolean debug = false;
 		}
+		
 		p.close();
 	}
 

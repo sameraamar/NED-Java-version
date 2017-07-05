@@ -5,8 +5,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
 
+import ned.types.ArrayFixedSize;
 import ned.types.Document;
 import ned.types.Session;
 
@@ -18,8 +20,7 @@ public class DocProviderGZip extends DocumentProvider {
 		super(maxDocument, skip);
 	}
 	
-	@Override
-	protected Document findNextHook() throws Exception {
+	private Document prepareSingleDocument() throws Exception {
 	
 		String line = buffered.readLine();
 		Document doc = Document.createOrGetDocument(line);
@@ -29,9 +30,13 @@ public class DocProviderGZip extends DocumentProvider {
 
 	@Override
 	protected boolean hasNextHook() throws Exception {
+		if( buffered == null )
+			return false;
+		
 		if( !buffered.ready() )
 		{
 			buffered.close();
+			buffered = null;
 			fileidx++;
 			if(!openFile())
 				return false;
@@ -43,7 +48,11 @@ public class DocProviderGZip extends DocumentProvider {
 	@Override
 	protected void closeHook() throws Exception
 	{
-		buffered.close();
+		if(buffered != null)
+		{
+			buffered.close();
+			buffered = null;
+		}
 	}
 	
 	@Override
@@ -78,6 +87,9 @@ public class DocProviderGZip extends DocumentProvider {
 	private boolean openFile() {
 		GZIPInputStream stream;
 		try {
+			if(fileidx >= gzfiles.length)
+				return false;
+			
 			System.out.println("opening file (" + fileidx + "): " + gzfiles[fileidx]);
 			stream = new GZIPInputStream(new FileInputStream(FOLDER + "/" + gzfiles[fileidx]));
 
@@ -90,6 +102,8 @@ public class DocProviderGZip extends DocumentProvider {
 		
 		return true;
 	}
+	String[] gzfiles2 = {"petrovic_00000000.gz",
+            "petrovic_00500000.gz"};
 
 	String[] gzfiles = {"petrovic_00000000.gz",
                     "petrovic_00500000.gz",
@@ -153,6 +167,21 @@ public class DocProviderGZip extends DocumentProvider {
                     "petrovic_29500000.gz"  
                    };
 	private BufferedReader buffered;
+
+	@Override
+	protected void prepareBuffer(ArrayFixedSize<Document> buffer) throws Exception
+	{
+		int size = buffer.capacity();
+		
+		int i;
+		for(i=0; i<size && hasNextHook() ; i++)
+		{
+			Document d = prepareSingleDocument();
+			buffer.set(i, d);
+		}
+		
+		buffer.set(i, -1, null); //release objects from i and up
+	}
 
 
 }

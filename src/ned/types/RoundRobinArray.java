@@ -17,18 +17,18 @@ public class RoundRobinArray<T>
 	
 	public void add(T s) 
 	{
-		if(data.length() == 0)
+		if(data.capacity() == 0)
 			return;
 		
 		//synchronized (index) {
 				int newIdx = index.updateAndGet(n -> {
-					int idx = (n >= data.length()-1) ? 0 : n + 1;
+					int idx = (n >= data.capacity()-1) ? 0 : n + 1;
 					data.set(idx, s);
 					return idx;
 				});
 				
 				//data.set(newIdx, s);
-				if(newIdx == data.length()-1)
+				if(newIdx == data.capacity()-1)
 					isFull = true;
 		//}
 		
