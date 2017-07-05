@@ -106,8 +106,6 @@ public class AppMain {
 
 			doMain();
 			
-			outFull.close();
-			outShort.close();
 			
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -132,9 +130,12 @@ public class AppMain {
 					}
 				}
 			}
-			
+
+			outFull.close();
+			outShort.close();
 			release();
 		}
+			
 	}
 
 	private static void createOutFolder() {

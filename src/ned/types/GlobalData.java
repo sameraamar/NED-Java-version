@@ -42,7 +42,7 @@ public class GlobalData {
 		public int number_of_tables = 70;
 		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
 		public int max_bucket_size = 2000;
-		public int max_documents = 100001;
+		public int max_documents = 50_000_000;
 		public int max_thread_delta_time = 4*3600; //seconds
 		public int offset =  0;
 		public int search_recents = 2000;
@@ -342,20 +342,7 @@ public class GlobalData {
 	public void flushClustersAll(PrintStream outFull, PrintStream outShort)
 	{
 		for (String leadId : this.clusters.keySet()) {
-			DocumentCluster c = clusterByDoc(leadId);
-			
-			boolean print = true;
-			if (c.size() < this.getParams().min_cluster_size)
-				print = false;
-			
-			else if(c.entropy() < this.getParams().min_cluster_entropy )
-				print = false;
-			
-			if (print)
-			{
-				outFull.print(c.toStringFull());
-				outShort.print(c.toStringShort());
-			}
+			flushOneCluster(leadId, outShort, outFull);
 		} 
 	}
 	
@@ -375,22 +362,9 @@ public class GlobalData {
 		int countDocs = 0;
 		for (String leadId : todelete) 
 		{
-			DocumentCluster cluster = clusterByDoc(leadId);
-			if (cluster == null) 
+			DocumentCluster cluster = flushOneCluster(leadId, outShort, outFull);
+			if(cluster == null)	
 				continue;
-			
-			boolean print = true;
-			if (cluster.size() < this.getParams().min_cluster_size)
-				print = false;
-			
-			else if(cluster.entropy() < this.getParams().min_cluster_entropy )
-				print = false;
-			
-			if (print)
-			{
-				outFull.print(cluster.toStringFull());
-				outShort.print(cluster.toStringShort());
-			}
 			
 			counter+=1;
 			
@@ -413,6 +387,27 @@ public class GlobalData {
 		
 		if (counter>0)
 			Session.getInstance().message(Session.DEBUG, "cleanClusters", "released "+counter+" clusters (" + countDocs + " docs)" );
+	}
+
+	private DocumentCluster flushOneCluster(String leadId, PrintStream outShort, PrintStream outFull) {
+		DocumentCluster cluster = clusterByDoc(leadId);
+		if (cluster == null) 
+			return null;
+		
+		boolean print = true;
+		if (cluster.size() < this.getParams().min_cluster_size)
+			print = false;
+		
+		else if(cluster.entropy() < this.getParams().min_cluster_entropy )
+			print = false;
+		
+		if (print)
+		{
+			outFull.print(cluster.toStringFull());
+			outShort.print(cluster.toStringShort());
+		}
+		
+		return cluster;
 	}
 
 	public Set<String> prepareListBeforeRelease() {
