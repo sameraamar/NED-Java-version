@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import ned.modules.Twokenize;
@@ -42,10 +43,10 @@ public class GlobalData {
 		public int number_of_tables = 70;
 		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
 		public int max_bucket_size = 2000;
-		public int max_documents = 100001;
+		public int max_documents = 50_000_000;
 		public int max_thread_delta_time = 4*3600; //seconds
 		public int offset =  0;
-		public int provider_buffer_size = 25000;
+		public int provider_buffer_size = 25000; //read documents ahead
 		public int search_recents = 2000;
 		public double threshold = 0.5;
 		public double min_cluster_entropy = 0.0;
@@ -134,17 +135,17 @@ public class GlobalData {
 	{
 		try{
 			System.out.println("Save to Redis...");
-			if(force || !getParams().resume_mode)
+			id2doc.save();
+	    	id2cluster.save();
+	    	cluster2replacement.save();
+	    	
+	    	if(force || !getParams().resume_mode)
 			{
 				id2wc.save();
 				word2index.save();
 		    	numberOfDocsIncludeWord.save();
 		    	resumeInfo.save();
 			}
-			
-			id2doc.save();
-	    	id2cluster.save();
-	    	cluster2replacement.save();
 		}
 		catch(JedisConnectionException re){
 			System.out.println(re.getMessage());
@@ -342,8 +343,15 @@ public class GlobalData {
 	
 	public void flushClustersAll(PrintStream outFull, PrintStream outShort)
 	{
-		for (String leadId : this.clusters.keySet()) {
+		KeySetView<String, DocumentCluster> keys = this.clusters.keySet();
+		System.out.println("Printing left-over clusters: " + keys.size());
+		int c = keys.size();
+		int c10 = c < 10 ? 10 : c / 10; //don't fail on zero division
+		for (String leadId : keys) {
 			flushOneCluster(leadId, outShort, outFull);
+			c--;
+			if(c % c10 == 0)
+				System.out.println(c + " left");
 		} 
 	}
 	

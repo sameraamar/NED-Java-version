@@ -65,9 +65,10 @@ public abstract class DocumentProvider {
 	private ArrayFixedSize<Document> threadPrepareBuffer_thread() throws Exception {
 		if(buffer_bk == null && bk_running.compareAndSet(false, true))
 		{
-			System.out.println("Thread name: " + Thread.currentThread().toString());
+			System.out.println("Putting a task to prepre new buffer: " + Thread.currentThread().toString());
 			Runnable task = () -> {
 				try {
+					System.out.println("Starting preparing a buffer: " + Thread.currentThread().toString());
 					int left = GlobalData.getInstance().getParams().max_documents - this.processed + 1;
 					int bs = buffer_size < left ? buffer_size : left; 
 					ArrayFixedSize<Document> tmp = new ArrayFixedSize<Document>(bs);
@@ -107,7 +108,7 @@ public abstract class DocumentProvider {
 		return buffer;
 	}
 
-	private ArrayFixedSize<Document> threadPrepareBuffer() throws Exception {
+	private ArrayFixedSize<Document> threadPrepareBuffer_singleThread() throws Exception {
 		if(index < buffer.size())
 			return buffer;
 			

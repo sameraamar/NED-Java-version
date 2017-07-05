@@ -67,7 +67,14 @@ public class DocumentClusteringThread extends Thread {
 		//last time
 		//wait for all other threads to finish
 		while(!mapToCluster())
-		{}
+		{
+			try {
+				System.out.println("Clustering thread is going to sleep");
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 
 		gd.flushClustersAll(outFull, outShort);
 	}

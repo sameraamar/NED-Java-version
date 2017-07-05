@@ -6,6 +6,9 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.concurrent.TimeUnit;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import ned.hash.LSHForest;
 import ned.main.DocumentProcessorExecutor;
 import ned.main.MyMonitorThread;
@@ -27,6 +30,7 @@ public class AppMain2 {
 	private static String outfolder;
 	private static LSHForest forest;
 	private static PrintStream idListFile;
+	private static DocumentProvider p;
 
 	private static void release()
 	{
@@ -41,6 +45,8 @@ public class AppMain2 {
 		long base = 0;
 		try {
 			GlobalData gd = GlobalData.getInstance();
+
+			
 			RedisAccessHelper.initRedisConnectionPool();
 			while(!RedisAccessHelper.ready){
 				System.out.print('.');
@@ -66,6 +72,12 @@ public class AppMain2 {
 					 gd.getParams().inital_dimension, 
 					 gd.getParams().max_bucket_size);	
 			
+			String filename = outfolder + "/params.txt";
+			PrintStream paramsOut = new PrintStream(new FileOutputStream(filename));
+			printParameters(System.out);
+			printParameters(paramsOut);
+			paramsOut.close();
+			
 			executer = new DocumentProcessorExecutor(forest, gd.getParams().number_of_threads);
 			threadMonitor  = new MyMonitorThread(executer, delay);
 			
@@ -75,6 +87,9 @@ public class AppMain2 {
 			threadMonitor.start();
 	    	clustering.start();
 	    	
+			p = new DocProviderGZip(gd.getParams().max_documents, gd.getParams().offset);
+			p.start();
+			
 			doMain();
 			
 		} catch(Exception e) {
@@ -87,7 +102,6 @@ public class AppMain2 {
 			Session.getInstance().message(Session.INFO, "Summary", "wait till executer finish");
 			executer.await(); //.shutdown();
 			
-
 			long current = System.nanoTime();
 			long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);
 			Session.getInstance().message(Session.INFO, "Summary", "Done in " + Utility.humanTime(seconds) );
@@ -111,12 +125,30 @@ public class AppMain2 {
 				}
 			}
 
+			if(p != null)
+				p.close();
 			
-			outFull.close();
-			outShort.close();
-			idListFile.close();
+			if(outFull != null)
+				outFull.close();
+			
+			if(outShort != null)
+				outShort.close();
+			
+			if(idListFile != null)
+				idListFile.close();
+
+			
 			release();
 		}
+	}
+
+	private static void printParameters(PrintStream out) 
+	{
+		GsonBuilder gson = new GsonBuilder();
+		Gson g = gson.setPrettyPrinting().create();
+		String params = g.toJson(GlobalData.getInstance().getParams());
+	                
+	    out.println(params);
 	}
 
 	public static void createOutFolder() {
@@ -151,8 +183,6 @@ public class AppMain2 {
 	
 	private static void doMain() throws Exception {
 		GlobalData gd = GlobalData.getInstance();
-		DocumentProvider p = new DocProviderGZip(gd.getParams().max_documents, gd.getParams().offset);
-		p.start();
 		
 		long base = System.nanoTime(); 
 		long middletime  = base;
@@ -208,7 +238,6 @@ public class AppMain2 {
             }
 		}
 		
-		p.close();
 	}
 
 	public static void waitForClusteringQueue() {
