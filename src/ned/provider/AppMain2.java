@@ -76,11 +76,6 @@ public class AppMain2 {
 	    	
 			doMain();
 			
-
-			
-			outFull.close();
-			outShort.close();
-			
 		} catch(Exception e) {
 			e.printStackTrace();
 			throw e;
@@ -113,6 +108,10 @@ public class AppMain2 {
 					}
 				}
 			}
+
+			
+			outFull.close();
+			outShort.close();
 			release();
 		}
 	}
