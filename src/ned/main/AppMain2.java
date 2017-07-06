@@ -1,4 +1,4 @@
-package ned.provider;
+package ned.main;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -10,8 +10,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import ned.hash.LSHForest;
-import ned.main.DocumentProcessorExecutor;
-import ned.main.MyMonitorThread;
+import ned.provider.DocProviderGZip;
+import ned.provider.DocumentProvider;
 import ned.tools.ExecutionHelper;
 import ned.tools.RedisAccessHelper;
 import ned.types.Document;
@@ -29,7 +29,7 @@ public class AppMain2 {
 	private static PrintStream outShort;
 	private static String outfolder;
 	private static LSHForest forest;
-	private static PrintStream idListFile;
+	//private static PrintStream idListFile;
 	private static DocumentProvider p;
 
 	private static void release()
@@ -134,8 +134,8 @@ public class AppMain2 {
 			if(outShort != null)
 				outShort.close();
 			
-			if(idListFile != null)
-				idListFile.close();
+			//if(idListFile != null)
+			//	idListFile.close();
 
 			
 			release();
@@ -178,7 +178,7 @@ public class AppMain2 {
 		String threadsFileNameShort = outfolder +"/short_"+roll+".txt";
 		outFull = new PrintStream(new FileOutputStream(threadsFileNameFull));
 		outShort = new PrintStream(new FileOutputStream(threadsFileNameShort));
-		idListFile = new PrintStream(new FileOutputStream(outfolder +"/ids_"+roll+".txt"));
+		//idListFile = new PrintStream(new FileOutputStream(outfolder +"/ids_"+roll+".txt"));
 	}
 	
 	private static void doMain() throws Exception {
@@ -194,7 +194,7 @@ public class AppMain2 {
 			int idx = p.getCursor();
 
 			gd.addDocument(d, idx);
-			idListFile.println(d.getId());
+			//idListFile.println(d.getId());
 			
 			GlobalData.getInstance().getQueue().add(d.getId());
 			executer.submit(d, idx);

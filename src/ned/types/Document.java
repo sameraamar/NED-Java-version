@@ -41,33 +41,6 @@ public class Document  implements Serializable, DirtyBit {
 	private String reply_to_user_id;
 	private String quoted_user_id;
 	
-	public static Document createOrGetDocument(String json)
-	{
-		Document doc = null;
-		
-		JsonParser jsonParser = new JsonParser();
-		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
-		
-		if(jsonObj.get("text") == null || jsonObj.get("id_str") == null)
-			return null;
-		
-		String id = jsonObj.get("id_str").getAsString();
-		
-		id = id.intern();
-		synchronized (id) {
-			doc = GlobalData.getInstance().id2doc.get(id);
-			if(doc == null)
-			{
-				doc = Document.parse(json, isBasicOnly);
-				GlobalData.getInstance().id2doc.put(id, doc);
-			}
-			
-		}
-		
-		return doc;
-	}
-	
-	
 	private Document(String id)
 	{
     	this.id = id.intern();
@@ -399,5 +372,32 @@ public class Document  implements Serializable, DirtyBit {
 	public void setUserId(String asString) {
 		user_id = asString;
 		dirtyOn();
+	}
+
+	@Deprecated
+	public static Document createOrGetDocument(String json)
+	{
+		Document doc = null;
+		
+		JsonParser jsonParser = new JsonParser();
+		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
+		
+		if(jsonObj.get("text") == null || jsonObj.get("id_str") == null)
+			return null;
+		
+		String id = jsonObj.get("id_str").getAsString();
+		
+		id = id.intern();
+		synchronized (id) {
+			doc = GlobalData.getInstance().id2doc.get(id);
+			if(doc == null)
+			{
+				doc = Document.parse(json, isBasicOnly);
+				GlobalData.getInstance().id2doc.put(id, doc);
+			}
+			
+		}
+		
+		return doc;
 	}
 }

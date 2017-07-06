@@ -43,7 +43,7 @@ public class GlobalData {
 		public int number_of_tables = 70;
 		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
 		public int max_bucket_size = 2000;
-		public int max_documents = 50_000_000;
+		public int max_documents = 500_000;
 		public int max_thread_delta_time = 4*3600; //seconds
 		public int offset =  0;
 		public int provider_buffer_size = 25000; //read documents ahead

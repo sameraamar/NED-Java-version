@@ -23,9 +23,9 @@ public class DocProviderGZip extends DocumentProvider {
 	private Document prepareSingleDocument() throws Exception {
 	
 		String line = buffered.readLine();
-		Document doc = Document.createOrGetDocument(line);
-		return doc;
+		Document doc = Document.parse(line, true);
 		
+		return doc;
 	}
 
 	@Override
@@ -33,7 +33,8 @@ public class DocProviderGZip extends DocumentProvider {
 		if( buffered == null )
 			return false;
 		
-		if( !buffered.ready() )
+		boolean isReady = buffered.ready();
+		if( !isReady )
 		{
 			buffered.close();
 			buffered = null;
@@ -42,7 +43,7 @@ public class DocProviderGZip extends DocumentProvider {
 				return false;
 		}
 		
-		return buffered.ready();
+		return true;
 	}
 
 	@Override
@@ -178,6 +179,8 @@ public class DocProviderGZip extends DocumentProvider {
 		{
 			Document d = prepareSingleDocument();
 			buffer.set(i, d);
+			if(i % 1000 == 0)
+				System.out.println("DEBUG: prepareBuffer -> " + i);
 		}
 		
 		buffer.set(i, -1, null); //release objects from i and up

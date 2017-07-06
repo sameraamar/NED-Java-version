@@ -3,6 +3,9 @@ package ned.provider;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import ned.tools.ExecutionHelper;
 import ned.types.ArrayFixedSize;
 import ned.types.Document;
@@ -38,6 +41,7 @@ public abstract class DocumentProvider {
 		processed++;
 		
 		Document d = buffer.get(index);
+		d = handleResumeMode(d);
 		//buffer.set(index, null);
 
 		index++;
@@ -108,6 +112,24 @@ public abstract class DocumentProvider {
 		return buffer;
 	}
 
+	public static Document handleResumeMode(Document newDoc)
+	{
+		if (!GlobalData.getInstance().getParams().resume_mode)
+			return newDoc;
+		
+		String id = newDoc.getId().intern();
+		synchronized (id) {
+			Document doc = GlobalData.getInstance().id2doc.get(id);
+			if(doc == null)
+			{
+				GlobalData.getInstance().id2doc.put(id, newDoc);
+				return newDoc;
+			}
+				
+			return doc;			
+		}
+	}
+	
 	private ArrayFixedSize<Document> threadPrepareBuffer_singleThread() throws Exception {
 		if(index < buffer.size())
 			return buffer;
