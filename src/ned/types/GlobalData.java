@@ -38,13 +38,13 @@ public class GlobalData {
 	{
 		public int roll_file = 50_000_000;
 		public String DELIMITER = "\t";
-		public int monitor_timer_seconds = 1; //seconds
+		public int monitor_timer_seconds = 10; //seconds
 		public int number_of_threads =100;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
 		public int max_bucket_size = 2000;
-		public int max_documents = 50_000_001;
+		public int max_documents = 50_000_002;
 		public int max_thread_delta_time = 1*3600; //seconds
 		public int offset =  0;
 		public int provider_buffer_size = 25000; //read documents ahead
@@ -56,7 +56,7 @@ public class GlobalData {
 		public int inital_dimension = 9 * dimension_jumps;
 		public boolean resume_mode = false;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
-		public int dimension_max = 15 * dimension_jumps;
+		public int dimension_max = 20 * dimension_jumps;
 	}
 	
 	private static GlobalData globalData = null;

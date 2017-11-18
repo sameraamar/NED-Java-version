@@ -81,7 +81,7 @@ public class DocumentClusteringThread extends Thread {
 		
 		StringBuilder headerShort = new StringBuilder("leadId").append( delimiter );			
 		headerShort.append( "entropy" ).append( delimiter );
-		headerShort.append( "#users" ).append( delimiter );
+		headerShort.append( "users" ).append( delimiter );
 		headerShort.append( "size" ).append( delimiter );
 		headerShort.append( "text" ).append( delimiter );
 		headerShort.append("\n");
@@ -94,7 +94,7 @@ public class DocumentClusteringThread extends Thread {
 		headerFull.append( "nearest" ).append( delimiter );
 		headerFull.append( "distance" ).append( delimiter );
 		headerFull.append( "entropy" ).append( delimiter );
-		headerFull.append( "#users" ).append( delimiter );
+		headerFull.append( "users" ).append( delimiter );
 		headerFull.append( "size" ).append( delimiter );
 		headerFull.append( "age" ).append( delimiter );
 		headerFull.append( "score" ).append( delimiter );

@@ -82,18 +82,16 @@ public class AppMain2 {
 			threadMonitor  = new MyMonitorThread(executer, parserThread, delay);
 			
 	    	Session.getInstance().message(Session.ERROR, "Reader", "Starting Monitor...");
-
-
 			threadMonitor.start();
 	    	clustering.start();
 	    	
 
-	    	
-	    	//try {
-	    	//	Thread.sleep(10000);
-	    	//}/ catch(Exception e) {
-	    	//	e.printStackTrace();
-	    	//}
+	    	//wait for the document provider to collect some input
+	    	try {
+	    		Thread.sleep(1000);
+	    	} catch(Exception e) {
+	    		e.printStackTrace();
+	    	}
 			doMain();
 			
 		} catch(Exception e) {
