@@ -66,7 +66,7 @@ public class DocProviderGZip extends DocumentProvider {
 	protected void startHook(int skip) throws Exception
 	{
 		FOLDER = "../data";
-		if(Session.getMachineName().indexOf("samer") >= 0)
+		if(Session.checkMachine())
 			FOLDER= "c:/data/Thesis/events_db/petrovic";
 
 		int offset = skip;

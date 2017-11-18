@@ -144,7 +144,7 @@ public class AppMain {
 	private static void createOutFolder() {
 		GlobalData gd = GlobalData.getInstance();
 		String folder = "../temp";
-		if(Session.getMachineName().indexOf("samer") >= 0)
+		if(Session.checkMachine())
 			folder  = "c:/temp";
 		
 		folder = folder + "/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset;
@@ -174,7 +174,7 @@ public class AppMain {
 		GlobalData gd = GlobalData.getInstance();
 		
 		String folder = "../data";
-		if(Session.getMachineName().indexOf("samer") >= 0)
+		if(Session.checkMachine())
 			folder  = "c:/data/Thesis/events_db/petrovic";
 		
 		String[] files = {"petrovic_00000000.gz",

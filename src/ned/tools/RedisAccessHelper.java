@@ -50,7 +50,7 @@ public class RedisAccessHelper {
 		config.setMaxTotal(REDIS_MAX_CONNECTIONS);
 		//String redisHost = "ec2-54-245-53-209.us-west-2.compute.amazonaws.com";	
 		String redisHost = "localhost";
-		if(Session.getMachineName().indexOf("samer") >= 0)
+		if(Session.checkMachine())
 			redisHost = "localhost";
 		
 		return new JedisPool(config, redisHost, PORT, TIME_OUT);

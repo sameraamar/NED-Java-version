@@ -53,4 +53,9 @@ public class Session {
 		return "";
 	}
 	
+	public static boolean checkMachine()
+	{	
+		String m = Session.getMachineName();
+		return m.indexOf("-processor")>=0 || m.indexOf("samer")>=0;
+	}
 }

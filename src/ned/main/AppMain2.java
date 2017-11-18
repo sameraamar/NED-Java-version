@@ -158,7 +158,7 @@ public class AppMain2 {
 	public static void createOutFolder() {
 		GlobalData gd = GlobalData.getInstance();
 		String folder = "../temp";
-		if(Session.getMachineName().indexOf("samer") >= 0)
+		if(Session.checkMachine())
 			folder  = "c:/temp";
 		
 		folder = folder + "/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset;
