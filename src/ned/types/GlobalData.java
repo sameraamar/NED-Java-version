@@ -52,11 +52,11 @@ public class GlobalData {
 		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
-		public int dimension_jumps = 10000;
+		public int dimension_jumps = 100000;
 		public int inital_dimension = 9 * dimension_jumps;
 		public boolean resume_mode = false;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
-		public int dimension_max = 20 * dimension_jumps;
+		public int dimension_max = 15 * dimension_jumps;
 	}
 	
 	private static GlobalData globalData = null;
