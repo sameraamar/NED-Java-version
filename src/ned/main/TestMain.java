@@ -6,13 +6,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
-import java.util.StringTokenizer;
 import java.util.regex.Pattern;
-
 import ned.types.Document;
 import ned.types.GlobalData;
 import ned.types.RedisBasedMap;
-import ned.types.SerializeHelperStrDoc;
+import ned.types.SerializeHelperAdapterDirtyBit;
 
 public class TestMain {
 
@@ -40,7 +38,7 @@ public class TestMain {
 		String filename = "C:\\temp\\threads_petrovic_all\\hit_results-MechanichalTurk.csv.txt";
 		String filenameOut = "C:\\temp\\threads_petrovic_all\\hit_results-MechanichalTurk_text.csv.txt";
 
-		RedisBasedMap<String, Document> id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, false, new SerializeHelperStrDoc() );
+		RedisBasedMap<String, Document> id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, false, new SerializeHelperAdapterDirtyBit<Document>() );
 
 		BufferedReader br = null;
 		try {

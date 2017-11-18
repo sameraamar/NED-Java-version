@@ -9,7 +9,7 @@ import ned.tools.RedisAccessHelper;
 import redis.clients.jedis.Jedis;
 
 
-public class SerializeHelperAdapter<T> extends SerializeHelper<String, T>{
+public class SerializeHelperAdapterDirtyBit<T> implements SerializeHelper<String, T>{
 
 	@Override
 	public void set(Jedis jedis, String jedisKey, String key, T value) 
@@ -35,12 +35,7 @@ public class SerializeHelperAdapter<T> extends SerializeHelper<String, T>{
 	}
 
 	@Override
-	T parse(String svalue) {
-		return null;
-	}
-
-	@Override
-	protected void saveMap(String jedisKey, Map<String, T> data) {
+	public void saveMap(String jedisKey, Map<String, T> data) {
 		Jedis jedis= RedisAccessHelper.getRedisClient();
 
 		int count = 0;

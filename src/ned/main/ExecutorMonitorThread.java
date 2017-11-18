@@ -1,7 +1,6 @@
 package ned.main;
 
 import java.util.concurrent.ExecutorService;
-
 import ned.types.Session;
 
 public class ExecutorMonitorThread extends Thread {
@@ -29,7 +28,7 @@ public class ExecutorMonitorThread extends Thread {
 	    	 try {		
 					String msg = this.executor.toString();
 					msg = msg.substring(msg.indexOf('[')+1, msg.indexOf(']'));
-					Session.getInstance().message(Session.INFO, "[monitor]", "\t" + msg);  		
+					Session.getInstance().message(Session.INFO, "[monitor]", "\t" + msg); 
 					printHook();
 		            ExecutorMonitorThread.sleep(seconds*1000);
 	               

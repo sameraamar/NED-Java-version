@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import ned.tools.GeneralHelper;
 import ned.types.ArrayFixedSize;
 import ned.types.Document;
+import ned.types.GlobalData;
 import ned.types.RoundRobinArray;
 
 public class LSHForest {
@@ -110,48 +111,44 @@ public class LSHForest {
     */
 	public List<String> addDocument01(Document doc, int dim, Map<Integer, Double> word2idf)
     {
-		HashMap<String, AtomicInteger> hitCounts = new HashMap<String, AtomicInteger>();
+		int capacity = numberOfTables * tables[0].getMaxBucketSize();
+		HashMap<String, AtomicInteger> hitCounts = new HashMap<String, AtomicInteger>(capacity);
 		
 		Stream<LSHTable> stream = Arrays.stream(tables);
 		
 		 stream.map(table->{
-			return table.AddDocument(doc, dim, word2idf);
-		}).forEach(tmpList->{
-			int s = tmpList.size();
-			for (int k=0; k<s; k++) {
-				String tmp = tmpList.get(k);
-				if(tmp == null)
-				{
-					System.out.println("Something strange.. value "+ k +" is null. tmpList.len = " + s);
-					continue;
-				}
-				String id = doc.getId();
-				if ( tmp.compareTo(id) >=0 )
-					continue;
-				
-				AtomicInteger ai = null;
-				if(!hitCounts.containsKey(tmp))
-				{
-					ai = new AtomicInteger(0);
-					synchronized (hitCounts) {
-						if(!hitCounts.containsKey(tmp))
-							hitCounts.put(tmp, ai);
+			 	return table.AddDocument(doc, dim, word2idf);
+			}).forEach(tmpList->{
+				int s = tmpList.size();
+				for (int k=0; k<s; k++) {
+					String tmp = tmpList.get(k);
+					if(tmp == null)
+					{
+						System.out.println("Something strange.. value "+ k +" is null. tmpList.len = " + s);
+						continue;
 					}
+					String id = doc.getId();
+					if ( tmp.compareTo(id) >=0 )
+						continue;
 					
+					AtomicInteger ai = null;
+					if(!hitCounts.containsKey(tmp))
+					{
+						ai = new AtomicInteger(0);
+						synchronized (hitCounts) {
+							if(!hitCounts.containsKey(tmp))
+								hitCounts.put(tmp, ai);
+						}
+						
+					}
+					if(ai == null)
+						ai = hitCounts.get(tmp);
+					ai.incrementAndGet();
 				}
-				if(ai == null)
-					ai = hitCounts.get(tmp);
-				ai.incrementAndGet();
-			}
-			
-		});;
+				
+			});;
 
-
-
-		
-		
-
-        ArrayList<String> output = new ArrayList<String>();
+		ArrayList<String> output = new ArrayList<String>();
         Set<Entry<String, AtomicInteger>> es = hitCounts.entrySet();
         int compare_with = 3*numberOfTables;
         int i=0;

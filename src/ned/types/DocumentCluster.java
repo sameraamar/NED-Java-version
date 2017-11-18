@@ -75,7 +75,7 @@ public class DocumentCluster implements Serializable, DirtyBit {
 	{
 		this.idList.add(doc.getId());
 		if(this.lasttime-this.starttime>0){
-			score = Double.valueOf(2.0)/(doc.getTimestamp()-this.lasttime);
+			score += Double.valueOf(2.0)/(doc.getTimestamp()-this.lasttime);
 		}
 		
 		this.lasttime = doc.getTimestamp();

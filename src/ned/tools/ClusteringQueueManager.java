@@ -2,23 +2,23 @@ package ned.tools;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class ClusteringQueueManager {
+public class ClusteringQueueManager<T> {
 	
- 	private Queue<String> queue; 
+ 	private Queue<T> queue; 
 
  	public ClusteringQueueManager( ) {
-		queue=new LinkedList<String>();
+		queue=new LinkedList<T>();
 
 	}
-	synchronized public String  poll() {
+	synchronized public T poll() {
 		return this.queue.poll();	
 	}
 	
-	synchronized public void  add(String str){
+	synchronized public void add(T str){
 		queue.add(str);
 	}
 
-	public String peek() {
+	public T peek() {
 		return queue.peek();
 	}
 	public boolean isEmpty() {

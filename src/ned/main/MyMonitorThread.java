@@ -3,6 +3,7 @@ package ned.main;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import ned.provider.DocumentParserThread;
 import ned.tools.RedisAccessHelper;
 import ned.types.GlobalData;
 import ned.types.Session;
@@ -15,6 +16,7 @@ public class MyMonitorThread extends Thread
     private long starttime;
 
     private boolean stop=false;
+	private DocumentParserThread parserThread;
 
     public MyMonitorThread(DocumentProcessorExecutor executorService, int delay)
     {
@@ -26,9 +28,16 @@ public class MyMonitorThread extends Thread
     {
         this.executor = null;
         this.seconds=delay;
+        this.parserThread = null;
     }
 
-    public void shutdown() {
+    public MyMonitorThread(DocumentProcessorExecutor executer, DocumentParserThread parserThread, int delay) {
+    	this.executor = null;
+        this.seconds=delay;
+        this.parserThread = parserThread;
+	}
+
+	public void shutdown() {
     	Session.getInstance().message(Session.INFO, "[monitor]", "request to shutdown");
         this.stop=true;
     }
@@ -82,7 +91,8 @@ public class MyMonitorThread extends Thread
 	        }
 	
             msg.append("\n");
-            msg.append("\tQueue: ").append(gd.getQueue().size()).append(", ID=").append(gd.getQueue().peek());
+            msg.append("\tClustering Queue: ").append(gd.getQueue().size()).append(", ID=").append(gd.getQueue().peek());
+            msg.append("\n\tparser queue: " + parserThread.queue.size());
 	        Session.getInstance().message(Session.INFO, "[monitor]", msg.toString());
 	                
 	        try {

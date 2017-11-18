@@ -158,6 +158,7 @@ public class DocumentClusteringHelper {
 			if(joinClusterId==null)
 			{
 				System.out.println("joinClusterId==null : " + nearest);
+				return null;
 			}
 			
 			DocumentCluster cluster = gd.clusterByDoc(joinClusterId);

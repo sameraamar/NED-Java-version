@@ -1,15 +1,12 @@
 package ned.types;
 
 import java.io.PrintStream;
-
 import ned.tools.ClusteringQueueManager;
 import ned.tools.RedisAccessHelper;
 import redis.clients.jedis.JedisPool;
 
 public class DocumentClusteringThread extends Thread {
 	private boolean stop = false;
-	
-
 	private PrintStream outFull;
 	private PrintStream outShort;
 	public int clusteredCounter;
@@ -67,7 +64,14 @@ public class DocumentClusteringThread extends Thread {
 		//last time
 		//wait for all other threads to finish
 		while(!mapToCluster())
-		{}
+		{
+			try {
+				System.out.println("Clustering thread is going to sleep");
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 
 		gd.flushClustersAll(outFull, outShort);
 	}
@@ -134,7 +138,7 @@ public class DocumentClusteringThread extends Thread {
 	private Document next()
 	{
 		GlobalData gd = GlobalData.getInstance();
-		ClusteringQueueManager queue = gd.getQueue();
+		ClusteringQueueManager<String> queue = gd.getQueue();
 		
 		String id = queue.peek();
 		if (id == null)

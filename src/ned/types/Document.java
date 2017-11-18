@@ -40,33 +40,8 @@ public class Document  implements Serializable, DirtyBit {
 	private String quoted_status_id;
 	private String reply_to_user_id;
 	private String quoted_user_id;
-	
-	public static Document createOrGetDocument(String json)
-	{
-		Document doc = null;
-		
-		JsonParser jsonParser = new JsonParser();
-		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
-		
-		if(jsonObj.get("text") == null || jsonObj.get("id_str") == null)
-			return null;
-		
-		String id = jsonObj.get("id_str").getAsString();
-		
-		id = id.intern();
-		synchronized (id) {
-			doc = GlobalData.getInstance().id2doc.get(id);
-			if(doc == null)
-			{
-				doc = Document.parse(json, isBasicOnly);
-				GlobalData.getInstance().id2doc.put(id, doc);
-			}
-			
-		}
-		
-		return doc;
-	}
-	
+
+	private int retweetedFavouritesCount;
 	
 	private Document(String id)
 	{
@@ -286,6 +261,8 @@ public class Document  implements Serializable, DirtyBit {
 				JsonObject obj = element.getAsJsonObject();
 				userObj = obj.get("user").getAsJsonObject();
 	        	doc.quoted_user_id = userObj.get("id_str").getAsString();
+	        	
+	        	doc.text += " [" + obj.get("text").getAsString() + "]";
 			}
 			
 			doc.retweet_count = jsonObj.get("retweet_count").getAsInt();
@@ -299,6 +276,8 @@ public class Document  implements Serializable, DirtyBit {
 				
 				userObj = retweetObj.get("user").getAsJsonObject();
 	        	doc.retweeted_user_id = userObj.get("id_str").getAsString();
+	        	
+	        	doc.retweetedFavouritesCount = retweetObj.get("favorite_count").getAsInt();
 			}
 			
 			
@@ -339,7 +318,8 @@ public class Document  implements Serializable, DirtyBit {
     	doc.user_id = userObj.get("id").getAsString();	
     	 return doc;
 		
-}
+	}
+	
 	public String getCreatedAt() {
 		return created_at;
 	}
@@ -398,5 +378,40 @@ public class Document  implements Serializable, DirtyBit {
 	public void setUserId(String asString) {
 		user_id = asString;
 		dirtyOn();
+	}
+
+	@Deprecated
+	public static Document createOrGetDocument(String json)
+	{
+		Document doc = null;
+		
+		JsonParser jsonParser = new JsonParser();
+		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
+		
+		if(jsonObj.get("text") == null || jsonObj.get("id_str") == null)
+			return null;
+		
+		String id = jsonObj.get("id_str").getAsString();
+		
+		id = id.intern();
+		synchronized (id) {
+			doc = GlobalData.getInstance().id2doc.get(id);
+			if(doc == null)
+			{
+				doc = Document.parse(json, isBasicOnly);
+				GlobalData.getInstance().id2doc.put(id, doc);
+			}
+			
+		}
+		
+		return doc;
+	}
+
+	public int getRetweetedFavouritesCount() {
+		return retweetedFavouritesCount;
+	}
+
+	public void setRetweetedFavouritesCount(int retweetedFavouritesCount) {
+		this.retweetedFavouritesCount = retweetedFavouritesCount;
 	}
 }
