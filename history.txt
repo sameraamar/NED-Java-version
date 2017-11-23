@@ -1,0 +1,1000 @@
+   18  tail -f nohup.out
+   19  git pull origin hyper
+   20  git pull origin hyper
+   21  haed -50 nohup.out
+   22  head -50 nohup.out
+   23  head -50 ../temp/threads.txt 
+   24  head -50 nohup.out
+   25  grep 40000000 nohup.out 
+   26  grep 4000000 nohup.out 
+   27  grep Worker Aht nohup.out 
+   28  cd samer/NED-Java-version/
+   29  tail -f nohup.out
+   30  cd samer/NED-Java-version/
+   31  tail -f nohup.out
+   32  top
+   33  cd samer/NED-Java-version/
+   34  tail -f nohup.out
+   35  pwd
+   36  ls -la /tmp/
+   37  cd samer/
+   38  mkdir data
+   39  chmod 7777 data
+   40  cd data/
+   41  mv /tmp/petrovic_*.gz .
+   42  ls -la
+   43  pwd
+   44  chmod -7777 data
+   45  chmod -R 7777 ../data
+   46  ls -la
+   47  pwd
+   48  exit
+   49  git checkout hyper_samer
+   50  git checkout -b hyper_samer
+   51  git pull origin  hyper_samer
+   52  git reset --hard
+   53  git pull origin  hyper_samer
+   54  git reset 3fcf12c33a37c81d3f5cf7c0e89a354673ab5740
+   55  git pull origin  hyper_samer
+   56  git reset 3fcf12c33a37c81d3f5cf7c0e89a354673ab57403fcf12c33a37c81d3f5cf7c0e89a354673ab5740
+   57  git reset --hard 3fcf12c33a37c81d3f5cf7c0e89a354673ab5740
+   58  git pull origin  hyper_samer
+   59  git pull origin  hyper_samer
+   60  git reset --hard
+   61  rm -rf sourc*.*
+   62  vi src/ned/main/AppMain.java 
+   63  vi src/ned/main/AppMain.java 
+   64  vi src/ned/types/GlobalData.java 
+   65  pwd
+   66  git branch 
+   67  git pull 
+   68  git pull origin  hyper_samer
+   69  git reset 3fcf12c33a37c81d3f5cf7c0e89a354673ab5740
+   70  git checout samer_hyper
+   71  git checkout samer_hyper
+   72  git checkout hyper_samer
+   73  git reset --hard
+   74  git reset 3fcf12c33a37c81d3f5cf7c0e89a354673ab5740  --hard
+   75  exit
+   76  mv ../NED-Java-version/ ../NED-Java-version_orig
+   77  unzip src.zip ../NED-Java-version/
+   78  mkdir ../NED-Java-version
+   79  unzip src.zip ../NED-Java-version/
+   80  unzip src.zip .
+   81  ls
+   82  unzip src.zip 
+   83  ls
+   84  ls ../
+   85  mc src ../NED-Java-version/
+   86  mv src ../NED-Java-version/
+   87  cd ../NED-Java-version
+   88  ls
+   89  mkdir lib
+   90  cp -R ../NED-Java-version/lib/* lib/
+   91  cp -R ../NED-Java-version/lib/ lib/
+   92  cp -R ../NED-Java-version_orig/lib/ lib/
+   93  ls lib/
+   94  ls lib/lib/
+   95  cp -R ../NED-Java-version_orig/lib/ .
+   96  ls
+   97  ls lib/
+   98  rm -rf lib/lib/*
+   99  cp -rf ../NED-Java-version_orig/*.sh .
+  100  ls
+  101  chmod 7777 *.sh
+  102  ./redisRun.sh 
+  103  ./build.sh 
+  104  find ./ -name *.java > sources.txt
+  105  ./build.sh 
+  106  vi build.sh 
+  107  find ./ -name *.java >sources.txt
+  108  ./build.sh 
+  109  cp ../NED-Java-version_orig/bin/ .
+  110  cp -rf  ../NED-Java-version_orig/bin/ .
+  111  ./build.sh 
+  112  ./run1.sh 
+  113  vi src/ned/main/AppMain.java 
+  114  vi src/ned/types/GlobalData.java 
+  115  ./build.sh 
+  116  ./run1.sh 
+  117  vi run1.sh 
+  118  git status
+  119  nohup ./run1.sh &
+  120  tail -f nohup.out 
+  121  tail -f nohup.out 
+  122  tail -f nohup.out 
+  123  ps -ef | grep java
+  124  tail -f nohup.out 
+  125  top
+  126  clea
+  127  clear
+  128  tail -f nohup.out 
+  129  rm -rf ../data/src.zip 
+  130  rm -rf ../data/src/*
+  131  exit
+  132  cd samer/data/
+  133  ls
+  134  unzip src.zip 
+  135  ls
+  136  unzip src.zip .
+  137  unzip src.zip 
+  138  pwd
+  139  unzip src.zip 
+  140  rm -rf src.zip 
+  141  exit
+  142  cd samer/NED-Java-version/
+  143  tail -f nohup.out 
+  144  chnof 7777 redisRun.sh 
+  145  ./redisRun.sh 
+  146  cd samer/NED-Java-version/
+  147  ./redisRun.sh 
+  148  vi ../../samer/redis/redis-3.2.8/redis.conf 
+  149  ps -ef | grep java
+  150  ./redisRun.sh 
+  151  ps -ef | grep redis
+  152  kill -9 15000
+  153  ./redisRun.sh 
+  154  vi ../../samer/redis/redis-3.2.8/redis.conf 
+  155  ps -ef | grep redis
+  156  kill -9 15064
+  157  ./redisRun.sh 
+  158  vi ../../samer/redis/redis-3.2.8/redis.conf 
+  159  ./redisRun.sh 
+  160  ps -ef | grep redis
+  161  kill -9 15074
+  162  ./redisRun.sh 
+  163  vi ../../samer/redis/redis-3.2.8/redis.conf 
+  164  ps -ef | grep redis
+  165  kill -9 15080
+  166  ./redisRun.sh 
+  167  rm -rf NED-Java-version/
+  168  git clone https://github.com/sameraamar/NED-Java-version.git
+  169  git checkout hyper_samer_quality
+  170  cd NED-Java-version/
+  171  git checkout hyper_samer_quality
+  172  git pull
+  173  git pull origin hyper_samer_quality
+  174  git pull origin hyper_samer_quality
+  175  git reset 
+  176  reset --hard
+  177  git reset --hard
+  178  rm -rf source.txt
+  179  find ./ -name *.java > sources.txt
+  180  ./build.sh 
+  181  vi src/ned/types/GlobalData.java 
+  182  ./run1.sh 
+  183  ./run1.sh > run_01_10.txt &
+  184  tail -f run_01_10.txt 
+  185  vi src/ned/types/GlobalData.java 
+  186  vi ./run1.sh 
+  187  vi ./run1.sh 
+  188  vi ./run1.sh 
+  189  vi ./run1.sh 
+  190  vi ./run1.sh 
+  191  chmod 777 -R /home/ec2-user/samer/redis
+  192  exit
+  193  vi ./run1.sh 
+  194  ./run1.sh 
+  195  ./build.sh 
+  196  ./run1.sh 
+  197  ./run1.sh > run_09_20.txt &
+  198  tail -f run_09_20.txt 
+  199  tail -f run_01_10.txt 
+  200  vi src/ned/types/GlobalData.java 
+  201  tail -f run_09_20.txt 
+  202  tail -f run_01_10.txt 
+  203  ps -ef | grep java
+  204  kill -9 4220
+  205  tail -f run_01_10.txt 
+  206  tail -f run_09_20.txt 
+  207  vi src/ned/types/GlobalData.java 
+  208  ./build.sh 
+  209  ./run1.sh > run_00_20.txt &
+  210  tail -f run_00
+  211  tail -f run_00_20.txt 
+  212  top
+  213  tail -f run_09_20.txt 
+  214  tail -f run_00_20.txt 
+  215  top
+  216  cd ../data/
+  217  aws configure
+  218  aws s3 cp magnet-fwm/SharedData/fsd/* .
+  219  aws s3 sync  magnet-fwm/SharedData/fsd/* .
+  220  aws s3 sync  magnet-fwm/SharedData/fsd/ .
+  221  aws s3 sync  s3://magnet-fwm/SharedData/fsd/ .
+  222  wget s3://magnet-fwm/SharedData/fsd/petrovic_07500000.gz 
+  223  tail -f /proc/4898/fd/1
+  224  kill -9  4898
+  225  pwd
+  226  vi src/ned/types/GlobalData.java 
+  227  ./build.sh 
+  228  ./run1.sh > run_09_18.txt &
+  229  rm -rf run_09_20.txt 
+  230  tail -f run_00_20.txt 
+  231  ps -ef | grep java 
+  232  tail -f ./run_09_18.txt 
+  233  tail -f /home/ec2-user/samer/NED-Java-version/hs_err_pid5794.log
+  234  ./run1.sh > run_09_18.txt &
+  235  tail -f ./run_09_18.txt 
+  236  vi run1.sh 
+  237  ./run1.sh > run_09_18.txt &
+  238  tail -f ./run_09_18.txt 
+  239  top
+  240  kill -9 4899
+  241  tail -f run_00_20.txt 
+  242  vi src/ned/types/GlobalData.java 
+  243  ./build.sh 
+  244  tail -f run_00_20.txt 
+  245  ps -ef | grep java
+  246  kill -9  5171
+  247  vi run1.sh 
+  248  rm -rf run_00_20.txt 
+  249  ./run1.sh > run_00_20.txt &
+  250  tail -f run_00_20.txt 
+  251  ls -ls /tmp/
+  252  mv /tmp/*.gz ../data/
+  253  ls ../data/
+  254  chmod -R 7777 ../data
+  255  ls ../data/
+  256  chmod -R 7777 ../data/*
+  257  ls ../data/
+  258  ls -la ../data/
+  259  cd samer/data/
+  260  ls -la
+  261  cd samer/data/
+  262  rm -rf results/
+  263  ls -la
+  264  rm -rf threads_*
+  265  ls -la
+  266  chmod -R 7777  ../data/
+  267  ls -la
+  268  cd samer
+  269  rm -rf NED-Java-version/
+  270  git clone https://github.com/sameraamar/NED-Java-version.git
+  271  cd NED-Java-version/
+  272  ls 
+  273  ls /tmp/
+  274  ls ../temp/
+  275  ls ../data/
+  276  ls -la ../data/
+  277  ls
+  278  git checkout hyper_samer_quality
+  279  git pull
+  280  find ./ -name *.java
+  281  find ./ -name *.java > sources.txt
+  282  ./build.sh 
+  283  ls -la
+  284  chmod 7777 redisRun.sh 
+  285  ./redisRun.sh 
+  286  nohup ./run1.sh &
+  287  tail -f nohup.out 
+  288  ./run1.sh 
+  289  ./run1.sh 
+  290  nohup ./run1.sh &
+  291  tail -f nohup.out 
+  292  vi ../data/relevance_judgments_00000000
+  293  nohup ./run1.sh &
+  294  tail -f nohup.out 
+  295  cd ../data
+  296  aws configure
+  297  aws s3 cp  s3://petrovic-samer/ . --recursive  --include "*.gz"
+  298  cd ../NED-Java-version/
+  299  tail -f nohup.out 
+  300  cd samer/NED-Java-version/
+  301  tail -f nohup.out 
+  302  cd samer/
+  303  cd NED-Java-version/
+  304  tail -f nohup.out 
+  305  cd ../data/
+  306  ls 
+  307  cd ../temp/
+  308  ls
+  309  ls -la
+  310  rm -rf threads.txt 
+  311  ca t threads_50000000_0.txt
+  312  cat threads_50000000_0.txt
+  313  cat threads_50000000_0.txt 
+  314  cat ../data/relevance_judgments_00000000 
+  315  cd samer/NED-Java-version/
+  316  ls -la
+  317  tail -f nohup.out 
+  318  ps -ef | grep java
+  319  jstack 4784> thread.dump
+  320  jstack 4783 > thread.dump
+  321  jstack -F 4783 > thread.dump
+  322  jstack -F 4783 > thread.dump
+  323  jstack -F 4783
+  324  jstack 4783
+  325  ps -ef | grep java
+  326  kill -9 4784
+  327  ps -ef | grep java
+  328  git pull
+  329  rm -rf nohup.out 
+  330  git pull
+  331  git pull
+  332  git pull
+  333  ./build.sh 
+  334  nohup ./run1.sh &
+  335  tail -f nohup.out 
+  336  vi src/ned/types/GlobalData.java 
+  337  ps -ef | grep java
+  338  kill -9 7015
+  339  vi src/ned/types/GlobalData.java 
+  340  ./build.sh 
+  341  ./run1.sh 
+  342  rm -rf nohup.out 
+  343  nohup ./run1.sh &
+  344  tail -f nohup.out 
+  345  head -50 ../temp/threads_50000000_10000.txt 
+  346  tail -f nohup.out 
+  347  ls -la ../data/
+  348  tail -f nohup.out 
+  349  tail -f nohup.out 
+  350  top
+  351  tail -f nohup.out 
+  352  ps -ef | grep java
+  353  kill -9 7479
+  354  git pull
+  355  git reset --hard
+  356  vi src/ned/types/GlobalData.java 
+  357  ./build.sh 
+  358  rm -rf nohup.out 
+  359  nohup ./run1.sh &
+  360  tail -f nohup.out 
+  361  head -50 ../temp/threads_50000000_0.txt 
+  362  ls -la ../temp/
+  363  rm -rf ../temp/threads_50000000_0.txt
+  364  ls -ltr ../temp/
+  365  ls -ltr ../temp/
+  366  rm -rf ../temp/threads_50000000_9000000.txt
+  367  cat ../temp/threads_50000000_10000.txt
+  368  pwd
+  369  ps -ef | grep java
+  370  tail -f nohup.out 
+  371  grep Exception nohup.out 
+  372  ls -la ../temp/threads_50000000_10000.txt 
+  373  head  ../temp/threads_50000000_10000.txt 
+  374  ps -ef | grep java
+  375  kill -9 7959
+  376  ps -ef | grep java
+  377  ps -ef | grep java
+  378  ls -la
+  379  rm -rf ../temp/*
+  380  git pull
+  381  vi src/ned/types/GlobalData.java
+  382  ./build.sh 
+  383  rm -rf nohup.out 
+  384  nohup ./run1.sh &
+  385  tail -f nohup.out 
+  386  head ../temp/threads_50000000_0.txt 
+  387  head ../temp/threads_50000000_0.txt 
+  388  git pull
+  389  git reset --hard
+  390  git pull
+  391  git reset --hard
+  392  vi src/ned/types/DocumentCluster.java
+  393  ./build.sh 
+  394  vi src/ned/types/GlobalData.java 
+  395  ./build.sh 
+  396  rm -rf nohup.out 
+  397  ps -ef | grep java
+  398  kill -9 8202
+  399  ps -ef | grep java
+  400  ps -ef | grep java
+  401  nohup ./run1.sh &
+  402  tail -f nohup.out 
+  403  head -50 ../temp/threads_50000000_0.txt 
+  404  head -50 ../temp/threads_50000000_0.txt 
+  405  tail -f nohup.out 
+  406  head -50 ../temp/threads_50000000_0.txt 
+  407  tail -f nohup.out 
+  408  top
+  409  tail -50 ../temp/threads_50000000_0.txt 
+  410  tail -50 ../temp/threads_50000000_0.txt 
+  411  tail -f nohup.out 
+  412  tail -f nohup.out 
+  413  cd ../temp/
+  414  ls -la
+  415  zip threads_50000000_0.zip threads_50000000_0.txt
+  416  aws cp threads_50000000_0.zip  s3://petrovic-samer/results/
+  417  aws s3 cp threads_50000000_0.zip  s3://petrovic-samer/results/
+  418  tail -f nohup.out 
+  419  tail -f nohup.out 
+  420  cd ../temp/
+  421  rm -rf threads_50000000_0.zip 
+  422  zip threads_50000000_0.zip threads_50000000_0.txt 
+  423  aws s3 cp threads_50000000_0.zip  s3://petrovic-samer/results/
+  424  ls -la
+  425  cd samer/NED-Java-version/
+  426  tail -f nohup.out 
+  427  tail -f nohup.out 
+  428  cd ../temp/
+  429  rm -rf threads_50000000_0.zip 
+  430  zip threads_50000000_10m.zip threads_50000000_0.txt 
+  431  aws s3 cp threads_50000000_10m.zip   s3://petrovic-samer/results/
+  432  tail -f nohup.out 
+  433  cd samer/NED-Java-version/
+  434  tail -f nohup.out 
+  435  tail - 50 nohup.out 
+  436  tail -50 nohup.out 
+  437  df
+  438  ps -ef | grep java
+  439  rm -rf ../temp/threads_50000000_10m.zip 
+  440  tail -50 nohup.out 
+  441  tail -50 nohup.out 
+  442  df
+  443  ls -la /tmp/
+  444  ls -la  ../redis/
+  445  rm -rf -rf ../redis/temp-11004.rdb 
+  446  rm -rf -rf ../redis/temp-3924.rdb 
+  447  df
+  448  tail -50 nohup.out 
+  449  df
+  450  rm -rf ../data/petrovic_00*
+  451  tail -50 nohup.out 
+  452  df
+  453  dh /dev/shm
+  454  df /dev/shm
+  455  df
+  456  mv nohup.out  /dev/
+  457  df
+  458  ls
+  459  ps -ef | grep java
+  460  tail -f /proc/8529/fd/1
+  461  ps -ef | redis
+  462  ps -ef | grep  redis
+  463  tail -f /proc/8529/fd/1
+  464  kill -9 8529
+  465  ps -ef | grep java
+  466  ps -ef | grep  redis
+  467  kill -9 4548
+  468  ps -ef | grep  redis
+  469  ls
+  470  chmod 7777 redisRun.sh 
+  471  ./redisRun.sh 
+  472  vi src/ned/types/GlobalData.java 
+  473  ./build.sh 
+  474  nohup ./run1.sh &
+  475  tail -f nohup.out 
+  476  rm -rf ../redis/dump.rdb 
+  477  nohup ./run1.sh &
+  478  tail -f nohup.out 
+  479  tail -f nohup.out 
+  480  rm -rf nohup.out 
+  481  nohup ./run1.sh &
+  482  tail -f nohup.out 
+  483  ps -ef | grep redis
+  484   ./run1.sh 
+  485  reboot
+  486  git reset --hard
+  487  git pull
+  488  vi src/ned/types/GlobalData.java 
+  489  ./build.sh 
+  490  ./run1.sh 
+  491  vi src/ned/types/GlobalData.java 
+  492  ./build.sh 
+  493  rm -rf sources.txt 
+  494  find ./ -name *.java >sources.txt
+  495  ./build.sh 
+  496  nohup ./run1.sh &
+  497  tail -f nohup.out 
+  498  ls -la ../temp/
+  499  tail -f nohup.out 
+  500  tail -f nohup.out 
+  501  grep Exception nohup.out 
+  502  ../redis/redis-3.2.8/src/redis-cli 
+  503  ps -ef | grep java
+  504  kill -9 4695
+  505  grep 1000000 nohup.out 
+  506  grep 2000000 nohup.out 
+  507  grep 2500000 nohup.out 
+  508  ps -ef | grep java
+  509  top
+  510  git pull
+  511  git reset --hard
+  512  git pull
+  513  vi src/ned/types/GlobalData.java 
+  514  ./build.sh 
+  515  rm -rf nohup.out 
+  516  nohup ./run1.sh &
+  517  tail -f nohup.out 
+  518  cd samer/NED-Java-version/
+  519  tail -f nohup.out 
+  520  git reset --hard
+  521  git pull
+  522  git reset --hard
+  523  vi src
+  524  vi src/ned/types/GlobalData.java 
+  525  ./build.sh 
+  526  vi run1.sh 
+  527  top
+  528  clear
+  529  ./build.sh 
+  530  ps -ef | grep java
+  531  kill -9 5524
+  532  ps -ef | grep java
+  533  ps -ef | grep java
+  534  rm -rf nohup.out 
+  535  ./build.sh 
+  536  nohup ./run1.sh &
+  537  tail -f nohup.out 
+  538  cd samer/NED-Java-version/
+  539  tail -f nohup.out 
+  540  vi src/ned/main/AppMain.java 
+  541  ./build.sh 
+  542  vi src/ned/main/AppMain.java 
+  543  ./build.sh 
+  544  git reset --hard
+  545  git pull
+  546  vi src/ned/main/GlobalMain.java 
+  547  vi src/ned/types/GlobalData.java 
+  548  ./build.sh 
+  549  ps -ef | grep java
+  550  kill -9 6014
+  551  rm -rf nohup.out 
+  552  nohup ./run1.sh &
+  553  tail -f nohup.out 
+  554  cd samer/NED-Java-version/
+  555  tail -f nohup.out 
+  556  cd samer/NED-Java-version/
+  557  tail -f nohup.out 
+  558  cd samer/NED-Java-version/
+  559  tail -f nohup.out 
+  560  git pull
+  561  ./build.sh 
+  562  ps -ef | grep java
+  563  kill -9 6590
+  564  ./build.sh 
+  565  rm -rf nohup.out 
+  566  nohup ./run1.sh &
+  567  tail -f nohup.out 
+  568  cd samer/NED-Java-version/
+  569  tail -f nohup.out 
+  570  cd samer/NED-Java-version/
+  571  tail -f nohup.out 
+  572  cd samer/NED-Java-version/
+  573  tail -f nohup.out 
+  574  tail -50 nohup.out 
+  575  tail -150 nohup.out 
+  576  grep petrovic nohup.out 
+  577  cd dat
+  578  cd data
+  579  cd ../data/
+  580  ls ls -la
+  581  ls -la
+  582  unzip petrovic_12500000.gz 
+  583  gp petrovic_12500000.gz 
+  584  gunzip -k petrovic_12500000.gz 
+  585  gunzip  petrovic_12500000.gz 
+  586  gunzip -D  petrovic_12500000.gz 
+  587  gunzip -d  petrovic_12500000.gz 
+  588  cd ..
+  589  cd NED-Java-version/
+  590  git pull
+  591  git reset --hard
+  592  git pull
+  593  vi src/ned/types/GlobalData.java 
+  594  ./build.sh 
+  595  ps -ef | grep java
+  596  kill -9 7183
+  597  rm -rf nohup.out 
+  598  nohup ./run1.sh &
+  599  tail -f nohup.out 
+  600  cd samer/NED-Java-version/
+  601  tail -f nohup.out 
+  602  tail -f nohup.out 
+  603  cd samer/NED-Java-version/
+  604  tail -f nohup.out 
+  605  cd samer/NED-Java-version/
+  606  tail -f nohup.out 
+  607  cd ../temp/threads_50000000_13000000/
+  608  ls
+  609  cat full_* >res.csv
+  610  cat res.csv 
+  611  head res.csv 
+  612  tail  res.csv 
+  613  ls -la
+  614  zip another__may31_10m.zip res.csv 
+  615  aws s3 cp another__may31_10m.zip   s3://petrovic-samer/results/
+  616  cd ..
+  617  cd ..
+  618  pwd
+  619  df 
+  620  ls -la /tmp/
+  621  chmod 7777 /tmp/petrovic_12500000.gz 
+  622  aws s3 cp  /tmp/petrovic_12500000.gz s3://buckets/petrovic-samer/
+  623  aws configure
+  624  aws s3 cp  /tmp/petrovic_12500000.gz s3://buckets/petrovic-samer/
+  625  aws s3 cp  /tmp/petrovic_12500000.gz s3://buckets/petrovic-samer/petrovic_12500000.gz
+  626  cd ../tmp
+  627  cd /tmp/
+  628  aws s3 cp  petrovic_12500000.gz s3://buckets/petrovic-samer/
+  629  aws s3 sync   petrovic_12500000.gz s3://buckets/petrovic-samer/
+  630  aws s3 sync   petrovic_12500000.gz s3://buckets/petrovic-samer/
+  631  aws s3 sync   petrovic_12500000.gz s3://buckets/petrovic-samer/
+  632  aws s3 cp    petrovic_12500000.gz s3://buckets/petrovic-samer/
+  633  aws s3 cp    petrovic_12500000.gz s3://buckets/petrovic-samer/
+  634  aws s3 cp    petrovic_12500000.gz s3://buckets/petrovic-samer/
+  635  aws s3 cp    petrovic_12500000.gz s3://buckets/petrovic-samer
+  636  aws configure
+  637  aws s3 cp    petrovic_12500000.gz s3://buckets/petrovic-samer/
+  638  aws s3 cp    petrovic_12500000.gz s3://buckets/petrovic-samer/
+  639  aws s3 cp    petrovic_12500000.gz s3://buckets/petrovic-samer/
+  640  aws s3 cp    petrovic_12500000.gz s3://buckets/petrovic-samer/
+  641  ls -la petrovic_12500000.gz 
+  642  aws s3 cp    petrovic_12500000.gz s3://buckets/petrovic-samer/
+  643  aws s3 cp    petrovic_12500000.gz s3://buckets/petrovic-samer/
+  644  aws s3 cp    petrovic_12500000.gz s3://buckets/petrovic-samer/
+  645  aws s3 cp    petrovic_12500000.gz s3://buckets/petrovic-samer/
+  646  aws s3 cp    petrovic_12500000.gz s3://buckets/petrovic-samer/
+  647  cd samer/NED-Java-version/
+  648  ls
+  649  tail -f nohup.out 
+  650  tail -50 nohup.out 
+  651  tail -5000 nohup.out 
+  652  vi ../redis/redis-3.2.8/redis.conf 
+  653  vi ../redis/redis-3.2.8/redis.conf 
+  654  ps -ef | grep redis
+  655  kill -9 4444
+  656  ps -ef | grep redis
+  657  chmod 7777 ./redisRun.sh 
+  658  ./redisRun.sh 
+  659  tail -f nohup.out 
+  660  vi src/ned/types/GlobalData.java 
+  661  ./build.sh 
+  662  ps -ef 
+  663  ps -ef | grep java
+  664  kill -9 7833
+  665  ps -ef | grep java
+  666  ps -ef | grep java
+  667  rm -rf nohup.out 
+  668  mv /tmp/petrovic_12500000.gz ../data/
+  669  ls -la ../data
+  670  aws s3 cp  ../data/petrovic_12500000.gz s3://petrovic-samer
+  671  ./build.sh 
+  672  nohup ./run1.sh &
+  673  tail -f nohup.out 
+  674  ps -ef | grep java
+  675  ./run1.sh 
+  676  ps -ef | grep redis
+  677  kill -9 9618
+  678  ./redisRun.sh 
+  679  echo never > /sys/kernel/mm/transparent_hugepage/enabled
+  680  vi /etc/rc.local 
+  681  vi /etc/rc.local 
+  682  ./redisRun.sh 
+  683  git pull
+  684  vi src/ned/main/TestMain.java 
+  685  vi src/ned/main/TestMain.java 
+  686  ./build.sh 
+  687  vi run1.sh 
+  688  java -Xmx100G   -Xss1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=7896  -classpath ".:./bin:./lib/gson-2.6.2.jar:./lib/commons-pool2-2.4.2.jar:./lib/jedis-2.9.0.jar:./lib/spring-core-4.3.7.RELEASE.jar:./lib/spring-data-redis-1.8.1.RELEASE.jar" ned.main.TestMain
+  689  ls ../temp/threads_50000000_13000000/res.csv
+  690  vi src/ned/main/TestMain.java 
+  691  ./build.sh 
+  692  java -Xmx100G   -Xss1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=7896  -classpath ".:./bin:./lib/gson-2.6.2.jar:./lib/commons-pool2-2.4.2.jar:./lib/jedis-2.9.0.jar:./lib/spring-core-4.3.7.RELEASE.jar:./lib/spring-data-redis-1.8.1.RELEASE.jar" ned.main.TestMain
+  693  vi src/ned/main/TestMain.java 
+  694  ./build.sh 
+  695  java -Xmx100G   -Xss1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=7896  -classpath ".:./bin:./lib/gson-2.6.2.jar:./lib/commons-pool2-2.4.2.jar:./lib/jedis-2.9.0.jar:./lib/spring-core-4.3.7.RELEASE.jar:./lib/spring-data-redis-1.8.1.RELEASE.jar" ned.main.TestMain
+  696  rm -rf src/ned/main/TestMain.java 
+  697  vi  src/ned/main/TestMain.java 
+  698  ./build.sh 
+  699  java -Xmx100G   -Xss1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=7896  -classpath ".:./bin:./lib/gson-2.6.2.jar:./lib/commons-pool2-2.4.2.jar:./lib/jedis-2.9.0.jar:./lib/spring-core-4.3.7.RELEASE.jar:./lib/spring-data-redis-1.8.1.RELEASE.jar" ned.main.TestMain
+  700  ls -la ../temp/threads_50000000_13000000/res.csv 
+  701  rm -rf src/ned/main/TestMain.java 
+  702  vi  src/ned/main/TestMain.java 
+  703  ./build.sh 
+  704  java -Xmx100G   -Xss1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=7896  -classpath ".:./bin:./lib/gson-2.6.2.jar:./lib/commons-pool2-2.4.2.jar:./lib/jedis-2.9.0.jar:./lib/spring-core-4.3.7.RELEASE.jar:./lib/spring-data-redis-1.8.1.RELEASE.jar" ned.main.TestMain
+  705  ls -la ../temp/threads_50000000_13000000/res
+  706  ls -la ../temp/threads_50000000_13000000/8
+  707  ls -la ../temp/threads_50000000_13000000/res*
+  708  rm -rf src/ned/main/TestMain.java 
+  709  vi  src/ned/main/TestMain.java 
+  710  ./build.sh 
+  711  java -Xmx100G   -Xss1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=7896  -classpath ".:./bin:./lib/gson-2.6.2.jar:./lib/commons-pool2-2.4.2.jar:./lib/jedis-2.9.0.jar:./lib/spring-core-4.3.7.RELEASE.jar:./lib/spring-data-redis-1.8.1.RELEASE.jar" ned.main.TestMain
+  712  ls -la ../temp/threads_50000000_13000000/*
+  713  ls -la ../temp/threads_50000000_13000000/res*
+  714  rm -rf src/ned/main/TestMain.java 
+  715  vi  src/ned/main/TestMain.java 
+  716  ./build.sh 
+  717  java -Xmx100G   -Xss1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=7896  -classpath ".:./bin:./lib/gson-2.6.2.jar:./lib/commons-pool2-2.4.2.jar:./lib/jedis-2.9.0.jar:./lib/spring-core-4.3.7.RELEASE.jar:./lib/spring-data-redis-1.8.1.RELEASE.jar" ned.main.TestMain
+  718  rm -rf src/ned/main/TestMain.java 
+  719  vi  src/ned/main/TestMain.java 
+  720  ./build.sh 
+  721  ./run1.sh 
+  722  java -Xmx100G   -Xss1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=7896  -classpath ".:./bin:./lib/gson-2.6.2.jar:./lib/commons-pool2-2.4.2.jar:./lib/jedis-2.9.0.jar:./lib/spring-core-4.3.7.RELEASE.jar:./lib/spring-data-redis-1.8.1.RELEASE.jar" ned.main.TestMain
+  723  head -50 ../temp/threads_50000000_13000000/res.csv
+  724  cd ../temp/threads_50000000_13000000/
+  725  ls
+  726  rm -rf res.csv 
+  727  cat short_* res_short.txt
+  728  cat short_* > res_short.txt
+  729  pwd
+  730  cd ../../NED-Java-version/
+  731  rm -rf src/ned/main/TestMain.java 
+  732  vi  src/ned/main/TestMain.java 
+  733  ./build.sh 
+  734  java -Xmx100G   -Xss1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=7896  -classpath ".:./bin:./lib/gson-2.6.2.jar:./lib/commons-pool2-2.4.2.jar:./lib/jedis-2.9.0.jar:./lib/spring-core-4.3.7.RELEASE.jar:./lib/spring-data-redis-1.8.1.RELEASE.jar" ned.main.TestMain
+  735  cd ../temp/
+  736  aws s3 cp  ../data/petrovic_12500000.gz s3://petrovic-samer
+  737  aws s3 cp  threads_50000000_13/res_oo1.txt s3://petrovic-samer/result
+  738  cd threads_50000000_13000000/
+  739  ls
+  740  ls -la
+  741  cat package ned.main;
+  742  import java.io.BufferedReader;
+  743  import java.io.FileOutputStream;
+  744  import java.io.FileReader;
+  745  import java.io.IOException;
+  746  import java.io.PrintStream;
+  747  import java.util.StringTokenizer;
+  748  public class TestMain {
+  749  public static void main(String[] args) throws Exception {
+  750  stance().getParams().resume_mode = true;
+  751  //GlobalData.getInstance().init();
+  752  //System.out.println("------------------------------------------");
+  753  //
+  754  //Document doc = GlobalData.getInstance().id2doc.get("93431326086152192");
+  755  //System.out.println(doc==null ? "NULL" : doc.toString());
+  756  g DELIMITER = " ||| ";
+  757  g filename = "../temp/threads_50000000_13000000/res_short.txt";
+  758  g filenameOut = "../temp/threads_50000000_13000000/res_001.txt";
+  759  ull;
+  760  tStream out = new PrintStream(new FileOutputStream(filenameOut));
+  761  ew BufferedReader(new FileReader(filename));
+  762  g line = br.readLine();
+  763  t(line + "\n");
+  764  t count = 0;
+  765  t printed = 0;
+  766  g leadId = null, entropy = null;
+  767  g size;
+  768          line = br.readLine();
+  769          System.out.println(line);
+  770  e != null) {
+  771  e.trim().equals(""))
+  772  tinue;
+  773  gTokenizer tk = new StringTokenizer(line, DELIMITER);
+  774  extToken();
+  775  tropy = tk.nextToken();
+  776  extToken();
+  777  extToken();
+  778  tr = null;
+  779  cat res_001.txt 
+  780  aws s3 cp  res_001.txt s3://petrovic-samer/results
+  781  aws s3 cp  res_001.txt s3://petrovic-samer/results
+  782  aws s3 cp  res_001.txt s3://petrovic-samer/results/
+  783  cd samer/NED-Java-version/
+  784  ls 
+  785  vi src/ned/types/GlobalData.java 
+  786  ./build.sh 
+  787  ./run1.sh 
+  788  rm -rf nohup.out 
+  789  nohup ./run1.sh &
+  790  tail -f nohup.out 
+  791  cd samer/NED-Java-version/
+  792  tail -f nohup.out 
+  793  cd samer/NED-Java-version/
+  794  tail -f nohup.out 
+  795  pwd
+  796  cd samer/
+  797  cd NED-Java-version/
+  798  git sttaus
+  799  git status
+  800  git add .
+  801  git status
+  802  rm -rf "C:\\temp\\threads_50000000_4000000\\short_000_out.txt"
+  803  rm -rf nohup.out 
+  804  rm -rf sources
+  805  git status
+  806  git rm "C:\\temp\\threads_50000000_4000000\\short_000_out.txt"
+  807  git rm nohup.out
+  808  git sttaus
+  809  git status
+  810  git rm thread.dump 
+  811  git rm sources.txt 
+  812  git sttaus
+  813  git status
+  814  git rm -rf thread.dump
+  815  git status
+  816  git rm -rf sources.txt 
+  817  git status
+  818  git commit -m "Jun01"
+  819  git push
+  820  vi ../redis/redis-3.2.8/redis.conf 
+  821  cp ../redis/redis-3.2.8/redis.conf .
+  822  vi redisRun.sh 
+  823  ./redisRun.sh 
+  824  git status
+  825  git add redisRun.sh 
+  826  git add redis.conf 
+  827  git status
+  828  git commit -m "modify redis conf"
+  829  git push
+  830  cd ../data/
+  831  wget https://s3-eu-west-1.amazonaws.com/magnet-fwm/SharedData/fsd/petrovic_24500000.gz
+  832  wget https://s3-eu-west-1.amazonaws.com/magnet-fwm/SharedData/fsd/petrovic_25000000.gz
+  833  wget https://s3-eu-west-1.amazonaws.com/magnet-fwm/SharedData/fsd/petrovic_25500000.gz
+  834  wget https://s3-eu-west-1.amazonaws.com/magnet-fwm/SharedData/fsd/petrovic_26000000.gz
+  835  wget https://s3-eu-west-1.amazonaws.com/magnet-fwm/SharedData/fsd/petrovic_26500000.gz
+  836  wget https://s3-eu-west-1.amazonaws.com/magnet-fwm/SharedData/fsd/petrovic_27000000.gz
+  837  wget https://s3-eu-west-1.amazonaws.com/magnet-fwm/SharedData/fsd/petrovic_27500000.gz
+  838  wget https://s3-eu-west-1.amazonaws.com/magnet-fwm/SharedData/fsd/petrovic_28000000.gz
+  839  wget https://s3-eu-west-1.amazonaws.com/magnet-fwm/SharedData/fsd/petrovic_28500000.gz
+  840  wget https://s3-eu-west-1.amazonaws.com/magnet-fwm/SharedData/fsd/petrovic_29000000.gz
+  841  wget https://s3-eu-west-1.amazonaws.com/magnet-fwm/SharedData/fsd/petrovic_29500000.gz
+  842  aws s3 sync . s3://petrovic_samer/
+  843  aws s3 sync . s3://petrovic-samer/
+  844  cd ../NED-Java-version/
+  845  ./build.sh 
+  846  ps -ef | grep resi
+  847  ps -ef | grep redis
+  848  find ./src -name *.java
+  849  find ./src -name *.java >sources.txt
+  850  ./build.sh 
+  851  vi src/ned/types/GlobalData.java 
+  852  ./build.sh 
+  853  ./redisRun.sh 
+  854  ./run1.sh 
+  855  top
+  856  cd samer/NED-Java-version/
+  857  ./redisRun.sh 
+  858  ./run1.sh 
+  859  vi src/ned/types/GlobalData.java 
+  860  ./build.sh 
+  861  rm -rf ../redis/dump.rdb 
+  862  rm -rf ../redis/temp-*
+  863  ps -ef | redis
+  864  ps -ef | grep redis
+  865  kill -9 4521
+  866  ps -ef | grep redis
+  867  ./redisRun.sh 
+  868  ./build.sh 
+  869  ./run1.sh 
+  870  cd ../data/
+  871  ls
+  872  wget https://s3-us-west-2.amazonaws.com/petrovic-samer/petrovic_00000000.gz
+  873  wget https://s3-us-west-2.amazonaws.com/petrovic-samer/petrovic_00500000.gz
+  874  ls -la
+  875  chmod 7777 *
+  876  ls -la
+  877  cd ../
+  878  cd NED-Java-version/
+  879  nohup ./run1.sh &
+  880  tail -f nohup.out 
+  881  cd samer/NED-Java-version/
+  882  tail -f nohup.out 
+  883  cd samer/NED-Java-version/
+  884  tail -f nohup.out 
+  885  cd samer/NED-Java-version/
+  886  tail -f nohup.out 
+  887  tail -f nohup.out 
+  888  cd samer/NED-Java-version/
+  889  tail -f nohup.out 
+  890  cd ../temp/
+  891  ls
+  892  ls -la
+  893  zi
+  894  zip -r jun3_30m.zip threads_50000000_0
+  895  ls -la threads_50000000_0
+  896  cd threads_50000000_0
+  897  cat short_0*.tct short_all.txt
+  898  cat short_0*.txt short_all.txt
+  899  cat short_0*.txt > short_all.txt
+  900  ls -la
+  901  cat full_0*.txt > full_all.txt
+  902  cd ..
+  903  ls 
+  904  ls -la
+  905  rm -rf threads_50000000_0.txt
+  906  rm -rf threads_50000000_19000000
+  907  ls -la
+  908  rm -rf threads_50000000_10000000_full.txt
+  909  rm -rf threads_50000000_10000000_*.txt
+  910  ls -la
+  911  rm -rf threads_50000000_10000000
+  912  rm -rf threads_50000000_13000000/
+  913  ls -la
+  914  rm -rf threads_50000000_10000000
+  915  ls -la
+  916  rm -rf threads_50000000_10000000*.*
+  917  ls-la
+  918  ls -la
+  919  cd threads_50000000_0/
+  920  ls
+  921  rm -rf full_all.txt 
+  922  cat full_0*.txt > full_all.txt
+  923  ls -la
+  924  zip jun3_30m.zip full_all.txt short_all.txt
+  925  df
+  926  pwd
+  927  cd /dev
+  928  zip jun3_30m.zip /home/ec2-user/samer/temp/threads_50000000_0/*_all.txt
+  929  ls -l
+  930  aws s3 cp jun3_30m.zip s3://petrovic_samer/results
+  931  aws s3 cp jun3_30m.zip s3://petrovic-samer/results
+  932  aws s3 cp jun3_30m.zip s3://petrovic-samer/results/
+  933  cd  /home/ec2-user/samer/NED-Java-version/
+  934  git tag jun3
+  935  cd samer/NED-Java-version/\git tags
+  936  cd samer/NED-Java-version/
+  937  git tags
+  938  git tag
+  939  git pull
+  940  git reset --hard
+  941  git pull
+  942  ./build.sh 
+  943  ./run1.sh 
+  944  ./redisRun.sh 
+  945  ps -ef | grep redis
+  946  kill -9 4643
+  947  ./redisRun.sh 
+  948  ./run1.sh 
+  949  ./run1.sh 
+  950  ./run1.sh 
+  951  ./run1.sh 
+  952  rm -rf ../redis/dump.rdb 
+  953  ps -ef | grep redis
+  954  kill -9 9275
+  955  ./run1.sh 
+  956  ./redisRun.sh 
+  957  ./run1.sh 
+  958  nohup ./run1.sh &
+  959  tail -f nohup.out 
+  960  cd samer/NED-Java-version/
+  961  tail -f nohup.out 
+  962  tail -500 ../temp/threads_30000000_0/full_000.txt 
+  963  cd samer/NED-Java-version/
+  964  tail -f nohup.out 
+  965  cd ../temp/
+  966  ls
+  967  cd threads_30000000_0/
+  968  grep Compassion
+  969  grep Compassion full_000.txt 
+  970  cd samer/
+  971  rm -rf temp/*
+  972  cd redis/
+  973  ls
+  974  rm -rf dump.rdb 
+  975  rm -rf temp-9569.rdb 
+  976  cd redis-3.2.8
+  977  ls
+  978  rm -rf dump.rdb 
+  979  cd ..
+  980  cd ..
+  981  cd NED-Java-version/
+  982  rm -rf sources.txt 
+  983  git pull origin with_provider
+  984  chnod 7777 *.sh
+  985  chmod 7777 *.sh
+  986  ./redisRun.sh 
+  987  vi run1.sh 
+  988  find ./ -name *.java > sources.txt
+  989  ./build.sh 
+  990  ./build.sh 
+  991  git pull origin with_provider
+  992  ./build.sh 
+  993  ./run1.sh 
+  994  ./run1.sh 
+  995  ./run1.sh 
+  996  rm -rf ../temp/*
+  997  nohup ./run1.sh > nohup.out
+  998  nohup ./run1.sh > nohup.out &
+  999  tail -f nohup.out 
+ 1000  cd samer/NED-Java-version/
+ 1001  git pull
+ 1002  git reset --hard
+ 1003  git checout provide_v1
+ 1004  git checkout provide_v1
+ 1005  rm -r sources.txt 
+ 1006  find ./ -name 8.java
+ 1007  find ./ -name *.java
+ 1008  find ./ -name *.java > sources.txt
+ 1009  chmod 7777 *.sh
+ 1010  ./build.sh 
+ 1011  vi run1.sh 
+ 1012  ./run1.sh 
+ 1013* rm -rf ../redis/*.rd
+ 1014  ./redisRun.sh 
+ 1015  rm -rf ../temp/*
+ 1016  ./run1.sh 
+ 1017  history > history.txt
