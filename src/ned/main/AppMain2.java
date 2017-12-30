@@ -75,7 +75,7 @@ public class AppMain2 {
 			printParameters(paramsOut);
 			paramsOut.close();
 			
-	    	parserThread = new DocumentParserThread();
+	    	parserThread = new DocumentParserThread(true);
 	    	parserThread.start();
 	    	
 			executer = new DocumentProcessorExecutor(forest, gd.getParams().number_of_threads);
@@ -194,9 +194,15 @@ public class AppMain2 {
 		while(parserThread.isready())
 		{
 			Document d = parserThread.queue.poll();
+			while(d == null)
+			{
+				Thread.sleep(5);
+				d = parserThread.queue.poll();
+			}
+			
 			cursor++;
 
-			gd.addDocument(d, cursor);
+			//gd.addDocument(d, cursor);
 			//idListFile.println(d.getId());
 			
 			GlobalData.getInstance().getQueue().add(d.getId());

@@ -16,16 +16,18 @@ import ned.types.Session;
 public class DocProviderGZip extends DocumentProvider {
 	private String FOLDER = "";
 	private int fileidx;
+	private boolean isBasicOnly;
 	
-	public DocProviderGZip(int maxDocument, int skip) {
+	public DocProviderGZip(int maxDocument, int skip, boolean isBasicOnly) {
 		super(maxDocument, skip);
+		this.isBasicOnly = isBasicOnly;
 	}
 	
 	@Override
 	protected Document parseNextHook() throws Exception {
 	
 		String line = buffered.readLine();
-		Document doc = Document.parse(line, true);
+		Document doc = Document.parse(line, isBasicOnly);
 		
 		return doc;
 	}
@@ -67,7 +69,8 @@ public class DocProviderGZip extends DocumentProvider {
 	{
 		FOLDER = "../data";
 		if(Session.checkMachine())
-			FOLDER= "c:/data/Thesis/events_db/petrovic";
+			FOLDER = "D:\\Thesis\\Backup_Laptop\\events_db\\petrovic";
+			//FOLDER= "c:/data/Thesis/events_db/petrovic";
 
 		int offset = skip;
 		int skip_files = (offset / 500_000);

@@ -1,11 +1,14 @@
 package ned.types;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -17,6 +20,12 @@ public class Document  implements Serializable, DirtyBit {
 	private static final long serialVersionUID = 4575371423244913253L;
 
 	private static boolean isBasicOnly;
+
+	private int hashtags;
+	private int multipleWordsTag = 0;
+	private int symbols;
+	private int urls;
+	private int user_mentions;
 	
 	public boolean isDirtyBit;
 	
@@ -42,6 +51,9 @@ public class Document  implements Serializable, DirtyBit {
 	private String quoted_user_id;
 
 	private int retweetedFavouritesCount;
+
+
+	//public Map<Integer, Double> tfidf;
 	
 	private Document(String id)
 	{
@@ -58,6 +70,8 @@ public class Document  implements Serializable, DirtyBit {
     	this.favouritesCount = -1;
     	this.reply_to = null;
         this.words = GlobalData.getInstance().identifyWords(text);
+        if(this.words.size()>0 && this.words.get(0).equals("rt"))
+        	this.words.remove(0);
         this.cleanText = String.join(" ", words);
     }
 	
@@ -115,7 +129,10 @@ public class Document  implements Serializable, DirtyBit {
 		}
         
         res = dot / norms; 
-        return 1.0 - res;
+        res = 1.0 - res;
+        if (res<0.0) 
+        	res = 0.0;
+        return res;
      	 
     }
 
@@ -139,7 +156,7 @@ public class Document  implements Serializable, DirtyBit {
 		return id;
 	}
 
-	DocumentWordCounts bringWordCount()
+	public DocumentWordCounts bringWordCount()
 	{
 		DocumentWordCounts wordCount = GlobalData.getInstance().id2wc.get(id);
 		return wordCount;
@@ -153,6 +170,25 @@ public class Document  implements Serializable, DirtyBit {
 		return cleanText;
 	}
 
+	public int getMultipleWordsTag() {
+		return multipleWordsTag;
+	}
+
+	public int getHashtags() {
+		return hashtags;
+	}
+	
+	public int getSymbols() {
+		return symbols;
+	}
+	
+	public int getURLs() {
+		return urls;
+	}
+	public int getUserMentions() {
+		return user_mentions;
+	}
+	
 	public void setCreatedAt(String created_at) {
 		this.created_at = created_at;
 		dirtyOn();
@@ -241,8 +277,28 @@ public class Document  implements Serializable, DirtyBit {
 		
         if(!isBasicOnly)
 		{
-        	//String retweeted_status = jsonObj.get("retweeted_status").getAsString();
-			
+        	element = jsonObj.get("entities");
+			if(element!=null && !element.isJsonNull())
+			{				
+				JsonObject obj = element.getAsJsonObject();
+				JsonArray hashtagsList = obj.get("hashtags").getAsJsonArray();
+				ArrayList<String> tags = new ArrayList<String>();
+				for (int h=0; h<hashtagsList.size(); h++)
+				{
+					String tag = hashtagsList.get(h).getAsJsonObject().get("text").getAsString();
+					
+					tags.add(tag);
+					String[] camelCaseWords = tag.split("(?=[A-Z])");
+					doc.multipleWordsTag  += camelCaseWords.length>1 ? 1 : 0;
+				}
+				
+				doc.hashtags = tags.size();
+				
+				doc.symbols = obj.get("symbols").getAsJsonArray().size();
+				doc.urls = obj.get("urls").getAsJsonArray().size();
+				doc.user_mentions = obj.get("user_mentions").getAsJsonArray().size();
+			}
+        	
         	element = jsonObj.get("in_reply_to_status_id_str");
 			if(!element.isJsonNull())
 				doc.reply_to = element.getAsString();

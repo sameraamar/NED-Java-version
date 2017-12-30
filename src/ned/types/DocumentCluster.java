@@ -29,15 +29,6 @@ public class DocumentCluster implements Serializable, DirtyBit {
 	private long lasttime;
 	private double entropy;
 	private boolean isDirtyBit;
-	private double score;
-	
-	public double getScore() {
-		return score;
-	}
-
-	public void setScore(double score) {
-		this.score = score;
-	}
 
 	public DocumentCluster(Document leadDocument)
 	{
@@ -50,8 +41,6 @@ public class DocumentCluster implements Serializable, DirtyBit {
 		entropy = -1;
 		users = new HashSet<String>() ;
 		addDocument(leadDocument);
-		score=0;
-		
 	}
 	
 	@Override
@@ -74,9 +63,6 @@ public class DocumentCluster implements Serializable, DirtyBit {
 	public void addDocument(Document doc) 
 	{
 		this.idList.add(doc.getId());
-		if(this.lasttime-this.starttime>0){
-			score += Double.valueOf(2.0)/(doc.getTimestamp()-this.lasttime);
-		}
 		
 		this.lasttime = doc.getTimestamp();
 		users.add(doc.getUserId());
@@ -112,13 +98,32 @@ public class DocumentCluster implements Serializable, DirtyBit {
 	}
 	*/
 	
+private String mapToString(Map<Integer, Double> m)
+{
+	if (m == null || m.size()==0)
+		return "";
+	
+	StringBuilder sb = new StringBuilder();
+	
+	sb.append("{");
+	boolean first = true;
+	for (Integer k : m.keySet())
+	{
+		Double d = m.get(k);
+		if (!first)
+			sb.append(",");
+		sb.append(k).append("=").append(String.format("%.7f", d));
+		first = false;
+	}
+	sb.append("}");
+	
+	return sb.toString();
+}
 
 public String toStringFull()
 	{
 		GlobalData gd = GlobalData.getInstance();
-
 		String ent =String.format("%.7f",  entropy());
-		String scoreAsStr = String.format("%.7f", score);
 		
 		/*sb.append("LEAD: ").append(leadId).append(" SIZE: ").append(this.idList.size());
 		sb.append(" Entropy: ").append(ent);
@@ -126,7 +131,6 @@ public String toStringFull()
 		*/
 		long a = this.age2();
 		
-		//sb.append("leadId\tid\tuser\t# users\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\n");
 		Pattern whitespace = Pattern.compile("\\s");
 		Pattern whitespace2 = Pattern.compile("\\s\\s");
 		int s = size();
@@ -138,7 +142,6 @@ public String toStringFull()
 		sb.append(numOfUsers).append(delimiter);
 		sb.append( s ).append(delimiter);
 		sb.append( a ).append(delimiter);
-		sb.append( scoreAsStr ).append(delimiter);
 		String block = sb.toString();
 		
 		sb = new StringBuilder();
@@ -160,6 +163,12 @@ public String toStringFull()
 			sb.append(nearestId).append(delimiter);
 			sb.append(String.format("%.7f", doc.getNearestDist())).append(delimiter);
 			
+			/*if(s == 1)
+				sb.append("{}").append(delimiter);
+			else
+				sb.append(mapToString(doc.tfidf)).append(delimiter);
+			*/
+			
 			sb.append(block);
 			
 			Matcher matcher = whitespace.matcher(doc.getText());
@@ -174,70 +183,6 @@ public String toStringFull()
 		return sb.toString();
 	}
 
-
-
-public String toStringProd1()
-	{
-		GlobalData gd = GlobalData.getInstance();
-
-		String ent =String.format("%.7f",  entropy());
-		String scoreAsStr = String.format("%.7f", score);
-		
-		/*sb.append("LEAD: ").append(leadId).append(" SIZE: ").append(this.idList.size());
-		sb.append(" Entropy: ").append(ent);
-		sb.append(" Age: ").append(a).append(" (s)\n");;
-		*/
-		long a = this.age2();
-		
-		//sb.append("leadId\tid\tuser\t# users\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\n");
-		Pattern whitespace = Pattern.compile("\\s");
-		Pattern whitespace2 = Pattern.compile("\\s\\s");
-		int s = size();
-		int numOfUsers = users.size();
-		
-		StringBuilder sb = new StringBuilder();
-		String delimiter = GlobalData.getInstance().getParams().DELIMITER;
-		sb.append( ent ).append(delimiter);
-		sb.append(numOfUsers).append(delimiter);
-		sb.append( s ).append(delimiter);
-		sb.append( a ).append(delimiter);
-		sb.append( scoreAsStr ).append(delimiter);
-		String block = sb.toString();
-		
-		sb = new StringBuilder();
-		
-		for (int i =0; i<s; i++)
-		{
-			String docId = idList.get(i);
-			Document doc = gd.id2doc.get(docId);
-			if(i == 0)
-			{
-				String nearestId = doc.getNearestId();
-				
-				sb.append(docId).append(delimiter);
-
-				Date time=Date.from( Instant.ofEpochSecond( doc.getTimestamp() ) );
-				sb.append(time.toString()).append(delimiter);
-				
-				sb.append(doc.getTimestamp()).append(delimiter);
-				sb.append(nearestId).append(delimiter);
-				sb.append(String.format("%.7f", doc.getNearestDist())).append(delimiter);
-				
-				sb.append(block);
-			}
-			
-			Matcher matcher = whitespace.matcher(doc.getCleanText());
-			String result = matcher.replaceAll(" ");
-			
-			matcher = whitespace2.matcher(result);
-			result = matcher.replaceAll(" ");
-			sb.append("<").append(docId).append("> ").append( result ).append(" ");
-			
-			if (i == s-1)
-				sb.append("\n");
-		}
-		return sb.toString();
-	}
 
 public String toStringShort()
 {
@@ -259,6 +204,28 @@ public String toStringShort()
 	
 	sb = new StringBuilder();
 
+	/*
+	Map<Integer, Double> centroid = new HashMap<Integer, Double>();
+
+	for (int i =0; i<s; i++)
+	{
+		String docId = idList.get(i);
+		Document doc = gd.id2doc.get(docId);
+		if (doc.tfidf == null) //Why?!
+			System.out.println("Null tfidf: " + docId);
+		//	continue;
+		
+		for (Integer k : doc.tfidf.keySet())
+		{
+			centroid.put(k, doc.tfidf.get(k) + centroid.getOrDefault(k, 0.0));
+		}
+	}
+	for (Integer k : centroid.keySet())
+	{
+		centroid.put(k, centroid.get(k) / s);
+	}
+	*/
+	
 	for (int i =0; i<1; i++)
 	{
 		String docId = idList.get(i);
@@ -268,6 +235,10 @@ public String toStringShort()
 			sb.append(docId).append(delimiter);
 			sb.append(block);
 		}
+		/*if(s == 1)
+			sb.append("{}").append(delimiter);
+		else
+			sb.append(mapToString(centroid)).append(delimiter);*/
 		
 		Matcher matcher = whitespace.matcher(doc.getText());
 		String result = matcher.replaceAll(" ");
@@ -294,9 +265,9 @@ public String toStringShort()
 		int N = 0;
 		List<String> tmpList = idList;
 		
+		GlobalData gd = GlobalData.getInstance();
 		for(String id : tmpList)
 		{
-			GlobalData gd = GlobalData.getInstance();
 			DocumentWordCounts doc = gd.id2wc.get(id);
 			if(doc!=null){
 				Map<Integer, Integer> tmp = doc.getWordCount();
