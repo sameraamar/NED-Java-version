@@ -9,7 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentHashMap.KeySetView;
@@ -448,6 +447,9 @@ public class GlobalData {
 		this.clusters.put(doc.getId(), cluster);
 		this.id2cluster.put(doc.getId(), doc.getId());
 		
+		if(GlobalData.debug(doc.getId()))
+			System.out.println(" ********************************* "  + doc.getId() + " is in ");
+		
 		//this.clusters.put(next_index, cluster);
 		//this.id2cluster.put(doc.getId(), next_index);
 
@@ -459,6 +461,11 @@ public class GlobalData {
 		//int idx = clusterIndexByDoc(leadId);
 		//this.id2cluster.put(doc.getId(), idx);
 		this.id2cluster.put(doc.getId(), leadId);
+		
+
+		if(GlobalData.debug( doc.getId() ))
+			System.out.println(" ********************************* "  + doc.getId() + " changed to " + leadId);
+		
 	}
 
 	public Parameters getParams() {
@@ -551,6 +558,10 @@ public class GlobalData {
 
 	public static void setId2nearestId(String key, String value) {
 		id2nearestId.put(key, value);
+	}
+
+	public static boolean debug(String id) {
+		return id.equals("FALSE"); //put here tweet id in order to debug it
 	}
 	
 }

@@ -162,7 +162,7 @@ public String toStringFull()
 			sb.append(doc.getTimestamp()).append(delimiter);
 			sb.append(nearestId).append(delimiter);
 			sb.append(String.format("%.7f", doc.getNearestDist())).append(delimiter);
-			
+
 			/*if(s == 1)
 				sb.append("{}").append(delimiter);
 			else
@@ -171,6 +171,8 @@ public String toStringFull()
 			
 			sb.append(block);
 			
+			sb.append(doc.getScore()).append(delimiter);
+
 			Matcher matcher = whitespace.matcher(doc.getText());
 			String result = matcher.replaceAll(" ");
 			

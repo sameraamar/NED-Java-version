@@ -101,6 +101,7 @@ public class DocumentClusteringThread extends Thread {
 		headerFull.append( "users" ).append( delimiter );
 		headerFull.append( "size" ).append( delimiter );
 		headerFull.append( "age" ).append( delimiter );
+		headerFull.append( "score" ).append( delimiter );
 		headerFull.append( "text" ).append( delimiter );
 		headerFull.append("\n");
 		

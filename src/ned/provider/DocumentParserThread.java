@@ -56,7 +56,8 @@ public class DocumentParserThread extends Thread {
 			{
 				for (; countHelper < 2*buffer_size; countHelper++)
 				{
-					if(!p.hasNext())
+					int hasNext = p.hasNext();
+					if(hasNext == 0)
 					{
 						stop = true;
 						break;
@@ -85,24 +86,23 @@ public class DocumentParserThread extends Thread {
 	}
 
 
-	public boolean isready() {
-		try {
+	public boolean isready() throws Exception {
+
 			while (queue.isEmpty())
 			{
-				if(!stop && p.hasNext())
+				int hasNext = p.hasNext();
+				if(!stop && -1==hasNext)
 				{
 					//System.out.println("go to sleep!");
-					Thread.sleep(100);
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+					}
 				}
 				else
-					return false;
+					return hasNext==1;
 			}
-		} 
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			return false;
-		}
+
 		return true;
 	}
 		

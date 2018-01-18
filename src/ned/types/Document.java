@@ -1,10 +1,15 @@
 package ned.types;
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,6 +44,7 @@ public class Document  implements Serializable, DirtyBit {
 	//document attributes
 	private long timestamp;
 	private String created_at;
+	private Double score;
 	private String retweeted_id;
 	private int retweet_count;
 	private String reply_to;
@@ -51,6 +57,10 @@ public class Document  implements Serializable, DirtyBit {
 	private String quoted_user_id;
 
 	private int retweetedFavouritesCount;
+
+	private transient String sourceFile = "";
+
+	private transient String json;
 
 
 	//public Map<Integer, Double> tfidf;
@@ -65,6 +75,7 @@ public class Document  implements Serializable, DirtyBit {
         this.text = text;
         this.timestamp = timestamp;
         this.created_at = null;
+        this.score = 0.0;
     	this.retweeted_id = null;
     	this.retweet_count = 0;
     	this.favouritesCount = -1;
@@ -193,6 +204,11 @@ public class Document  implements Serializable, DirtyBit {
 		this.created_at = created_at;
 		dirtyOn();
 	}
+	
+	public void setScore(double score) {
+		this.score = score;
+		dirtyOn();
+	}
 
 	public void updateNearest(DocumentWordCounts rWordCount, Map<Integer, Double> word2idf) {
 		if(rWordCount == null)
@@ -245,7 +261,7 @@ public class Document  implements Serializable, DirtyBit {
 	} 
 	
 	//**************************************************************
-	public static Document parse(String json, boolean isBasicOnly)
+	public static Document parse(String json, boolean isBasicOnly, String sourceFile)
 	{
 		JsonParser jsonParser = new JsonParser();
 		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
@@ -257,20 +273,34 @@ public class Document  implements Serializable, DirtyBit {
 		String id = jsonObj.get("id_str").getAsString();
 		
 		String created_at = jsonObj.get("created_at").getAsString();
+		Double score = (jsonObj.get("score") != null) ? jsonObj.get("score").getAsDouble() : 0.0;
 		JsonElement element = jsonObj.get("timestamp");
 		long timestamp;
 		if(element != null)
 			timestamp = element.getAsLong();
 		else {
 			//convert from created_at to timestamp
+			//example: Tue Mar 07 23:58:53 +0000 2017
+			DateFormat osLocalizedDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy", Locale.ENGLISH);
 			timestamp = 0;
+			try {
+				Date dateTime = osLocalizedDateFormat.parse(created_at);
+				timestamp = dateTime.getTime() / 1000;
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 			
 		//id == "94816822100099073" is for Amy Winhouse event
 		Document doc = new Document(id);
 		doc.init(text, timestamp);
+		doc.json = json;
+		doc.sourceFile = sourceFile;
 		doc.dirtyOn();
 		
+		doc.score = score;
         doc.created_at = created_at;
         JsonObject userObj = jsonObj.get("user").getAsJsonObject();
     	doc.user_id = userObj.get("id_str").getAsString();			
@@ -379,6 +409,10 @@ public class Document  implements Serializable, DirtyBit {
 	public String getCreatedAt() {
 		return created_at;
 	}
+	
+	public Double getScore() {
+		return score;
+	}
 
 	public String getRetweetedId() {
 		return retweeted_id;
@@ -437,7 +471,7 @@ public class Document  implements Serializable, DirtyBit {
 	}
 
 	@Deprecated
-	public static Document createOrGetDocument(String json)
+	public static Document createOrGetDocument(String json, String sourceFile)
 	{
 		Document doc = null;
 		
@@ -454,7 +488,7 @@ public class Document  implements Serializable, DirtyBit {
 			doc = GlobalData.getInstance().id2doc.get(id);
 			if(doc == null)
 			{
-				doc = Document.parse(json, isBasicOnly);
+				doc = Document.parse(json, isBasicOnly, sourceFile);
 				GlobalData.getInstance().id2doc.put(id, doc);
 			}
 			
@@ -469,5 +503,13 @@ public class Document  implements Serializable, DirtyBit {
 
 	public void setRetweetedFavouritesCount(int retweetedFavouritesCount) {
 		this.retweetedFavouritesCount = retweetedFavouritesCount;
+	}
+	
+	public String getSource() {
+		return this.sourceFile;
+	}	
+	
+	public String getJson() {
+		return this.json;
 	}
 }

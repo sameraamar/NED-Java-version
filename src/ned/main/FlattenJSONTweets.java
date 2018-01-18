@@ -16,7 +16,7 @@ import ned.types.GlobalData;
 import ned.types.RedisBasedMap;
 import ned.types.SerializeHelperAdapterDirtyBit;
 
-public class CleanClustersMain {
+public class FlattenJSONTweets {
 	private static DocumentParserThread parserThread;
 
 	private static String DELIMITER = "\t";
@@ -26,15 +26,30 @@ public class CleanClustersMain {
 		String fileName = args[0];
 		
 		System.out.println("Writing to " + fileName);
-		PrintStream out = new PrintStream(new FileOutputStream(fileName));
-
+		PrintStream out = new PrintStream(new FileOutputStream(fileName));		
+		
+		PrintStream outJson = null;
+		if (args.length>=2) //json option
+		{
+			String fileNameJson = args[2];
+			System.out.println("Writing to " + fileNameJson);
+			outJson = new PrintStream(new FileOutputStream(fileNameJson));
+		}
+		
     	parserThread = new DocumentParserThread(false);
     	parserThread.start();
     	
     	int cursor = 0;
     	Thread.sleep(500);
     	StringBuilder sb = new StringBuilder();
+    	sb.append("source").append(DELIMITER);
     	sb.append("tweet_id").append(DELIMITER);
+    	sb.append("timestamp").append(DELIMITER);
+    	sb.append("created_at").append(DELIMITER);
+    	sb.append("like").append(DELIMITER);
+    	sb.append("retweet").append(DELIMITER);
+    	sb.append("reply").append(DELIMITER);
+    	sb.append("quote").append(DELIMITER);
     	sb.append("hashtags").append(DELIMITER);
     	sb.append("MultipleWordsTag").append(DELIMITER);
     	sb.append("symbols").append(DELIMITER);
@@ -47,6 +62,7 @@ public class CleanClustersMain {
     	
 		out.print(sb.toString());
 		
+		String current = null;
     	while(parserThread.isready())
 		{
 			Document d = parserThread.queue.poll();
@@ -57,7 +73,21 @@ public class CleanClustersMain {
 			}
 			
 			StringBuilder line = new StringBuilder();
+			line.append(d.getSource());
+			line.append(DELIMITER);
 			line.append(d.getId());
+			line.append(DELIMITER);
+			line.append(d.getTimestamp());
+			line.append(DELIMITER);
+			line.append(d.getCreatedAt());
+			line.append(DELIMITER);
+			line.append(d.getFavouritesCount());
+			line.append(DELIMITER);
+			line.append(d.getReplyTo());
+			line.append(DELIMITER);
+			line.append(d.getRetweetedId());
+			line.append(DELIMITER);
+			line.append(d.getQuotedStatusId());
 			line.append(DELIMITER);
 			line.append(d.getHashtags());
 			line.append(DELIMITER);
@@ -82,17 +112,26 @@ public class CleanClustersMain {
 			line.append("\n");
 
 			out.print(line);
+			outJson.print(d.getJson());
+			outJson.print("\n");
+			
 	    	
 			cursor++;
-			if(cursor % 10000 == 0)
-				System.out.println("processed: " + cursor);
+			if(current == null)
+				current = d.getSource();
+			
+			if(!current.equals(d.getSource()))
+			{
+				System.out.println(current + " processed: " + cursor);
+				current = d.getSource();
+			}
 			
 			/*********** deal (WA) with some strange bug... sometimes the processing stops before the new file is ready *********/
 			int X = 500000;
 			int temp = (cursor+3) % X;
 			if (temp <= 6)
 			{
-				System.out.println("Sleeping 0.5 sec..." + parserThread.isready());
+				//System.out.println("Sleeping 0.5 sec..." + parserThread.isready());
 				Thread.sleep(500);  //wait 0.5 sec to give the provider to read more. Bug!!!
 			}
 

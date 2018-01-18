@@ -30,10 +30,10 @@ public abstract class DocumentProvider {
 
 	abstract protected Document parseNextHook() throws Exception;
 
-	public boolean hasNext() throws Exception
+	public int hasNext() throws Exception
 	{
 		if(processed >= maxDocument)
-			return false;
+			return 0;
 		
 		return hasNextHook();
 	}
@@ -78,6 +78,6 @@ public abstract class DocumentProvider {
 	
 	abstract protected void closeHook();
 	abstract protected void startHook(int skip) throws Exception;
-	abstract protected boolean hasNextHook() throws Exception;
+	abstract protected int hasNextHook() throws Exception;
 	
 }

@@ -297,7 +297,7 @@ public class AppMain {
 					continue;
 				}
 				
-				Document doc = Document.createOrGetDocument(line);
+				Document doc = Document.createOrGetDocument(line, filename);
 				GlobalData.getInstance().getQueue().add(doc.getId());
 				
 	            int idx = gd.getParams().offset+processed;
