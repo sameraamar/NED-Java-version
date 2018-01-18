@@ -263,6 +263,8 @@ public class Document  implements Serializable, DirtyBit {
 	//**************************************************************
 	public static Document parse(String json, boolean isBasicOnly, String sourceFile)
 	{
+		json = json.replaceAll("u'", "'").replaceAll("u\"", "\"");
+		
 		JsonParser jsonParser = new JsonParser();
 		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
 		
