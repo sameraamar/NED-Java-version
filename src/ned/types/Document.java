@@ -266,7 +266,18 @@ public class Document  implements Serializable, DirtyBit {
 		json = json.replaceAll("u'", "'").replaceAll("u\"", "\"");
 		
 		JsonParser jsonParser = new JsonParser();
-		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
+		
+		//System.out.println(json);
+		JsonObject jsonObj = null;
+		
+		try {
+			jsonObj = jsonParser.parse(json).getAsJsonObject();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			System.err.println("String: " + json);
+			return null;
+		}
 		
 		if(jsonObj.get("text") == null || jsonObj.get("id_str") == null)
 			return null;
@@ -367,8 +378,6 @@ public class Document  implements Serializable, DirtyBit {
 	        	
 	        	doc.retweetedFavouritesCount = retweetObj.get("favorite_count").getAsInt();
 			}
-			
-			
 		}        
         return doc;
 	}

@@ -164,8 +164,8 @@ public class AppMain {
 	private static void openOutput(int index) throws FileNotFoundException {
 		
 		String roll = String.format("%03d", index);
-		String threadsFileNameFull = outfolder + "/full_"+roll+".txt";
-		String threadsFileNameShort = outfolder +"/short_"+roll+".txt";
+		String threadsFileNameFull = outfolder + "/full_"+roll+".csv";
+		String threadsFileNameShort = outfolder +"/short_"+roll+".csv";
 		outFull = new PrintStream(new FileOutputStream(threadsFileNameFull));
 		outShort = new PrintStream(new FileOutputStream(threadsFileNameShort));
 	}

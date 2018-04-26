@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import ned.modules.Twokenize;
+import ned.provider.DocProviderGZip;
 import ned.provider.DocumentParserThread;
+import ned.provider.DocumentProvider;
 import ned.types.Document;
 import ned.types.GlobalData;
 import ned.types.RedisBasedMap;
@@ -36,7 +38,9 @@ public class FlattenJSONTweets {
 			outJson = new PrintStream(new FileOutputStream(fileNameJson));
 		}
 		
-    	parserThread = new DocumentParserThread(false);
+		GlobalData gd = GlobalData.getInstance();
+		DocumentProvider documentProvider = new DocProviderGZip(gd.getParams().max_documents, gd.getParams().offset, true);
+    	parserThread = new DocumentParserThread(documentProvider);
     	parserThread.start();
     	
     	int cursor = 0;

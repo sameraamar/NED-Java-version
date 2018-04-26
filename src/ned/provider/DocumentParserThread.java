@@ -10,14 +10,14 @@ public class DocumentParserThread extends Thread {
 	public DocumentProvider p;
 	private int buffer_size;
 
-	public DocumentParserThread(boolean isBasicOnly)
+	public DocumentParserThread(DocumentProvider documentProvider)
 	{
 		queue = new ClusteringQueueManager<Document>();
 		
 		GlobalData gd = GlobalData.getInstance();
 		buffer_size = GlobalData.getInstance().getParams().provider_buffer_size;
 
-		p = new DocProviderGZip(gd.getParams().max_documents, gd.getParams().offset, isBasicOnly);
+		p = documentProvider;
 	}
 	
 	

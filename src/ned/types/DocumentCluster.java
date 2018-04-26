@@ -178,7 +178,7 @@ public String toStringFull()
 			
 			matcher = whitespace2.matcher(result);
 			result = matcher.replaceAll(" ");
-			sb.append( result );			
+			sb.append( result.replaceAll(delimiter, " ") );			
 			
 			sb.append("\n");
 		}
@@ -249,7 +249,7 @@ public String toStringShort()
 		result = matcher.replaceAll(" ");
 		
 		result.replaceAll(delimiter," ");
-		sb.append( result );
+		sb.append( result.replaceAll(delimiter, " ") );
 
 		sb.append("\n");
 	}

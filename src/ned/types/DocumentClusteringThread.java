@@ -1,5 +1,8 @@
 package ned.types;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import ned.tools.ClusteringQueueManager;
 import ned.tools.RedisAccessHelper;
@@ -59,7 +62,7 @@ public class DocumentClusteringThread extends Thread {
 			{
 				e.printStackTrace();
 			}
-			
+
 		}
 		//last time
 		//wait for all other threads to finish
@@ -86,7 +89,7 @@ public class DocumentClusteringThread extends Thread {
 		headerShort.append( "users" ).append( delimiter );
 		headerShort.append( "size" ).append( delimiter );
 		//headerShort.append( "tfidf" ).append( delimiter );
-		headerShort.append( "text" ).append( delimiter );
+		headerShort.append( "text" );
 		headerShort.append("\n");
 		
 		
@@ -102,7 +105,7 @@ public class DocumentClusteringThread extends Thread {
 		headerFull.append( "size" ).append( delimiter );
 		headerFull.append( "age" ).append( delimiter );
 		headerFull.append( "score" ).append( delimiter );
-		headerFull.append( "text" ).append( delimiter );
+		headerFull.append( "text" );
 		headerFull.append("\n");
 		
 		outFull.print(headerFull);

@@ -92,7 +92,8 @@ public class MyMonitorThread extends Thread
 	
             msg.append("\n");
             msg.append("\tClustering Queue: ").append(gd.getQueue().size()).append(", ID=").append(gd.getQueue().peek());
-            msg.append("\n\tparser queue: " + parserThread.queue.size());
+            if (parserThread != null)
+            	msg.append("\n\tparser queue: " + parserThread.queue.size());
 	        Session.getInstance().message(Session.INFO, "[monitor]", msg.toString());
 	                
 	        try {

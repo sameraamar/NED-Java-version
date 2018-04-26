@@ -1,31 +1,29 @@
 package ned.provider;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.Map;
+import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
-
-import ned.types.ArrayFixedSize;
 import ned.types.Document;
-import ned.types.GlobalData;
 import ned.types.Session;
 
 public class DocProviderGZip extends DocumentProvider {
-	private String FOLDER = "";
 	private int fileidx;
 	private boolean isBasicOnly;
 	private String loadNewFile = "symaphone";
+	protected String[] gzfiles;
 	
 	public DocProviderGZip(int maxDocument, int skip, boolean isBasicOnly) {
 		super(maxDocument, skip);
+		gzfiles = dir(getBaseFolder());
+		Arrays.sort( gzfiles );
+		
 		this.isBasicOnly = isBasicOnly;
 	}
 	
@@ -39,6 +37,7 @@ public class DocProviderGZip extends DocumentProvider {
 			if (line != null)
 				source = gzfiles[fileidx];
 		}
+		
 		Document doc = Document.parse(line, isBasicOnly, source);
 		
 		return doc;
@@ -79,12 +78,6 @@ public class DocProviderGZip extends DocumentProvider {
 	@Override
 	protected void startHook(int skip) throws Exception
 	{
-		FOLDER = "../data";
-		if(Session.checkMachine())
-			FOLDER= "c:/data/Thesis/events_db"; //"c:/data/Thesis/events_db";
-
-		FOLDER += "/petrovic"; // "/tweets";
-		
 		int offset = skip;
 		int skip_files = (offset / 500_000);
 		offset = offset % 500_000;
@@ -109,17 +102,63 @@ public class DocProviderGZip extends DocumentProvider {
 
 	}
 	
+
+	protected String[] dir(String folder) 
+	{
+		File[] files = new File(folder).listFiles(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return checkFileNamesFormat(dir, name);
+				}
+			});
+		
+		if (files == null || files.length==0)
+			return new String[0]; //no such folder
+		
+		ArrayList<String> results = new ArrayList<String>();
+
+		int i=0;
+		for (File file : files) {
+		    if (file.isFile()) {
+		        results.add( file.getName() );
+		    }
+		}
+		
+		String[] temp = (String[])results.toArray(new String[i]);
+		return temp;
+	}
+	
+	protected String getBaseFolder() {
+		String folder = "../data";
+		if(Session.checkMachine())
+			folder= "c:/data/Thesis/events_db";
+
+		folder += "/petrovic"; // "/tweets";
+		return folder;
+	}
+
 	private boolean openFile() throws IOException 
 	{
-		GZIPInputStream stream;
 
 		if(fileidx >= gzfiles.length)
 			return false;
 		
 		System.out.println("opening file (" + fileidx + "): " + gzfiles[fileidx]);
-		stream = new GZIPInputStream(new FileInputStream(FOLDER + "/" + gzfiles[fileidx]));
-
-		Reader decoder = new InputStreamReader(stream, "UTF-8");
+		
+		Reader decoder = null;
+		
+		if (gzfiles[fileidx].endsWith(".gz"))
+		{
+			GZIPInputStream stream;
+			stream = new GZIPInputStream(new FileInputStream(getBaseFolder() + "/" + gzfiles[fileidx]));
+			decoder = new InputStreamReader(stream, "UTF-8");
+		}
+		else
+		{
+			FileInputStream stream = new FileInputStream(getBaseFolder() + "/" + gzfiles[fileidx]);
+			decoder = new InputStreamReader(stream, "UTF-8");		
+		}
+		
 		BufferedReader temp = buffered;
 		buffered = new BufferedReader(decoder);
 		if (temp != null)
@@ -127,12 +166,14 @@ public class DocProviderGZip extends DocumentProvider {
 		
 		return true;
 	}
+	
+	/*
 	String[] gzfiles2 = {"petrovic_00000000.gz",
     "petrovic_00500000.gz"};
 
 	String[] gzfiles3 = {"corset1.json.gz"};
 
-	String[] gzfiles_datatset2 = { /*"2017_03_07.gz", "2017_03_08.gz", "2017_03_09.gz", */
+	String[] gzfiles_datatset2 = {
 			"2017_03_10.gz",    "2017_03_11.gz",
 			"2017_03_12.gz",    "2017_03_13.gz",    "2017_03_14.gz",    "2017_03_15.gz",    "2017_03_16.gz",    "2017_03_17.gz",    "2017_03_18.gz", 
 			"2017_03_19.gz",    "2017_03_20.gz",    "2017_03_21.gz",    "2017_03_22.gz",    "2017_03_23.gz",    "2017_03_24.gz",    "2017_03_25.gz", 
@@ -174,7 +215,8 @@ public class DocProviderGZip extends DocumentProvider {
 			"2017_12_08.gz",    "2017_12_09.gz",    "2017_12_10.gz",    "2017_12_11.gz",    "2017_12_12.gz",    "2017_12_13.gz",    "2017_12_14.gz", 
 			"2017_12_15.gz",    "2017_12_16.gz", "2017_12_16.gz", "2017_12_17.gz"} ; //,    "2017_12_25.gz"};
 	
-	String[] gzfiles = {"petrovic_00000000.gz",
+	//String[] gzfiles = {"tweets_for_sammer (2).txt" }; //, "tweets_for_adiel_samer.txt"};
+	protected String[] gzfiles = 	{"petrovic_00000000.gz",
                     "petrovic_00500000.gz",
                     "petrovic_01000000.gz",
                     "petrovic_01500000.gz",
@@ -235,6 +277,12 @@ public class DocProviderGZip extends DocumentProvider {
                     "petrovic_29000000.gz",
                     "petrovic_29500000.gz"  
                    };
+	*/
+	
 	private BufferedReader buffered;
+
+	protected boolean checkFileNamesFormat(File dir, String name) {
+		return name.toLowerCase().endsWith(".gz") && name.toLowerCase().startsWith("petrovic");
+	}
 
 }
