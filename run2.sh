@@ -12,9 +12,9 @@ echo Downloading folder $DATAFILE_PATH_AWS_INPUT from AWS ...
 mkdir $DATAFILE_LOCAL
 ##aws s3 cp s3://magnet-fwm/home/LiveU/joint_scenario/raw_data/ ../data/demo/ --recursive --include "*......xc*"
 
-echo aws s3 cp "$DATAFILE_PATH_AWS_INPUT" "$DATAFILE_LOCAL" --recursive --include "\"*.gz\""
+echo aws s3 cp "$DATAFILE_PATH_AWS_INPUT" "$DATAFILE_LOCAL" --recursive --exclude "*" --include "\"*.gz\""
 
-aws s3 cp "$DATAFILE_PATH_AWS_INPUT" "$DATAFILE_LOCAL" --recursive --include "*.gz"
+aws s3 cp "$DATAFILE_PATH_AWS_INPUT" "$DATAFILE_LOCAL" --recursive --exclude "*" --include "*.gz"
 
 "*.json"
 
@@ -26,7 +26,7 @@ sudo java -Xmx120G  -Xss1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,sus
 
 
 
-aws s3 cp ../temp/threads_1000000_0/ $DATAFILE_PATH_AWS_OUTPUT --recursive --include "*.csv"
-aws s3 cp ../temp/threads_1000000_0/ $DATAFILE_PATH_AWS_OUTPUT --recursive --include "*.txt"
+aws s3 cp ../temp/threads_1000000_0/ $DATAFILE_PATH_AWS_OUTPUT --recursive --exclude "*" --include "*.csv"
+aws s3 cp ../temp/threads_1000000_0/ $DATAFILE_PATH_AWS_OUTPUT --recursive --exclude "*" --include "*.txt"
 
 
