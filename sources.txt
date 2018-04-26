@@ -1,6 +1,8 @@
 ./src/ned/tools/ExecutionHelper.java
 ./src/ned/tools/GeneralHelper.java
+./src/ned/tools/KeyStrokeThread.java
 ./src/ned/tools/ClusteringQueueManager.java
+./src/ned/tools/FilterCorset.java
 ./src/ned/tools/HyperPlansManager.java
 ./src/ned/tools/RecentManager.java
 ./src/ned/tools/RedisAccessHelper.java
@@ -22,6 +24,7 @@
 ./src/ned/types/DocumentWordCounts.java
 ./src/ned/modules/Twokenize.java
 ./src/ned/provider/DocProviderGZip.java
+./src/ned/provider/DocProviderForDemo.java
 ./src/ned/provider/DocumentParserThread.java
 ./src/ned/provider/DocumentProvider.java
 ./src/ned/hash/LSHTable.java
@@ -29,9 +32,12 @@
 ./src/ned/hash/LSHForest.java
 ./src/ned/main/GlobalMain.java
 ./src/ned/main/TestMain.java
+./src/ned/main/CleanClustersMain.java
 ./src/ned/main/DocumentProcessorExecutor.java
 ./src/ned/main/ExecutorMonitorThread.java
 ./src/ned/main/MyMonitorThread.java
+./src/ned/main/ReformatInputJson.java
 ./src/ned/main/AppMain2.java
 ./src/ned/main/WorkerThread.java
 ./src/ned/main/AppMain.java
+./src/ned/main/FlattenJSONTweets.java
