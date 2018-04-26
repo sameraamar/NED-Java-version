@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 
+import ned.types.Session;
+
 public class DocProviderForDemo extends DocProviderGZip {
 	public DocProviderForDemo(int maxDocument, int skip, boolean isBasicOnly) 
 	{
@@ -18,6 +20,9 @@ public class DocProviderForDemo extends DocProviderGZip {
 	@Override
 	protected String getBaseFolder()
 	{
+		if (Session.checkMachine())
+			return "../data/demo";
+		
 		return "C:\\data\\Thesis\\events_db\\petrovic\\tweets";
 	}
 
