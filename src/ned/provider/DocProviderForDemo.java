@@ -20,7 +20,7 @@ public class DocProviderForDemo extends DocProviderGZip {
 	@Override
 	protected String getBaseFolder()
 	{
-		if (Session.checkMachine())
+		if (!Session.checkMachine())
 			return "../data/demo";
 		
 		return "C:\\data\\Thesis\\events_db\\petrovic\\tweets";

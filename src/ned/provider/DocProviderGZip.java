@@ -21,8 +21,10 @@ public class DocProviderGZip extends DocumentProvider {
 	
 	public DocProviderGZip(int maxDocument, int skip, boolean isBasicOnly) {
 		super(maxDocument, skip);
-		gzfiles = dir(getBaseFolder());
-		Arrays.sort( gzfiles );
+		synchronized (loadNewFile) {
+			gzfiles = dir(getBaseFolder());
+			Arrays.sort( gzfiles );
+		}
 		
 		this.isBasicOnly = isBasicOnly;
 	}
