@@ -5,6 +5,8 @@ if [[ -f ./out.log ]] ; then
     exit
 fi
 
-rm err.log
-
-java -classpath ".:./bin:./lib/gson-2.6.2.jar:./lib/commons-pool2-2.4.2.jar:./lib/jedis-2.9.0.jar:./lib/spring-core-4.3.7.RELEASE.jar:./lib/spring-data-redis-1.8.1.RELEASE.jar" ned.main.AppMain -max_doc 2000000 -ifolder  /Users/sameraamar/data -ofolder ~/temp -threads threads11.txt >out.log 2>err.log 
+rm -rf err.log
+rm -rf sources.txt
+find ./ -name *.java >sources.txt
+./build.sh
+java -Xmx90g -classpath ".:./bin:./lib/gson-2.6.2.jar:./lib/commons-pool2-2.4.2.jar:./lib/jedis-2.9.0.jar:./lib/spring-core-4.3.7.RELEASE.jar:./lib/spring-data-redis-1.8.1.RELEASE.jar" ned.main.AppMain2 -max_doc 2000000 -ifolder  /Users/sameraamar/data -ofolder ~/temp -threads threads11.txt >out.log 2>err.log 

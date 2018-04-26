@@ -1,11 +1,19 @@
 package ned.types;
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -17,6 +25,12 @@ public class Document  implements Serializable, DirtyBit {
 	private static final long serialVersionUID = 4575371423244913253L;
 
 	private static boolean isBasicOnly;
+
+	private int hashtags;
+	private int multipleWordsTag = 0;
+	private int symbols;
+	private int urls;
+	private int user_mentions;
 	
 	public boolean isDirtyBit;
 	
@@ -30,6 +44,7 @@ public class Document  implements Serializable, DirtyBit {
 	//document attributes
 	private long timestamp;
 	private String created_at;
+	private Double score;
 	private String retweeted_id;
 	private int retweet_count;
 	private String reply_to;
@@ -40,33 +55,15 @@ public class Document  implements Serializable, DirtyBit {
 	private String quoted_status_id;
 	private String reply_to_user_id;
 	private String quoted_user_id;
-	
-	public static Document createOrGetDocument(String json)
-	{
-		Document doc = null;
-		
-		JsonParser jsonParser = new JsonParser();
-		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
-		
-		if(jsonObj.get("text") == null || jsonObj.get("id_str") == null)
-			return null;
-		
-		String id = jsonObj.get("id_str").getAsString();
-		
-		id = id.intern();
-		synchronized (id) {
-			doc = GlobalData.getInstance().id2doc.get(id);
-			if(doc == null)
-			{
-				doc = Document.parse(json, isBasicOnly);
-				GlobalData.getInstance().id2doc.put(id, doc);
-			}
-			
-		}
-		
-		return doc;
-	}
-	
+
+	private int retweetedFavouritesCount;
+
+	private transient String sourceFile = "";
+
+	private transient String json;
+
+
+	//public Map<Integer, Double> tfidf;
 	
 	private Document(String id)
 	{
@@ -78,11 +75,14 @@ public class Document  implements Serializable, DirtyBit {
         this.text = text;
         this.timestamp = timestamp;
         this.created_at = null;
+        this.score = 0.0;
     	this.retweeted_id = null;
     	this.retweet_count = 0;
     	this.favouritesCount = -1;
     	this.reply_to = null;
         this.words = GlobalData.getInstance().identifyWords(text);
+        if(this.words.size()>0 && this.words.get(0).equals("rt"))
+        	this.words.remove(0);
         this.cleanText = String.join(" ", words);
     }
 	
@@ -140,7 +140,10 @@ public class Document  implements Serializable, DirtyBit {
 		}
         
         res = dot / norms; 
-        return 1.0 - res;
+        res = 1.0 - res;
+        if (res<0.0) 
+        	res = 0.0;
+        return res;
      	 
     }
 
@@ -164,7 +167,7 @@ public class Document  implements Serializable, DirtyBit {
 		return id;
 	}
 
-	DocumentWordCounts bringWordCount()
+	public DocumentWordCounts bringWordCount()
 	{
 		DocumentWordCounts wordCount = GlobalData.getInstance().id2wc.get(id);
 		return wordCount;
@@ -178,8 +181,32 @@ public class Document  implements Serializable, DirtyBit {
 		return cleanText;
 	}
 
+	public int getMultipleWordsTag() {
+		return multipleWordsTag;
+	}
+
+	public int getHashtags() {
+		return hashtags;
+	}
+	
+	public int getSymbols() {
+		return symbols;
+	}
+	
+	public int getURLs() {
+		return urls;
+	}
+	public int getUserMentions() {
+		return user_mentions;
+	}
+	
 	public void setCreatedAt(String created_at) {
 		this.created_at = created_at;
+		dirtyOn();
+	}
+	
+	public void setScore(double score) {
+		this.score = score;
 		dirtyOn();
 	}
 
@@ -234,10 +261,23 @@ public class Document  implements Serializable, DirtyBit {
 	} 
 	
 	//**************************************************************
-	public static Document parse(String json, boolean isBasicOnly)
+	public static Document parse(String json, boolean isBasicOnly, String sourceFile)
 	{
+		json = json.replaceAll("u'", "'").replaceAll("u\"", "\"");
+		
 		JsonParser jsonParser = new JsonParser();
-		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
+		
+		//System.out.println(json);
+		JsonObject jsonObj = null;
+		
+		try {
+			jsonObj = jsonParser.parse(json).getAsJsonObject();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			System.err.println("String: " + json);
+			return null;
+		}
 		
 		if(jsonObj.get("text") == null || jsonObj.get("id_str") == null)
 			return null;
@@ -246,28 +286,62 @@ public class Document  implements Serializable, DirtyBit {
 		String id = jsonObj.get("id_str").getAsString();
 		
 		String created_at = jsonObj.get("created_at").getAsString();
+		Double score = (jsonObj.get("score") != null) ? jsonObj.get("score").getAsDouble() : 0.0;
 		JsonElement element = jsonObj.get("timestamp");
 		long timestamp;
 		if(element != null)
 			timestamp = element.getAsLong();
 		else {
 			//convert from created_at to timestamp
+			//example: Tue Mar 07 23:58:53 +0000 2017
+			DateFormat osLocalizedDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy", Locale.ENGLISH);
 			timestamp = 0;
+			try {
+				Date dateTime = osLocalizedDateFormat.parse(created_at);
+				timestamp = dateTime.getTime() / 1000;
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 			
 		//id == "94816822100099073" is for Amy Winhouse event
 		Document doc = new Document(id);
 		doc.init(text, timestamp);
+		doc.json = json;
+		doc.sourceFile = sourceFile;
 		doc.dirtyOn();
 		
+		doc.score = score;
         doc.created_at = created_at;
         JsonObject userObj = jsonObj.get("user").getAsJsonObject();
     	doc.user_id = userObj.get("id_str").getAsString();			
 		
         if(!isBasicOnly)
 		{
-        	//String retweeted_status = jsonObj.get("retweeted_status").getAsString();
-			
+        	element = jsonObj.get("entities");
+			if(element!=null && !element.isJsonNull())
+			{				
+				JsonObject obj = element.getAsJsonObject();
+				JsonArray hashtagsList = obj.get("hashtags").getAsJsonArray();
+				ArrayList<String> tags = new ArrayList<String>();
+				for (int h=0; h<hashtagsList.size(); h++)
+				{
+					String tag = hashtagsList.get(h).getAsJsonObject().get("text").getAsString();
+					
+					tags.add(tag);
+					String[] camelCaseWords = tag.split("(?=[A-Z])");
+					doc.multipleWordsTag  += camelCaseWords.length>1 ? 1 : 0;
+				}
+				
+				doc.hashtags = tags.size();
+				
+				doc.symbols = obj.get("symbols").getAsJsonArray().size();
+				doc.urls = obj.get("urls").getAsJsonArray().size();
+				doc.user_mentions = obj.get("user_mentions").getAsJsonArray().size();
+			}
+        	
         	element = jsonObj.get("in_reply_to_status_id_str");
 			if(!element.isJsonNull())
 				doc.reply_to = element.getAsString();
@@ -286,6 +360,8 @@ public class Document  implements Serializable, DirtyBit {
 				JsonObject obj = element.getAsJsonObject();
 				userObj = obj.get("user").getAsJsonObject();
 	        	doc.quoted_user_id = userObj.get("id_str").getAsString();
+	        	
+	        	doc.text += " [" + obj.get("text").getAsString() + "]";
 			}
 			
 			doc.retweet_count = jsonObj.get("retweet_count").getAsInt();
@@ -299,9 +375,9 @@ public class Document  implements Serializable, DirtyBit {
 				
 				userObj = retweetObj.get("user").getAsJsonObject();
 	        	doc.retweeted_user_id = userObj.get("id_str").getAsString();
+	        	
+	        	doc.retweetedFavouritesCount = retweetObj.get("favorite_count").getAsInt();
 			}
-			
-			
 		}        
         return doc;
 	}
@@ -339,9 +415,14 @@ public class Document  implements Serializable, DirtyBit {
     	doc.user_id = userObj.get("id").getAsString();	
     	 return doc;
 		
-}
+	}
+	
 	public String getCreatedAt() {
 		return created_at;
+	}
+	
+	public Double getScore() {
+		return score;
 	}
 
 	public String getRetweetedId() {
@@ -398,5 +479,48 @@ public class Document  implements Serializable, DirtyBit {
 	public void setUserId(String asString) {
 		user_id = asString;
 		dirtyOn();
+	}
+
+	@Deprecated
+	public static Document createOrGetDocument(String json, String sourceFile)
+	{
+		Document doc = null;
+		
+		JsonParser jsonParser = new JsonParser();
+		JsonObject jsonObj = jsonParser.parse(json).getAsJsonObject();
+		
+		if(jsonObj.get("text") == null || jsonObj.get("id_str") == null)
+			return null;
+		
+		String id = jsonObj.get("id_str").getAsString();
+		
+		id = id.intern();
+		synchronized (id) {
+			doc = GlobalData.getInstance().id2doc.get(id);
+			if(doc == null)
+			{
+				doc = Document.parse(json, isBasicOnly, sourceFile);
+				GlobalData.getInstance().id2doc.put(id, doc);
+			}
+			
+		}
+		
+		return doc;
+	}
+
+	public int getRetweetedFavouritesCount() {
+		return retweetedFavouritesCount;
+	}
+
+	public void setRetweetedFavouritesCount(int retweetedFavouritesCount) {
+		this.retweetedFavouritesCount = retweetedFavouritesCount;
+	}
+	
+	public String getSource() {
+		return this.sourceFile;
+	}	
+	
+	public String getJson() {
+		return this.json;
 	}
 }

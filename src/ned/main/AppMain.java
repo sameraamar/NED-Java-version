@@ -33,7 +33,7 @@ public class AppMain {
 	private static PrintStream outShort;
 	private static String outfolder;
 
-	public static void release()
+	private static void release()
 	{
 		forest = null;
 		executer = null;
@@ -76,7 +76,11 @@ public class AppMain {
 
 			if(gd.getParams().resume_mode) 
 			{
-				int n = gd.resumeInfo.get(GlobalData.LAST_DIMENSION);
+				Integer n = gd.resumeInfo.get(GlobalData.LAST_DIMENSION);
+				if(n == null)
+				{
+					throw new Exception("No previous run was found to resume. Please run first with resume_mode=False.");
+				}
 				if(gd.getParams().inital_dimension < n)
 				{
 					if( n % gd.getParams().dimension_jumps != 0 )
@@ -106,7 +110,6 @@ public class AppMain {
 
 			doMain();
 			
-			
 		} catch(Exception e) {
 			e.printStackTrace();
 			throw e;
@@ -130,18 +133,18 @@ public class AppMain {
 					}
 				}
 			}
+			
 
 			outFull.close();
 			outShort.close();
 			release();
 		}
-			
 	}
 
 	private static void createOutFolder() {
 		GlobalData gd = GlobalData.getInstance();
 		String folder = "../temp";
-		if(Session.getMachineName().indexOf("samer") >= 0)
+		if(Session.checkMachine())
 			folder  = "c:/temp";
 		
 		folder = folder + "/threads_"+gd.getParams().max_documents+"_"+gd.getParams().offset;
@@ -161,18 +164,18 @@ public class AppMain {
 	private static void openOutput(int index) throws FileNotFoundException {
 		
 		String roll = String.format("%03d", index);
-		String threadsFileNameFull = outfolder + "/full_"+roll+".txt";
-		String threadsFileNameShort = outfolder +"/short_"+roll+".txt";
+		String threadsFileNameFull = outfolder + "/full_"+roll+".csv";
+		String threadsFileNameShort = outfolder +"/short_"+roll+".csv";
 		outFull = new PrintStream(new FileOutputStream(threadsFileNameFull));
 		outShort = new PrintStream(new FileOutputStream(threadsFileNameShort));
 	}
 
-	public static void doMain() throws IOException {
+	private static void doMain() throws IOException {
 		GlobalData gd = GlobalData.getInstance();
 		
 		String folder = "../data";
-		if(Session.getMachineName().indexOf("samer") >= 0)
-			folder  = "c:/data/thesis/events_db/petrovic";
+		if(Session.checkMachine())
+			folder  = "c:/data/Thesis/events_db/petrovic";
 		
 		String[] files = {"petrovic_00000000.gz",
 	                    "petrovic_00500000.gz",
@@ -294,7 +297,7 @@ public class AppMain {
 					continue;
 				}
 				
-				Document doc = Document.createOrGetDocument(line);
+				Document doc = Document.createOrGetDocument(line, filename);
 				GlobalData.getInstance().getQueue().add(doc.getId());
 				
 	            int idx = gd.getParams().offset+processed;
@@ -390,10 +393,10 @@ public class AppMain {
 		}
 		
 		//wait till all processes finish
-		executer.shutdown();
-		ExecutionHelper.shutdown();
-		
 		Session.getInstance().message(Session.INFO, "Summary", "wait till all processes finish");
+		executer.await();
+		ExecutionHelper.await();
+		
 
 		long current = System.nanoTime();
 		long seconds = TimeUnit.NANOSECONDS.toSeconds(current-base);

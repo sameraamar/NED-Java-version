@@ -53,4 +53,16 @@ public class Session {
 		return "";
 	}
 	
+	public static boolean checkMachine()
+	{	
+		String m = Session.getMachineName();
+
+		String[] myMachines = {"samer", "my7pro", "-processor"};
+		for (String my : myMachines) {
+			if(m.toLowerCase().indexOf(my.toLowerCase())>=0)
+				return true;
+		}
+		
+		return false;
+	}
 }

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import ned.modules.Twokenize;
@@ -34,25 +35,27 @@ public class GlobalData {
 
 	public class Parameters 
 	{
-		public int roll_file = 1_000_000;
-		public String DELIMITER = " ||| ";
-		public int monitor_timer_seconds = 5; //seconds
+		public int roll_file = 50_000_000;
+		public String DELIMITER = ",";
+		public int monitor_timer_seconds = 10; //seconds
 		public int number_of_threads =100;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
 		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
 		public int max_bucket_size = 2000;
-		public int max_documents = 50_000_000;
-		public int max_thread_delta_time = 4*3600; //seconds
+		public int max_documents = 1000000;
+		public int max_thread_delta_time = 2*3600; //seconds
 		public int offset =  0;
+		public int provider_buffer_size = 25000; //read documents ahead
 		public int search_recents = 2000;
-		public double threshold = 0.5;
+		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
-		public int inital_dimension = 100000;
-		public int dimension_jumps = 100000;
+		public int dimension_jumps = 10000;
+		public int inital_dimension = 9 * dimension_jumps;
 		public boolean resume_mode = false;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
+		public int dimension_max = 20 * dimension_jumps;
 	}
 	
 	private static GlobalData globalData = null;
@@ -81,7 +84,7 @@ public class GlobalData {
 	public RedisBasedMap<String, String> id2cluster;
 	public RedisBasedMap<String, String> cluster2replacement;
 	
-	private ClusteringQueueManager queue;
+	private ClusteringQueueManager<String> queue;
 	private RoundRobinArray<String> recentManager = null;
 
 	private Parameters parameters = new Parameters();
@@ -94,7 +97,7 @@ public class GlobalData {
 	{	
 		cleanClusterQueue = new LinkedList<String>();
 		clusters = new ConcurrentHashMap<String, DocumentCluster>();
-		queue = new ClusteringQueueManager();
+		queue = new ClusteringQueueManager<String>();
 	}
 	
 	synchronized public void init() throws Exception
@@ -103,13 +106,13 @@ public class GlobalData {
 			return;
 		
 		recentManager = new RoundRobinArray<String>(parameters.search_recents);
-		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, !getParams().resume_mode, new SerializeHelperStrDoc() );
-		id2wc = new RedisBasedMap<String, DocumentWordCounts>(GlobalData.K_ID2WORD_COUNT, !getParams().resume_mode, new SerializeHelperStrDocWordCounts() );
-		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, !getParams().resume_mode, new SerializeHelperStrInt() );
+		id2doc = new RedisBasedMap<String, Document>(GlobalData.K_ID2DOCUMENT, !getParams().resume_mode, new SerializeHelperAdapterDirtyBit<Document>() );
+		id2wc = new RedisBasedMap<String, DocumentWordCounts>(GlobalData.K_ID2WORD_COUNT, !getParams().resume_mode, new SerializeHelperAdapterDirtyBit<DocumentWordCounts>() );
+		word2index = new RedisBasedMap<String, Integer>(GlobalData.K_WORD2INDEX, !getParams().resume_mode, new SerializeHelperAdapterSimpleType<Integer>(Integer.class) );
 		numberOfDocsIncludeWord = new RedisBasedMap<Integer, Integer>(GlobalData.K_WORD2COUNTS, !getParams().resume_mode, new SerializeHelperIntInt() );
-		resumeInfo = new RedisBasedMap<String, Integer>(GlobalData.K_RESUME_INFO, !getParams().resume_mode, new SerializeHelperStrInt() );
-		id2cluster = new RedisBasedMap<String, String>(GlobalData.K_ID2CLUSTR_INFO, true, new SerializeHelperStrStr() );
-		cluster2replacement = new RedisBasedMap<String, String>(GlobalData.K_CLUSTR2REPLCMENT, true, new SerializeHelperStrStr() );
+		resumeInfo = new RedisBasedMap<String, Integer>(GlobalData.K_RESUME_INFO, !getParams().resume_mode, new SerializeHelperAdapterSimpleType<Integer>(Integer.class) );
+		id2cluster = new RedisBasedMap<String, String>(GlobalData.K_ID2CLUSTR_INFO, true, new SerializeHelperAdapterSimpleType<String>(String.class) );
+		cluster2replacement = new RedisBasedMap<String, String>(GlobalData.K_CLUSTR2REPLCMENT, true, new SerializeHelperAdapterSimpleType<String>(String.class) );
 		id2nearestDist = new ConcurrentHashMap<String, Double>();
 		id2nearestOk = new ConcurrentHashMap<String, Boolean>();
 		id2nearestId = new ConcurrentHashMap<String, String>();
@@ -133,17 +136,17 @@ public class GlobalData {
 	{
 		try{
 			System.out.println("Save to Redis...");
-			if(force || !getParams().resume_mode)
+			id2doc.save();
+	    	id2cluster.save();
+	    	cluster2replacement.save();
+	    	
+	    	if(force || !getParams().resume_mode)
 			{
 				id2wc.save();
 				word2index.save();
 		    	numberOfDocsIncludeWord.save();
 		    	resumeInfo.save();
 			}
-			
-			id2doc.save();
-	    	id2cluster.save();
-	    	cluster2replacement.save();
 		}
 		catch(JedisConnectionException re){
 			System.out.println(re.getMessage());
@@ -163,11 +166,11 @@ public class GlobalData {
 		return recentManager;
 	}
 
-	public ClusteringQueueManager getQueue() {
+	public ClusteringQueueManager<String> getQueue() {
 		return queue;
 	}
 
-	public void setQueue(ClusteringQueueManager queue) {
+	public void setQueue(ClusteringQueueManager<String> queue) {
 		this.queue = queue;
 	}
 
@@ -260,8 +263,7 @@ public class GlobalData {
 				{
 					idx = resumeInfo.get(LAST_DIMENSION);
 					resumeInfo.put(LAST_DIMENSION, idx+1);
-					
-					//index2word.put(idx, word);
+
 					word2index.put(word, idx);
 				}
 			}
@@ -341,8 +343,15 @@ public class GlobalData {
 	
 	public void flushClustersAll(PrintStream outFull, PrintStream outShort)
 	{
-		for (String leadId : this.clusters.keySet()) {
+		KeySetView<String, DocumentCluster> keys = this.clusters.keySet();
+		System.out.println("Printing left-over clusters: " + keys.size());
+		int c = keys.size();
+		int c10 = c < 10 ? 10 : c / 10; //don't fail on zero division
+		for (String leadId : keys) {
 			flushOneCluster(leadId, outShort, outFull);
+			c--;
+			if(c % c10 == 0)
+				System.out.println(c + " left");
 		} 
 	}
 	
@@ -438,6 +447,9 @@ public class GlobalData {
 		this.clusters.put(doc.getId(), cluster);
 		this.id2cluster.put(doc.getId(), doc.getId());
 		
+		if(GlobalData.debug(doc.getId()))
+			System.out.println(" ********************************* "  + doc.getId() + " is in ");
+		
 		//this.clusters.put(next_index, cluster);
 		//this.id2cluster.put(doc.getId(), next_index);
 
@@ -449,6 +461,11 @@ public class GlobalData {
 		//int idx = clusterIndexByDoc(leadId);
 		//this.id2cluster.put(doc.getId(), idx);
 		this.id2cluster.put(doc.getId(), leadId);
+		
+
+		if(GlobalData.debug( doc.getId() ))
+			System.out.println(" ********************************* "  + doc.getId() + " changed to " + leadId);
+		
 	}
 
 	public Parameters getParams() {
@@ -541,6 +558,10 @@ public class GlobalData {
 
 	public static void setId2nearestId(String key, String value) {
 		id2nearestId.put(key, value);
+	}
+
+	public static boolean debug(String id) {
+		return id.equals("FALSE"); //put here tweet id in order to debug it
 	}
 	
 }

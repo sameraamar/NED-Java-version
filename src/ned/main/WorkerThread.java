@@ -1,5 +1,6 @@
 package ned.main;
 
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +9,7 @@ import ned.hash.LSHForest;
 import ned.tools.RedisAccessHelper;
 import ned.types.Document;
 import ned.types.DocumentClusteringHelper;
+import ned.types.DocumentWordCounts;
 import ned.types.GlobalData;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -76,6 +78,7 @@ public class WorkerThread implements Runnable
     {
 		if (doc.getWords().size() == 0)
 		{
+			//this.doc.tfidf = new HashMap<Integer, Double>();
 	        this.doc.setNearestDetermined( true);
 			return;
 		}
@@ -87,6 +90,8 @@ public class WorkerThread implements Runnable
     	List<String> set = forest.addDocument(this.doc, this.dimension, word2idf);
 
     	DocumentClusteringHelper.postLSHMapping(this.doc, set, word2idf);
+		//DocumentWordCounts myWC = this.doc.bringWordCount();
+		//doc.tfidf = myWC.getWeights(word2idf);
     	this.doc.setNearestDetermined( true);
 
         //DocumentClusteringHelper.mapToClusterHelper(doc);

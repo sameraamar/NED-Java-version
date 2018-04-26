@@ -1,5 +1,6 @@
 package ned.tools;
 
+import java.net.SocketTimeoutException;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
@@ -22,6 +23,7 @@ import ned.types.Session;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisException;
 
 public class RedisAccessHelper {
@@ -48,7 +50,7 @@ public class RedisAccessHelper {
 		config.setMaxTotal(REDIS_MAX_CONNECTIONS);
 		//String redisHost = "ec2-54-245-53-209.us-west-2.compute.amazonaws.com";	
 		String redisHost = "localhost";
-		if(Session.getMachineName().indexOf("samer") >= 0)
+		if(Session.checkMachine())
 			redisHost = "localhost";
 		
 		return new JedisPool(config, redisHost, PORT, TIME_OUT);
@@ -161,11 +163,37 @@ public class RedisAccessHelper {
 		return 0;		
 	}
 
-	 public static void resetKey(String key)
-	 {
-	 	Jedis jedis=getRedisClient();
-		jedis.del(key);
-		retunRedisClient(jedis);
+	public static void resetKey(String key)
+	{
+		Jedis jedis = null;
+		int tries = 0;
+		boolean try_again = true;
+		
+		while(try_again && tries < 5)
+		{
+			jedis=getRedisClient();
+			
+			try {
+				jedis.del(key);
+		 		try_again = false;
+		 	}	 
+		 	catch (JedisConnectionException se) 
+		 	{
+		 		System.out.println("Failed to reset key " + key + ". trying again (" + tries + ")");
+		 		se.printStackTrace();
+		 		tries ++;
+		 	}
+			
+			if(try_again)
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+			if(jedis != null)
+	 			retunRedisClient(jedis);
+	 	}
 	 }
 	
 	 public static void saveStrSerializableMap(String jedisKey, Map<String, Map<Integer, Integer>> data)
@@ -238,42 +266,6 @@ public class RedisAccessHelper {
 			
 			retunRedisClient(jedis);
 		}
-	 
-	public static void saveStrDocMap(String jedisKey, Map<String, Document> data)
-	{
-		Jedis jedis=getRedisClient();
-
-		int count = 0;
-		int update = 0;
-		int skip = 0;
-		
-		Set<Entry<String, Document>> entries = data.entrySet();
-		
-		
-		for (Entry<String, Document> entry : entries) {
-			Document value=entry.getValue();
-			if(value.isDirty())
-			{
-				String key = entry.getKey();
-				byte[] bytes = getDocSerializer().serialize(value);
-
-				if(jedis.hexists(jedisKey, key))
-					update++;
-				else
-					count++;
-
-				jedis.hset(jedisKey.getBytes(), key.getBytes(), bytes);
-				value.dirtyOff();;
-			}
-			else
-				skip ++;
-			
-		}
-
-		System.out.println(jedisKey + ": skipped " + skip + ", updated " + update + " added " + count);
-		
-		retunRedisClient(jedis);
-	}
 	
 	public static void loadStrDocMap(String key, Hashtable<String, Document> data) {
 		Jedis jedis=getRedisClient();

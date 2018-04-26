@@ -5,6 +5,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import ned.types.GlobalData;
 import ned.types.Utility;
 
 public class HyperPlansManager {
@@ -14,9 +15,11 @@ public class HyperPlansManager {
 	double[] data ;
 	private Callable<double[]>  futureTask;
 	private Future<?> newdata;
+	private int max_dim = 0;
 
 	public HyperPlansManager(int hyperplanes, int dimension, int dimension_jumps)
 	{
+		this.max_dim = GlobalData.getInstance().getParams().dimension_max;
 		//this.dimension = dimension;
 		this.dimension_jumps = dimension_jumps;
 		this.hyperplanes = hyperplanes;
@@ -34,7 +37,7 @@ public class HyperPlansManager {
 
 	private void fixDimWait(int j) {
 		int dimension = data.length/hyperplanes;
-		while(j>=dimension)
+		while(j>=dimension && j<max_dim)
 			//wait
 		{
 			try {
@@ -50,6 +53,11 @@ public class HyperPlansManager {
 
 	public void fixDim(int newdim)
 	{
+		if(newdim >= max_dim)
+		{
+			newdim %= max_dim;
+		}
+		
 		prepare();
 		
 		int dimension = data.length/hyperplanes;
@@ -97,6 +105,12 @@ public class HyperPlansManager {
 		int dimension = data.length/hyperplanes;
 		if (i>=this.hyperplanes || i<0)
 			throw new ArrayIndexOutOfBoundsException("Bad i in :(" + i + ", " + j + "). Dim: " + dimension);
+		
+		if(j >= max_dim)
+		{
+			j %= max_dim;
+		}
+		
 		if (j>=dimension) //dimension
 		{
 			System.out.println("Fixing dimension...");

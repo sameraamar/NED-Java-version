@@ -4,6 +4,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import ned.hash.LSHForest;
+import ned.provider.DocumentParserThread;
 import ned.types.Document;
 import ned.types.GlobalData;
 
@@ -35,6 +36,7 @@ public class DocumentProcessorExecutor {
 	public boolean await()
 	{
 		try {
+			executor.shutdown();
 			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -43,12 +45,7 @@ public class DocumentProcessorExecutor {
 		
 		return true;
 	}
-	
-	public void shutdown()
-	{
-		shutdown(executor);
-	}
-	
+		
 	private void shutdown(ExecutorService executor)
 	{
 		executor.shutdown();
