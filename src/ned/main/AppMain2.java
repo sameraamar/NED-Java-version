@@ -268,7 +268,7 @@ public class AppMain2 {
         		middle_processed = cursor;
         	}
 			
-			if (processed % (gd.getParams().print_limit * 100) == 0)
+			if (processed % (gd.getParams().print_limit * 400) == 0)
             {
             	int lastIndex = gd.resumeInfo.get(GlobalData.LAST_SEEN_IDX);
             	waitForClusteringQueue();
