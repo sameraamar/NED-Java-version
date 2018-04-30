@@ -315,9 +315,16 @@ public class Document  implements Serializable, DirtyBit {
 		
 		doc.score = score;
         doc.created_at = created_at;
-        JsonObject userObj = jsonObj.get("user").getAsJsonObject();
-    	doc.user_id = userObj.get("id_str").getAsString();			
-		
+        
+        JsonElement userObj = jsonObj.get("user");
+        if (userObj.isJsonObject())
+        {
+	    	doc.user_id = userObj.getAsJsonObject().get("id_str").getAsString();			
+        } else if (userObj.isJsonPrimitive())
+        {
+        	doc.user_id = userObj.getAsString();
+        }
+        
         if(!isBasicOnly)
 		{
         	element = jsonObj.get("entities");
@@ -358,8 +365,8 @@ public class Document  implements Serializable, DirtyBit {
 			if(element!=null && !element.isJsonNull())
 			{				
 				JsonObject obj = element.getAsJsonObject();
-				userObj = obj.get("user").getAsJsonObject();
-	        	doc.quoted_user_id = userObj.get("id_str").getAsString();
+				JsonObject userObj2 = obj.get("user").getAsJsonObject();
+	        	doc.quoted_user_id = userObj2.get("id_str").getAsString();
 	        	
 	        	doc.text += " [" + obj.get("text").getAsString() + "]";
 			}
@@ -373,8 +380,8 @@ public class Document  implements Serializable, DirtyBit {
 				JsonObject retweetObj = element.getAsJsonObject();
 				doc.retweeted_id = retweetObj.get("id_str").getAsString();
 				
-				userObj = retweetObj.get("user").getAsJsonObject();
-	        	doc.retweeted_user_id = userObj.get("id_str").getAsString();
+				JsonObject userObj2 = retweetObj.get("user").getAsJsonObject();
+	        	doc.retweeted_user_id = userObj2.get("id_str").getAsString();
 	        	
 	        	doc.retweetedFavouritesCount = retweetObj.get("favorite_count").getAsInt();
 			}
