@@ -145,7 +145,6 @@ public String toStringFull()
 		String block = sb.toString();
 		
 		sb = new StringBuilder();
-		double alpha = 0.6;
 
 		for (int i =0; i<s; i++)
 		{
@@ -172,7 +171,7 @@ public String toStringFull()
 			
 			sb.append(block);
 			
-			String score =String.format("%.3f",  alpha * entropy() + (1.0-alpha) * numOfUsers);
+			String score =String.format("%.3f",  calcScore(numOfUsers));
 			sb.append(score).append(delimiter);
 
 			Matcher matcher = whitespace.matcher(doc.getText());
@@ -186,6 +185,11 @@ public String toStringFull()
 		}
 		return sb.toString();
 	}
+
+private double calcScore(int numOfUsers) {
+	double alpha = 0.6;
+	return alpha * entropy() + (1.0-alpha) * numOfUsers;
+}
 
 
 public String toStringShort()
@@ -251,7 +255,9 @@ public String toStringShort()
 		result = matcher.replaceAll(" ");
 		
 		result.replaceAll(delimiter," ");
-		sb.append( result.replaceAll(delimiter, " ") );
+		
+		String score =String.format("%.3f",  calcScore(numOfUsers));
+		sb.append(score).append(delimiter);		sb.append( result.replaceAll(delimiter, " ") );
 
 		sb.append("\n");
 	}

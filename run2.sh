@@ -2,8 +2,7 @@
 
 DATAFILE_PATH=../data/demo
 DATAFILE_PATH_AWS_BASE=s3://magnet-fwm/home/LiveU/joint_scenario
-DATAFILE_PATH_AWS_INPUT=$DATAFILE_PATH_AWS_BASE/Bodof_Group/data/
-raw_data/
+DATAFILE_PATH_AWS_INPUT=$DATAFILE_PATH_AWS_BASE/Feldman_Group/tweets_feldman_loc.txt
 DATAFILE_PATH_AWS_OUTPUT=$DATAFILE_PATH_AWS_BASE/Bodof_Group/
 
 DATAFILE_LOCAL=$DATAFILE_PATH
@@ -12,11 +11,11 @@ echo Downloading folder $DATAFILE_PATH_AWS_INPUT from AWS ...
 mkdir $DATAFILE_LOCAL
 ##aws s3 cp s3://magnet-fwm/home/LiveU/joint_scenario/raw_data/ ../data/demo/ --recursive --include "*......xc*"
 
-echo aws s3 cp "$DATAFILE_PATH_AWS_INPUT" "$DATAFILE_LOCAL" --recursive --exclude "*" --include "\"*.gz\""
+echo aws s3 cp "$DATAFILE_PATH_AWS_INPUT" "$DATAFILE_LOCAL" --recursive --exclude "*" --include "*.*"
+aws s3 cp "$DATAFILE_PATH_AWS_INPUT" "$DATAFILE_LOCAL" --recursive --exclude "*" --include "*.*"
 
-aws s3 cp "$DATAFILE_PATH_AWS_INPUT" "$DATAFILE_LOCAL" --recursive --exclude "*" --include "*.gz"
-
-"*.json"
+echo aws s3 cp "$DATAFILE_PATH_AWS_INPUT" "$DATAFILE_LOCAL" 
+aws s3 cp "$DATAFILE_PATH_AWS_INPUT" "$DATAFILE_LOCAL" 
 
 echo "DATAFILE_LOCAL"
 

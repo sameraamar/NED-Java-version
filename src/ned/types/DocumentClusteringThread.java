@@ -88,7 +88,7 @@ public class DocumentClusteringThread extends Thread {
 		headerShort.append( "entropy" ).append( delimiter );
 		headerShort.append( "users" ).append( delimiter );
 		headerShort.append( "size" ).append( delimiter );
-		//headerShort.append( "tfidf" ).append( delimiter );
+		headerShort.append( "score" ).append( delimiter );
 		headerShort.append( "text" );
 		headerShort.append("\n");
 		
