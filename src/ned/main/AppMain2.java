@@ -1,5 +1,10 @@
 package ned.main;
 
+/***
+ * Pre-requisite: https://github.com/rgl/redis/downloads
+ */
+
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;

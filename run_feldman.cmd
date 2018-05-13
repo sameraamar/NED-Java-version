@@ -2,7 +2,7 @@
 
 set DATAFILE_LOCAL=C:\data\Thesis\events_db\petrovic\tweets
 set DATAFILE_PATH_AWS_BASE=s3://magnet-fwm/home/LiveU/joint_scenario
-set DATAFILE_PATH_AWS_INPUT=%DATAFILE_PATH_AWS_BASE%/Feldman_Group/tweets_feldman_loc.txt
+set DATAFILE_PATH_AWS_INPUT=%DATAFILE_PATH_AWS_BASE%/Feldman_Group/tweets_feldman_108k_glo.txt
 set DATAFILE_PATH_AWS_OUTPUT=%DATAFILE_PATH_AWS_BASE%/Bodof_Group/
 
 
