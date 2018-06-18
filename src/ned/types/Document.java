@@ -294,8 +294,8 @@ public class Document  implements Serializable, DirtyBit {
 		else {
 			//convert from created_at to timestamp
 			//example: Tue Mar 07 23:58:53 +0000 2017
-			//DateFormat osLocalizedDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy", Locale.ENGLISH);
-			DateFormat osLocalizedDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+			DateFormat osLocalizedDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy", Locale.ENGLISH);
+			//DateFormat osLocalizedDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
 			timestamp = 0;
 			try {
 				Date dateTime = osLocalizedDateFormat.parse(created_at);
