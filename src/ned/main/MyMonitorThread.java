@@ -97,7 +97,12 @@ public class MyMonitorThread extends Thread
 	        Session.getInstance().message(Session.INFO, "[monitor]", msg.toString());
 	                
 	        try {
-	                Thread.sleep(seconds*1000);
+	        	int _sec = seconds;
+	        	while(!stop && _sec>0)
+	        	{
+	                Thread.sleep(1000);
+	                _sec--;
+	        	}
 	        } catch (Exception e) {
 	            Session.getInstance().message(Session.INFO, "[monitor]", "Exception");
 	            e.printStackTrace();

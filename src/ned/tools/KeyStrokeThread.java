@@ -5,6 +5,11 @@ public class KeyStrokeThread extends Thread
 {
 	protected boolean stop;
 
+	public KeyStrokeThread()
+	{
+		setDaemon(true);
+	}
+	
 	@Override
 	public void run() 
 	{
@@ -67,6 +72,7 @@ public class KeyStrokeThread extends Thread
 
 
 	public void shutdown() {
+		System.out.println("KeyStroke: request to shutdown...");
 		stop = true;
 	}
 

@@ -51,7 +51,7 @@ public class AppMain2 {
 	public static void main(String[] args) throws Exception 
 	{
 		long base = 0;
-		KeyStrokeThread thr = null;
+		KeyStrokeThread keyStrokeThread = null;
 		try {
 			GlobalData gd = GlobalData.getInstance();
 
@@ -92,8 +92,8 @@ public class AppMain2 {
 			//DocumentProvider documentProvider = new DocProviderGZip(gd.getParams().max_documents, gd.getParams().offset, true);
 			DocumentProvider documentProvider = new DocProviderForDemo(gd.getParams().max_documents, gd.getParams().offset, true);
 			
-			thr = new KeyStrokeThread();
-			thr.start();
+			keyStrokeThread = new KeyStrokeThread();
+			keyStrokeThread.start();
 			
 	    	parserThread = new DocumentParserThread(documentProvider);
 	    	parserThread.start();
@@ -143,6 +143,7 @@ public class AppMain2 {
 				while(threadMonitor.isAlive())
 				{
 					try {
+						System.out.println("Wait for threadMonitor");
 						Thread.sleep(50);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
@@ -159,11 +160,14 @@ public class AppMain2 {
 			//if(idListFile != null)
 			//	idListFile.close();
 
-			if (thr != null)
-				thr.shutdown();
-			
+			if (keyStrokeThread != null) 
+			{
+				keyStrokeThread.shutdown();
+			}
 			release();
 		}
+		
+		System.out.println("I am done!");
 	}
 
 	private static void parseArguments(String[] args) {
