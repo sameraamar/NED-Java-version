@@ -3,7 +3,7 @@
 DATAFILE_PATH=../data/demo
 DATAFILE_PATH_AWS_BASE=s3://magnet-fwm/home/LiveU/joint_scenario
 DATAFILE_PATH_AWS_INPUT=$DATAFILE_PATH_AWS_BASE/Feldman_Group/
-FILE_NAME=tweets_feldman_108k_loc.txt
+FILE_NAME=tweets_feldman_300_loc_no_RT.txt
 DATAFILE_PATH_AWS_INPUT=$DATAFILE_PATH_AWS_BASE/Feldman_Group/$FILE_NAME
 tweets_feldman_loc.txt
 DATAFILE_PATH_AWS_OUTPUT=$DATAFILE_PATH_AWS_BASE/Bodof_Group/
