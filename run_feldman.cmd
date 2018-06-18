@@ -2,14 +2,13 @@
 
 set DATAFILE_LOCAL=C:\data\Thesis\events_db\petrovic\tweets
 set DATAFILE_PATH_AWS_BASE=s3://magnet-fwm/home/LiveU/joint_scenario
-set DATAFILE_PATH_AWS_INPUT=%DATAFILE_PATH_AWS_BASE%/Feldman_Group/tweets_feldman_108k_loc.txt
-tweets_feldman_loc.txt
+set DATAFILE_PATH_AWS_INPUT=%DATAFILE_PATH_AWS_BASE%/Feldman_Group/tweets_feldman_300_loc_no_RT.txt
 set DATAFILE_PATH_AWS_OUTPUT=%DATAFILE_PATH_AWS_BASE%/Bodof_Group/
 
 
 
-set /p input="Download from AWS? <yes or no>: "
-if %input%==no goto no
+set /p input="Download from AWS? <y / n>: "
+if %input%==n  goto no
 
 
 echo Looking for file: "%DATAFILE_LOCAL%"
@@ -36,7 +35,7 @@ java1 -XX:+UseG1GC -Xms50000m -classpath ".;./bin;./lib/gson-2.6.2.jar;./lib/com
 java -XX:+UseG1GC -Xms50000m -classpath ".;./bin;./lib/gson-2.6.2.jar;./lib/commons-pool2-2.4.2.jar;./lib/jedis-2.9.0.jar;./lib/spring-core-4.3.7.RELEASE.jar;./lib/spring-data-redis-1.8.1.RELEASE.jar" ned.main.AppMain2
 
 
-AWS s3 cp C:/temp/threads_1000000_0/ %DATAFILE_PATH_AWS_OUTPUT% --recursive --include "*.csv"
+AWS s3 cp C:/temp/threads_1000000_0/ %DATAFILE_PATH_AWS_OUTPUT% --recursive --include "*0.csv"
 AWS s3 cp C:/temp/threads_1000000_0/ %DATAFILE_PATH_AWS_OUTPUT% --recursive --include "*.txt"
 
 

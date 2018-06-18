@@ -213,6 +213,11 @@ public class AppMain2 {
 		String roll = String.format("%03d", index);
 		String threadsFileNameFull = outfolder + "/full_"+roll+".csv";
 		String threadsFileNameShort = outfolder +"/short_"+roll+".csv";
+		
+		System.out.println("Output files:");
+		System.out.println(threadsFileNameShort);
+		System.out.println(threadsFileNameFull);
+		
 		outFull = new PrintStream(new FileOutputStream(threadsFileNameFull));
 		outShort = new PrintStream(new FileOutputStream(threadsFileNameShort));
 		//idListFile = new PrintStream(new FileOutputStream(outfolder +"/ids_"+roll+".txt"));
