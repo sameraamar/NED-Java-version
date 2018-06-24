@@ -145,19 +145,20 @@ public class DocProviderGZip extends DocumentProvider {
 		if(fileidx >= gzfiles.length)
 			return false;
 		
-		System.out.println("opening file (" + fileidx + "): " + gzfiles[fileidx]);
+		String fullePath = getBaseFolder() + File.separator + gzfiles[fileidx];
+		System.out.println("opening file (" + fileidx + "): " + fullePath);
 		
 		Reader decoder = null;
 		
 		if (gzfiles[fileidx].endsWith(".gz"))
 		{
 			GZIPInputStream stream;
-			stream = new GZIPInputStream(new FileInputStream(getBaseFolder() + "/" + gzfiles[fileidx]));
+			stream = new GZIPInputStream(new FileInputStream(fullePath));
 			decoder = new InputStreamReader(stream, "UTF-8");
 		}
 		else
 		{
-			FileInputStream stream = new FileInputStream(getBaseFolder() + "/" + gzfiles[fileidx]);
+			FileInputStream stream = new FileInputStream(fullePath);
 			decoder = new InputStreamReader(stream, "UTF-8");		
 		}
 		

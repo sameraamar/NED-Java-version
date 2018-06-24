@@ -280,7 +280,10 @@ public class Document  implements Serializable, DirtyBit {
 		}
 		
 		if(jsonObj.get("text") == null || jsonObj.get("id_str") == null)
+		{
+			System.err.println("Missing attributes: id_str or text");
 			return null;
+		}
 		
 		String text = jsonObj.get("text").getAsString();
 		String id = jsonObj.get("id_str").getAsString();
@@ -294,17 +297,7 @@ public class Document  implements Serializable, DirtyBit {
 		else {
 			//convert from created_at to timestamp
 			//example: Tue Mar 07 23:58:53 +0000 2017
-			DateFormat osLocalizedDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy", Locale.ENGLISH);
-			//DateFormat osLocalizedDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-			timestamp = 0;
-			try {
-				Date dateTime = osLocalizedDateFormat.parse(created_at);
-				timestamp = dateTime.getTime() / 1000;
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
+			timestamp = safeParseDateTime(created_at);
 		}
 			
 		//id == "94816822100099073" is for Amy Winhouse event
@@ -388,6 +381,38 @@ public class Document  implements Serializable, DirtyBit {
 			}
 		}        
         return doc;
+	}
+
+	private static long safeParseDateTime(String created_at) {
+		DateFormat osLocalizedDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy", Locale.ENGLISH);
+		Date dateTime = null;
+		try 
+		{
+			dateTime = osLocalizedDateFormat.parse(created_at);
+		} 
+		catch (ParseException e) 
+		{
+		}
+		
+		if (dateTime == null)
+		{
+			osLocalizedDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+			try 
+			{
+				dateTime = osLocalizedDateFormat.parse(created_at);
+			} 
+			catch (ParseException e) 
+			{
+			}
+		}
+
+		if (dateTime == null)
+		{
+			System.err.println("Error parsing date time '" + created_at + "'");
+		}
+		
+		long timestamp = dateTime.getTime() / 1000;
+		return timestamp;
 	}
 	
 	public static Document parse01(String json, boolean isBasicOnly)

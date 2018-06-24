@@ -48,7 +48,7 @@ public class GlobalData {
 		public int offset =  0;
 		public int provider_buffer_size = 25000; //read documents ahead
 		public int search_recents = 2000;
-		public double threshold = 0.8;
+		public double threshold = 0.5;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
 		public int dimension_jumps = 10000;
