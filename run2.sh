@@ -1,7 +1,7 @@
 @echo off
 
 
-# run me without 'sudo'
+# run me WITHOUT 'sudo'
 
 DATAFILE_PATH=../data/demo
 DATAFILE_PATH_AWS_BASE=s3://magnet-fwm/home/LiveU/joint_scenario
