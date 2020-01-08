@@ -1,8 +1,5 @@
 package ned.types;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import ned.tools.ClusteringQueueManager;
 import ned.tools.RedisAccessHelper;
@@ -62,7 +59,7 @@ public class DocumentClusteringThread extends Thread {
 			{
 				e.printStackTrace();
 			}
-
+			
 		}
 		//last time
 		//wait for all other threads to finish
@@ -82,30 +79,26 @@ public class DocumentClusteringThread extends Thread {
 	private void printHeader() {		
 		String delimiter = GlobalData.getInstance().getParams().DELIMITER;
 		
-		//leadId\tentropy\tusers\tsize\ttfidf\ttext
-
 		StringBuilder headerShort = new StringBuilder("leadId").append( delimiter );			
 		headerShort.append( "entropy" ).append( delimiter );
 		headerShort.append( "users" ).append( delimiter );
 		headerShort.append( "size" ).append( delimiter );
-		headerShort.append( "score" ).append( delimiter );
-		headerShort.append( "text" );
+		headerShort.append( "text" ).append( delimiter );
 		headerShort.append("\n");
 		
-		
+		//leadId\tid\tuser\t# users\tcreated\ttimestamp\tnearest\tdistance\tentropy\tsize\tage\ttext\n
 		StringBuilder headerFull = new StringBuilder("leadId").append( delimiter );
 		headerFull.append( "id" ).append( delimiter );
 		headerFull.append( "created" ).append( delimiter );
 		headerFull.append( "timestamp" ).append( delimiter );
 		headerFull.append( "nearest" ).append( delimiter );
 		headerFull.append( "distance" ).append( delimiter );
-		//headerFull.append( "tfidf" ).append( delimiter );
 		headerFull.append( "entropy" ).append( delimiter );
 		headerFull.append( "users" ).append( delimiter );
 		headerFull.append( "size" ).append( delimiter );
 		headerFull.append( "age" ).append( delimiter );
 		headerFull.append( "score" ).append( delimiter );
-		headerFull.append( "text" );
+		headerFull.append( "text" ).append( delimiter );
 		headerFull.append("\n");
 		
 		outFull.print(headerFull);

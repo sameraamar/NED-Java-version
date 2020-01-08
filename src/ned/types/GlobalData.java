@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentHashMap.KeySetView;
@@ -36,22 +37,22 @@ public class GlobalData {
 	public class Parameters 
 	{
 		public int roll_file = 50_000_000;
-		public String DELIMITER = ",";
+		public String DELIMITER = "\t";
 		public int monitor_timer_seconds = 10; //seconds
 		public int number_of_threads =100;
 		public int print_limit = 5000;
 		public int number_of_tables = 70;
-		public int hyperplanes = 5; // k  -->  2^k * 2000 --> 
+		public int hyperplanes = 13; // k  -->  2^k * 2000 --> 
 		public int max_bucket_size = 2000;
-		public int max_documents = 1000000;
-		public int max_thread_delta_time = 10*3600; //seconds
+		public int max_documents = 50_000_002;
+		public int max_thread_delta_time = 1*3600; //seconds
 		public int offset =  0;
 		public int provider_buffer_size = 25000; //read documents ahead
 		public int search_recents = 2000;
-		public double threshold = 0.5;
+		public double threshold = 0.6;
 		public double min_cluster_entropy = 0.0;
 		public double min_cluster_size = 1;
-		public int dimension_jumps = 10000;
+		public int dimension_jumps = 100000;
 		public int inital_dimension = 9 * dimension_jumps;
 		public boolean resume_mode = false;
 		public boolean scan_mode_only = false; //keep this false unless you only wants to be in scan mode
@@ -447,9 +448,6 @@ public class GlobalData {
 		this.clusters.put(doc.getId(), cluster);
 		this.id2cluster.put(doc.getId(), doc.getId());
 		
-		if(GlobalData.debug(doc.getId()))
-			System.out.println(" ********************************* "  + doc.getId() + " is in ");
-		
 		//this.clusters.put(next_index, cluster);
 		//this.id2cluster.put(doc.getId(), next_index);
 
@@ -461,11 +459,6 @@ public class GlobalData {
 		//int idx = clusterIndexByDoc(leadId);
 		//this.id2cluster.put(doc.getId(), idx);
 		this.id2cluster.put(doc.getId(), leadId);
-		
-
-		if(GlobalData.debug( doc.getId() ))
-			System.out.println(" ********************************* "  + doc.getId() + " changed to " + leadId);
-		
 	}
 
 	public Parameters getParams() {
@@ -558,10 +551,6 @@ public class GlobalData {
 
 	public static void setId2nearestId(String key, String value) {
 		id2nearestId.put(key, value);
-	}
-
-	public static boolean debug(String id) {
-		return id.equals("FALSE"); //put here tweet id in order to debug it
 	}
 	
 }

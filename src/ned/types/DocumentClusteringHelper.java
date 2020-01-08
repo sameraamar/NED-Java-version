@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -158,24 +157,8 @@ public class DocumentClusteringHelper {
 			
 			if(joinClusterId==null)
 			{
-				/*if(GlobalData.debug( nearest ))
-					System.out.println(" ***************************** found null "  + nearest + " while handling doc " + doc.getId());
-
-				try {
-					Thread.sleep(10000);
-				} catch (InterruptedException e) {
-				}*/
-
-				joinClusterId = gd.id2cluster.get(nearest);
-				if(GlobalData.debug( nearest ))
-					System.out.println(" ***************************** after sleep 1 sec "  + nearest + " cluster is " + joinClusterId + " while handling doc " + doc.getId());
-
-				if(joinClusterId==null)
-				{
-					System.out.println("joinClusterId==null : " + nearest + " while handling doc " + doc.getId());
-					return null;
-				}
-					
+				System.out.println("joinClusterId==null : " + nearest);
+				return null;
 			}
 			
 			DocumentCluster cluster = gd.clusterByDoc(joinClusterId);

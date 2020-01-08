@@ -57,7 +57,7 @@ public class Session {
 	{	
 		String m = Session.getMachineName();
 
-		String[] myMachines = {"samer", "saaama", "my7pro", "-processor"};
+		String[] myMachines = {"samer", "my7pro", "-processor"};
 		for (String my : myMachines) {
 			if(m.toLowerCase().indexOf(my.toLowerCase())>=0)
 				return true;

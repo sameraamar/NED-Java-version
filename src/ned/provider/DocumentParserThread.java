@@ -10,14 +10,14 @@ public class DocumentParserThread extends Thread {
 	public DocumentProvider p;
 	private int buffer_size;
 
-	public DocumentParserThread(DocumentProvider documentProvider)
+	public DocumentParserThread()
 	{
 		queue = new ClusteringQueueManager<Document>();
 		
 		GlobalData gd = GlobalData.getInstance();
 		buffer_size = GlobalData.getInstance().getParams().provider_buffer_size;
 
-		p = documentProvider;
+		p = new DocProviderGZip(gd.getParams().max_documents, gd.getParams().offset);
 	}
 	
 	
@@ -56,8 +56,7 @@ public class DocumentParserThread extends Thread {
 			{
 				for (; countHelper < 2*buffer_size; countHelper++)
 				{
-					int hasNext = p.hasNext();
-					if(hasNext == 0)
+					if(!p.hasNext())
 					{
 						stop = true;
 						break;
@@ -86,23 +85,24 @@ public class DocumentParserThread extends Thread {
 	}
 
 
-	public boolean isready() throws Exception {
-
+	public boolean isready() {
+		try {
 			while (queue.isEmpty())
 			{
-				int hasNext = p.hasNext();
-				if(!stop && -1==hasNext)
+				if(!stop && p.hasNext())
 				{
 					//System.out.println("go to sleep!");
-					try {
-						Thread.sleep(10);
-					} catch (InterruptedException e) {
-					}
+					Thread.sleep(100);
 				}
 				else
-					return hasNext==1;
+					return false;
 			}
-
+		} 
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			return false;
+		}
 		return true;
 	}
 		
