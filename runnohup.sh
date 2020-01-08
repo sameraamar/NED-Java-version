@@ -1,3 +1,4 @@
-rm nohup.out 
+
+rm nohup.out
 nohup ./run.sh &
 
